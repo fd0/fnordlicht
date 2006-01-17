@@ -1,0 +1,1 @@
+<Project name="avrprog_boot"><File path="uart.h"></File><File path="lowlevel.c"></File><File path="lowlevel.h"></File><File path="main.c"></File><File path="makefile"></File><File path="readme.txt"></File><File path="uart.c"></File><File path="chipdef.h"></File><File path="main.lss"></File></Project>
