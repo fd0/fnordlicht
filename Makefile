@@ -44,6 +44,8 @@ fuse:
 	avrdude -p m8 -c $(ISP_PROG) -P $(ISP_DEV) -U hfuse:w:0xD0:m
 	avrdude -p m8 -c $(ISP_PROG) -P $(ISP_DEV) -U lfuse:w:0xE0:m
 
+bootstrap: fuse bootloader.hex prog-isp-bootloader install-fnordlicht
+
 interactive-isp:
 	avrdude -p m8 -c $(ISP_PROG) -P $(ISP_DEV) -t
 
