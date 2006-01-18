@@ -1,6 +1,34 @@
-/* fnordlicht rewritten in c
- * vim:fdm=marker ts=4 et ai
+/*
+ vim:fdm=marker ts=4 et ai
  */
+
+/*
+ *         fnordlicht firmware next generation
+ *
+ *    for additional information please
+ *    see http://koeln.ccc.de/prozesse/running/fnordlicht
+ *
+ * (c) by Alexander Neumann <alexander@bumpern.de>
+ *     Lars Noschinski <lars@public.noschinski.de>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ * For more information on the GPL, please go to:
+ * http://www.gnu.org/copyleft/gpl.html
+ */
+
+
 
 /* define the cpu speed when using the fuse bits set by the
  * makefile (and documented in fuses.txt), using an external
@@ -115,12 +143,12 @@ struct Channel channels[3]; /* current channel records */
 
 /* }}} */
 
-/* header */
+/* prototypes */
 static inline void init_uart(void);
 static inline void init_output(void);
 static inline void init_timer1(void);
-void update_pwm_timeslots(void);
 static inline void init_pwm(void);
+void update_pwm_timeslots(void);
 inline void do_fading(void);
 
 
@@ -162,6 +190,9 @@ void init_timer1(void) { /* {{{ */
 
     /* enable timer1 output compare 1a interrupt */
     TIMSK |= _BV(OCIE1A);
+
+    /* load initial delay */
+    OCR1A = 64000;
 }
 
 /* }}} */
@@ -178,17 +209,6 @@ void init_pwm(void) { /* {{{ */
         channels[i].remainder = 0;
         channels[i].mask = _BV(i);
     }
-
-    //channels[0].target_brightness = 192;
-    //channels[1].target_brightness = 20;
-    //channels[2].target_brightness = 182;
-
-    channels[0].brightness = 30;
-    channels[1].brightness = 0;
-    channels[2].brightness = 0;
-    channels[0].target_brightness=channels[0].brightness;
-    channels[1].target_brightness=channels[1].brightness;
-    channels[2].target_brightness=channels[2].brightness;
 
     update_pwm_timeslots();
 }
@@ -285,12 +305,42 @@ void update_pwm_timeslots(void) { /* {{{ */
 /** fade any channels not already at their target brightness */
 void do_fading(void) { /* {{{ */
     uint8_t i;
+    uint16_t value;
 
+    /* iterate over the channels */
     for (i=0; i<PWM_CHANNELS; i++) {
+
+        /* increase brightness */
         if (channels[i].brightness < channels[i].target_brightness) {
-            channels[i].brightness++;
+            /* calculate new brightness value, high byte is brightness, low byte is remainder */
+            value = (uint16_t)channels[i].remainder + (uint16_t)(channels[i].brightness << 8) + channels[i].speed;
+
+            /* if new brightness is lower than before or brightness is higher than the target, just set the target brightness */
+            if (HIGH(value) < channels[i].brightness || HIGH(value) > channels[i].target_brightness) {
+                channels[i].brightness = channels[i].target_brightness;
+            } else {
+                /* set new brightness */
+                channels[i].brightness = HIGH(value);
+
+                /* save remainder */
+                channels[i].remainder = LOW(value);
+            }
+
+        /* or decrease brightness */
         } else if (channels[i].brightness > channels[i].target_brightness) {
-            channels[i].brightness--;
+            /* calculate new brightness value, high byte is brightness, low byte is remainder */
+            value = (uint16_t)channels[i].remainder + (uint16_t)(channels[i].brightness << 8) - channels[i].speed;
+
+            /* if new brightness is higher than before or brightness is lower than the target, just set the target brightness */
+            if (HIGH(value) > channels[i].brightness || HIGH(value) < channels[i].target_brightness) {
+                channels[i].brightness = channels[i].target_brightness;
+            } else {
+                /* set new brightness */
+                channels[i].brightness = HIGH(value);
+
+                /* save remainder */
+                channels[i].remainder = LOW(value);
+            }
         }
     }
 }
@@ -311,15 +361,15 @@ SIGNAL(SIG_OUTPUT_COMPARE1A) { /* {{{ */
 
             /* output initial values */
             PORTB = pwm.initial_bitmask;
+
+            /* signal new cycle to main procedure */
+            flags.new_cycle = 1;
         } else {
             /* middle, nothing to do here so far */
         }
 
         /* reset overflow flag */
         flags.pwm_overflow = 0;
-
-        /* signal new cycle to main procedure */
-        flags.new_cycle = 1;
     } else {
         /* normal interrupt here */
 
@@ -403,6 +453,22 @@ SIGNAL(SIG_UART_RECV) { /* {{{ */
             channels[1].target_brightness=channels[1].brightness;
             channels[2].target_brightness=channels[2].brightness;
             break;
+        case '>':
+            channels[0].speed >>= 1;
+            channels[1].speed >>= 1;
+            channels[2].speed >>= 1;
+            break;
+        case '<':
+            channels[0].speed <<= 1;
+            channels[1].speed <<= 1;
+            channels[2].speed <<= 1;
+            break;
+        case 's':
+            UDR = HIGH(channels[0].speed);
+            while (!(UCSRA & (1<<UDRE)));
+            UDR = LOW(channels[0].speed);
+            while (!(UCSRA & (1<<UDRE)));
+            break;
     }
 }
 /* }}} */
@@ -415,8 +481,15 @@ int main(void) { /* {{{ */
     init_timer1();
     init_pwm();
 
-    /* load timer1 initial delay */
-    OCR1A = 64000;
+    channels[1].brightness = 1;
+    channels[1].target_brightness = 255;
+    channels[1].speed = 0x0400;
+
+#if 0
+    channels[1].target_brightness = 20;
+    channels[2].target_brightness = 182;
+#endif
+
 
     /* enable interrupts globally */
     sei();
