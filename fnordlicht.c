@@ -33,6 +33,7 @@
 #define PWM_MAX_TIMESLOTS 5
 
 #define PWM_CHANNELS 3
+#define PWM_BURST_LEVELS 16
 
 
 /* structs {{{ */
@@ -112,6 +113,8 @@ volatile struct {
 struct Timeslots pwm;       /* pwm timeslots (the top values and masks for the timer1 interrupt) */
 struct Channel channels[3]; /* current channel records */
 
+uint8_t burst_output_table[PWM_BURST_LEVELS+1]; /* burst output masks */
+
 /* }}} */
 
 
@@ -155,7 +158,7 @@ static inline void init_timer1(void) { /* {{{ */
 /* }}} */
 
 /** update pwm timeslot table */
-inline void update_pwm_timeslots(void) { /* {{{ */
+void update_pwm_timeslots(void) { /* {{{ */
     uint8_t sorted[PWM_CHANNELS] = { 0, 1, 2 };
     uint8_t i, j;
     uint8_t mask = 0;
@@ -181,7 +184,7 @@ inline void update_pwm_timeslots(void) { /* {{{ */
     for (i=0; i < PWM_CHANNELS; i++) {
 
         /* check if a timeslot is needed */
-        if (channels[sorted[i]].brightness > 16) {
+        if (channels[sorted[i]].brightness > 16 && channels[sorted[i]].brightness < 255) {
             /* if the next timeslot will be after the middle of the pwm cycle, insert the middle interrupt */
             if (last_brightness < 181 && channels[sorted[i]].brightness >= 181) {
                 /* middle interrupt: top 64k and mask 0xff */
@@ -233,6 +236,32 @@ inline void update_pwm_timeslots(void) { /* {{{ */
 
 /* }}} */
 
+/** update pwm burst table */
+void update_pwm_burst_table(void) { /* {{{ */
+    uint8_t brightness, channel;
+    uint8_t mask;
+
+    UDR = 'b';
+    while (!(UCSRA & (1<<UDRE)));
+
+    for (brightness=0; brightness <= PWM_BURST_LEVELS; brightness++) {
+        mask = 0;
+        for (channel=0; channel < PWM_CHANNELS; channel++) {
+            if (channels[channel].brightness <= brightness) {
+                mask |= channels[channel].mask;
+            }
+        }
+
+        burst_output_table[brightness] = mask;
+
+        UDR = mask;
+        while (!(UCSRA & (1<<UDRE)));
+    }
+}
+
+
+/* }}} */
+
 /** init pwm */
 static inline void init_pwm(void) { /* {{{ */
     uint8_t i;
@@ -246,9 +275,16 @@ static inline void init_pwm(void) { /* {{{ */
         channels[i].mask = _BV(i);
     }
 
-    channels[0].target_brightness = 192;
-    channels[1].target_brightness = 20;
-    channels[2].target_brightness = 182;
+    //channels[0].target_brightness = 192;
+    //channels[1].target_brightness = 20;
+    //channels[2].target_brightness = 182;
+
+    channels[0].brightness = 0;
+    channels[1].brightness = 5;
+    channels[2].brightness = 0;
+    channels[0].target_brightness=channels[0].brightness;
+    channels[1].target_brightness=channels[1].brightness;
+    channels[2].target_brightness=channels[2].brightness;
 
     update_pwm_timeslots();
 }
@@ -285,18 +321,74 @@ SIGNAL(SIG_OUTPUT_COMPARE1A) { /* {{{ */
 
         if (pwm.next_bitmask == 0) {
             /* first interrupt */
+            uint8_t a, b;
 
-            /* set portb to low, led on */
-            PORTB = 0;
+            /* preload first 2 values */
+            a = burst_output_table[0];
+            b = burst_output_table[1];
 
-            uint8_t i;
+            /* output first value and wait one cycle */
+            PORTB = a;
+            asm("nop" :: );
+            /* output second value and wait 3 cycles, plus 3 cycles */
+            PORTB = b;
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            PORTB = burst_output_table[2]; /* wait 10 */
+        /* signal new cycle to main procedure, costs 5 cycles */
+        flags.new_cycle = 1;
+            asm("nop" :: );
+            asm("nop" :: );
+            PORTB = burst_output_table[3]; /* wait 14 */
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            PORTB = burst_output_table[4]; /* wait 18 */
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            PORTB = burst_output_table[5]; /* wait 22 */
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
+            asm("nop" :: );
 
-            for (i=0; i<PWM_CHANNELS; i++)
-                if (channels[i].brightness < 17)
-                    PORTB |= channels[i].mask;
-
-            /* signal new cycle to main procedure */
-            flags.new_cycle = 1;
         }
 
     } else {
@@ -367,6 +459,7 @@ int main(void) { /* {{{ */
     init_uart();
     init_timer1();
     init_pwm();
+    update_pwm_burst_table();
 
     /* load timer1 initial delay */
     OCR1A = 64000;
