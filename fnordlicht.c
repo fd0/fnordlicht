@@ -87,11 +87,14 @@ struct Channel_t { /* {{{ */
      * the lsb is added to the remainder until an overflow happens */
     uint16_t speed;
 
-    /* flags for this channel, eg channel target reached */
-    uint8_t flags;
-
     /* output mask for switching on the leds for this channel */
     uint8_t mask;
+
+    /* flags for this channel, implemented as a bitvector field */
+    struct {
+        uint8_t target_reached:1; /* this channel reached has recently reached it's desired target brightness */
+    } flags;
+
 };
 
 /* }}} */
@@ -169,7 +172,7 @@ static inline void init_output(void);
 static inline void init_timer1(void);
 static inline void init_pwm(void);
 void update_pwm_timeslots(void);
-inline void do_fading(void);
+inline void update_brightness(void);
 
 
 /** init the hardware uart */
@@ -230,20 +233,10 @@ void init_pwm(void) { /* {{{ */
         channels[i].brightness = 0;
         channels[i].target_brightness = 0;
         channels[i].speed = 0x0100;
-        channels[i].flags = 0;
+        channels[i].flags.target_reached = 0;
         channels[i].remainder = 0;
         channels[i].mask = _BV(i);
     }
-
-    //channels[0].brightness = 10;
-    //channels[1].brightness = 12;
-    //channels[2].brightness = 11;
-    channels[0].brightness = 8;
-    channels[1].brightness = 14;
-    channels[2].brightness = 15;
-    channels[0].target_brightness = channels[0].brightness;
-    channels[1].target_brightness = channels[1].brightness;
-    channels[2].target_brightness = channels[2].brightness;
 
     update_pwm_timeslots();
 }
@@ -330,40 +323,45 @@ void update_pwm_timeslots(void) { /* {{{ */
 /* }}} */
 
 /** fade any channels not already at their target brightness */
-void do_fading(void) { /* {{{ */
+void update_brightness(void) { /* {{{ */
     uint8_t i;
 
     /* iterate over the channels */
     for (i=0; i<PWM_CHANNELS; i++) {
         uint8_t old_brightness;
 
-        /* increase brightness */
-        if (channels[i].brightness < channels[i].target_brightness) {
+        /* fade channel if not already at target brightness, set flag if target reached */
+        if (channels[i].brightness != channels[i].target_brightness) {
             /* safe brightness, for later compare with calculated value */
             old_brightness = channels[i].brightness;
 
-            /* calculate new brightness value, high byte is brightness, low byte is remainder */
-            channels[i].brightness_and_remainder += channels[i].speed;
+            /* increase brightness */
+            if (channels[i].brightness < channels[i].target_brightness) {
+                /* calculate new brightness value, high byte is brightness, low byte is remainder */
+                channels[i].brightness_and_remainder += channels[i].speed;
 
-            /* if new brightness is lower than before or brightness is higher than the target,
-             * just set the target brightness and reset the remainder, since we addedd too much */
-            if (channels[i].brightness < old_brightness || channels[i].brightness > channels[i].target_brightness) {
-                channels[i].brightness = channels[i].target_brightness;
-                channels[i].remainder = 0;
+                /* if new brightness is lower than before or brightness is higher than the target,
+                 * just set the target brightness and reset the remainder, since we addedd too much */
+                if (channels[i].brightness < old_brightness || channels[i].brightness > channels[i].target_brightness) {
+                    channels[i].brightness = channels[i].target_brightness;
+                    channels[i].remainder = 0;
+                }
+
+            /* or decrease brightness */
+            } else if (channels[i].brightness > channels[i].target_brightness) {
+                /* calculate new brightness value, high byte is brightness, low byte is remainder */
+                channels[i].brightness_and_remainder -= channels[i].speed;
+
+                /* if new brightness is higher than before or brightness is lower than the target, just set the target brightness */
+                if (channels[i].brightness > old_brightness || channels[i].brightness < channels[i].target_brightness) {
+                    channels[i].brightness = channels[i].target_brightness;
+                    channels[i].remainder = 0;
+                }
             }
 
-        /* or decrease brightness */
-        } else if (channels[i].brightness > channels[i].target_brightness) {
-            /* safe brightness, for later compare with calculated value */
-            old_brightness = channels[i].brightness;
-
-            /* calculate new brightness value, high byte is brightness, low byte is remainder */
-            channels[i].brightness_and_remainder -= channels[i].speed;
-
-            /* if new brightness is higher than before or brightness is lower than the target, just set the target brightness */
-            if (channels[i].brightness > old_brightness || channels[i].brightness < channels[i].target_brightness) {
-                channels[i].brightness = channels[i].target_brightness;
-                channels[i].remainder = 0;
+            /* if target brightness has been reached, set flag */
+            if (channels[i].brightness == channels[i].target_brightness) {
+                channels[i].flags.target_reached = 1;
             }
         }
     }
@@ -506,6 +504,11 @@ int main(void) {
     init_timer1();
     init_pwm();
 
+    /* some color */
+    channels[0].target_brightness = 200;
+    channels[0].speed = 0x0200;
+    channels[1].target_brightness = 100;
+
     /* enable interrupts globally */
     sei();
 
@@ -513,7 +516,7 @@ int main(void) {
         if (flags.new_cycle) {
             flags.new_cycle = 0;
 
-            do_fading();
+            update_brightness();
         }
 
         if (flags.last_pulse) {
