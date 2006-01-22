@@ -33,8 +33,11 @@ debug: CFLAGS+=-DDEBUG
 debug: fnordlicht.hex
 
 clean:
-	rm -f *.hex *.list *.map *.obj *.cof *.o *.i *.s *.lst *.elf *.lss
+	rm -f *.hex *.list *.map *.obj *.cof *.o *.i *.s *.lst *.elf *.lss tags
 	cd boot/v0_7 && make clean
+
+tags: *.c
+	ctags *.c
 
 install-fnordlicht: prog-serial-fnordlicht
 

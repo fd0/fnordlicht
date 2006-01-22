@@ -57,30 +57,47 @@
 #define UART_UCSRC _BV(URSEL) | _BV(UCSZ0) | _BV(UCSZ1)
 #define UART_UBRR (F_CPU/(UART_BAUDRATE * 16L)-1)
 
-/* possible pwm interrupts in a pwm cycle */
-#define PWM_MAX_TIMESLOTS 5
-
 #define PWM_CHANNELS 3
-#define PWM_BURST_LEVELS 16
+
+/* possible pwm interrupts in a pwm cycle */
+#define PWM_MAX_TIMESLOTS (PWM_CHANNELS+1)
+
+#define FIFO_SIZE 32
 
 
-/* structs {{{ */
-struct Channel {
-    uint8_t brightness;
-    uint8_t target_brightness;
+/* structs */
+
+/* contains all the data for one color channel */
+struct Channel_t { /* {{{ */
     union {
-        uint16_t speed;
+        /* for adding fade-speed to brightness, and save the remainder */
+        uint16_t brightness_and_remainder;
+
+        /* for accessing brightness directly */
         struct {
-            uint8_t speed_l;
-            uint8_t speed_h;
+            uint8_t brightness;
+            uint8_t remainder;
         };
     };
+
+    /* desired brightness for this channel */
+    uint8_t target_brightness;
+
+    /* fade speed, the msb is added directly to brightness,
+     * the lsb is added to the remainder until an overflow happens */
+    uint16_t speed;
+
+    /* flags for this channel, eg channel target reached */
     uint8_t flags;
-    uint8_t remainder;
+
+    /* output mask for switching on the leds for this channel */
     uint8_t mask;
 };
 
-struct Timeslots {
+/* }}} */
+
+/* encapsulates all pwm data including timeslot and output mask array */
+struct Timeslots_t { /* {{{ */
     struct {
         uint8_t mask;
         uint16_t top;
@@ -93,6 +110,15 @@ struct Timeslots {
 };
 
 /* }}} */
+
+/* global flag(=bit) structure */
+struct Flags_t { /* {{{ */
+    uint8_t new_cycle:1;    /* set by pwm interrupt after burst, signals the beginning of a new pwm cycle to the main loop. */
+    uint8_t last_pulse:1;   /* set by pwm interrupt after last interrupt in the current cycle, signals the main loop to rebuild the pwm timslot table */
+};
+
+/* }}} */
+
 
 /* timer top values for 256 brightness levels (stored in flash) {{{ */
 const uint16_t timeslot_table[] PROGMEM = {               \
@@ -131,17 +157,11 @@ const uint16_t timeslot_table[] PROGMEM = {               \
 
 /* }}} */
 
-/* global variables {{{ */
-volatile struct {
-    uint8_t new_cycle:1;    /* set by pwm interrupt after burst, signals the beginning of a new pwm cycle to the main loop. */
-    uint8_t last_pulse:1;   /* set by pwm interrupt after last interrupt in the current cycle, signals the main loop to rebuild the pwm timslot table */
-    uint8_t pwm_overflow:1; /* set for pwm interrupt, when the next interrupt should dcrement TCNT1 */
-} flags = {0, 0, 0};
+/* global variables */
+volatile struct Flags_t flags = {0, 0};
 
-struct Timeslots pwm;       /* pwm timeslots (the top values and masks for the timer1 interrupt) */
-struct Channel channels[3]; /* current channel records */
-
-/* }}} */
+struct Timeslots_t pwm;       /* pwm timeslots (the top values and masks for the timer1 interrupt) */
+struct Channel_t channels[3]; /* current channel records */
 
 /* prototypes */
 static inline void init_uart(void);
@@ -184,15 +204,20 @@ void init_output(void) { /* {{{ */
 
 /** init timer 1 */
 void init_timer1(void) { /* {{{ */
-    /* no prescaler, normal mode */
-    TCCR1B = _BV(CS10);
+    /* no prescaler, CTC mode */
+    TCCR1B = _BV(CS10) | _BV(WGM12);
+    //TCCR1B = _BV(CS12) | _BV(CS10) | _BV(WGM12);
     TCCR1A = 0;
 
-    /* enable timer1 output compare 1a interrupt */
-    TIMSK |= _BV(OCIE1A);
+    /* enable timer1 overflow (=output compare 1a)
+     * and output compare 1b interrupt */
+    TIMSK |= _BV(OCIE1A) | _BV(OCIE1B);
 
-    /* load initial delay */
+    /* set TOP for CTC mode */
     OCR1A = 64000;
+
+    /* load initial delay, trigger an overflow */
+    OCR1B = 65000;
 }
 
 /* }}} */
@@ -209,6 +234,16 @@ void init_pwm(void) { /* {{{ */
         channels[i].remainder = 0;
         channels[i].mask = _BV(i);
     }
+
+    //channels[0].brightness = 10;
+    //channels[1].brightness = 12;
+    //channels[2].brightness = 11;
+    channels[0].brightness = 8;
+    channels[1].brightness = 14;
+    channels[2].brightness = 15;
+    channels[0].target_brightness = channels[0].brightness;
+    channels[1].target_brightness = channels[1].brightness;
+    channels[2].target_brightness = channels[2].brightness;
 
     update_pwm_timeslots();
 }
@@ -245,8 +280,8 @@ void update_pwm_timeslots(void) { /* {{{ */
         if (channels[sorted[i]].brightness > 0 && channels[sorted[i]].brightness < 255) {
             /* if the next timeslot will be after the middle of the pwm cycle, insert the middle interrupt */
             if (last_brightness < 181 && channels[sorted[i]].brightness >= 181) {
-                /* middle interrupt: top 64k and mask 0xff */
-                pwm.slots[j].top = 64000;
+                /* middle interrupt: top 65k and mask 0xff */
+                pwm.slots[j].top = 65000;
                 pwm.slots[j].mask = 0xff;
                 j++;
             }
@@ -272,22 +307,17 @@ void update_pwm_timeslots(void) { /* {{{ */
 
     /* if all interrupts happen before the middle interrupt, insert it here */
     if (last_brightness < 181) {
-        /* middle interrupt: top 64k and mask 0xff */
-        pwm.slots[j].top = 64000;
+        /* middle interrupt: top 65k and mask 0xff */
+        pwm.slots[j].top = 65000;
         pwm.slots[j].mask = 0xff;
         j++;
     }
-
-    /* insert last interrupt: new start */
-    pwm.slots[j].top = 64000;
-    pwm.slots[j].mask = 0;
-    j++;
 
     /* reset pwm structure */
     pwm.index = 0;
     pwm.count = j;
 
-    /* next interrupt is the first in a cycle, so set the bitmask to 0, so that the counter is reset */
+    /* next interrupt is the first in a cycle, so set the bitmask to 0 */
     pwm.next_bitmask = 0;
 
     /* calculate initial bitmask */
@@ -295,9 +325,6 @@ void update_pwm_timeslots(void) { /* {{{ */
     for (i=0; i < PWM_CHANNELS; i++)
         if (channels[i].brightness > 0)
             pwm.initial_bitmask &= ~channels[i].mask;
-
-    /* next interrupt is an overflow interrupt */
-    flags.pwm_overflow = 1;
 }
 
 /* }}} */
@@ -347,76 +374,69 @@ void do_fading(void) { /* {{{ */
 
 /* }}} */
 
-
-/** timer1 output compare a interrupt */
-SIGNAL(SIG_OUTPUT_COMPARE1A) { /* {{{ */
-    /* check if we have an overflow interrupt */
-    if (flags.pwm_overflow) {
-        /* decrement counter register by 64k and 6,
-         * because these instructions cost 6 cycles */
-        TCNT1 -= 64000-6;
-
-        if (pwm.next_bitmask == 0) {
-            /* first interrupt */
-
-            /* output initial values */
-            PORTB = pwm.initial_bitmask;
-
-            /* signal new cycle to main procedure */
-            flags.new_cycle = 1;
-        } else {
-            /* middle, nothing to do here so far */
-        }
-
-        /* reset overflow flag */
-        flags.pwm_overflow = 0;
+/** prepare next timeslot */
+static inline void prepare_next_timeslot(void) { /* {{{ */
+    /* check if this is the last interrupt */
+    if (pwm.index >= pwm.count) {
+        /* select first timeslot and trigger timeslot rebuild */
+        pwm.index = 0;
+        flags.last_pulse = 1;
+        OCR1B = 65000;
     } else {
-        /* normal interrupt here */
-
-        PORTB |= pwm.next_bitmask;
-    }
-
-    /**
-     * prepare next timeslot
-     */
-
-    /* if next timeslot would happen too fast or has already happened, just
-     * spinlock and call interrupt handler again */
-    while (pwm.slots[pwm.index].top - TCNT1 < 100 || pwm.slots[pwm.index].top <
-            TCNT1)
-    {
-        /* spin until timer interrupt is near enough */
-        while (pwm.slots[pwm.index].top > TCNT1) {
-            //asm volatile ("nop");
-        }
-
-        /* output value */
-        PORTB |= pwm.slots[pwm.index].mask;
-
-        /* we can safely just increment the index, as the will always be at
-         * least one interrupt after this (middle) */
-        pwm.index++;
-
-    }
-
-    /* if we have enough time, just set new top and let the timer do all the work */
-    {
         /* load new top and bitmask */
-        OCR1A = pwm.slots[pwm.index].top;
+        OCR1B = pwm.slots[pwm.index].top;
         pwm.next_bitmask = pwm.slots[pwm.index].mask;
 
-        /* if next top is 64000, we have an overflow timeslot */
-        if (OCR1A == 64000)
-            flags.pwm_overflow = 1;
-
-        /* select next timeslot and trigger timeslot table rebuild if necessary */
+        /* select next timeslot */
         pwm.index++;
-
-        if (pwm.index == pwm.count) {
-            pwm.index = 0;
-            flags.last_pulse = 1;
-        }
     }
+
+    /* clear compare interrupts which might have in the meantime happened */
+    //TIFR |= _BV(OCF1B);
+}
+
+/* }}} */
+
+/** timer1 overflow (=output compare a) interrupt */
+SIGNAL(SIG_OUTPUT_COMPARE1A) { /* {{{ */
+    /* decide if this interrupt is the beginning of a pwm cycle */
+    if (pwm.next_bitmask == 0) {
+        /* output initial values */
+        PORTB = pwm.initial_bitmask;
+
+        /* signal new cycle to main procedure */
+        flags.new_cycle = 1;
+
+        /* if next timeslot would happen too fast or has already happened, just spinlock */
+        while (TCNT1 + 500 > pwm.slots[pwm.index].top)
+        {
+            /* spin until timer interrupt is near enough */
+            while (pwm.slots[pwm.index].top > TCNT1) {
+                asm volatile ("nop");
+            }
+
+            /* output value */
+            PORTB |= pwm.slots[pwm.index].mask;
+
+            /* we can safely increment index here, since we are in the first timeslot and there
+             * will always be at least one timeslot after this (middle) */
+            pwm.index++;
+        }
+
+    }
+
+    /* prepare the next timeslot */
+    prepare_next_timeslot();
+}
+/* }}} */
+
+/** timer1 output compare b interrupt */
+SIGNAL(SIG_OUTPUT_COMPARE1B) { /* {{{ */
+    /* normal interrupt, output pre-calculated bitmask */
+    PORTB |= pwm.next_bitmask;
+
+    /* and calculate the next timeslot */
+    prepare_next_timeslot();
 }
 /* }}} */
 
@@ -469,27 +489,25 @@ SIGNAL(SIG_UART_RECV) { /* {{{ */
             UDR = LOW(channels[0].speed);
             while (!(UCSRA & (1<<UDRE)));
             break;
+        case 'b':
+            UDR = channels[0].brightness;
+            while (!(UCSRA & (1<<UDRE)));
+            UDR = channels[1].brightness;
+            while (!(UCSRA & (1<<UDRE)));
+            UDR = channels[2].brightness;
+            while (!(UCSRA & (1<<UDRE)));
+            break;
     }
 }
 /* }}} */
 
 /** main function
  */
-int main(void) { /* {{{ */
+int main(void) {
     init_output();
     init_uart();
     init_timer1();
     init_pwm();
-
-    channels[1].brightness = 1;
-    channels[1].target_brightness = 255;
-    channels[1].speed = 0x0400;
-
-#if 0
-    channels[1].target_brightness = 20;
-    channels[2].target_brightness = 182;
-#endif
-
 
     /* enable interrupts globally */
     sei();
@@ -499,15 +517,25 @@ int main(void) { /* {{{ */
             flags.new_cycle = 0;
 
             do_fading();
+
+            /*
+            UDR = channels[0].brightness;
+            while (!(UCSRA & (1<<UDRE)));
+            UDR = channels[1].brightness;
+            while (!(UCSRA & (1<<UDRE)));
+            */
+
         }
 
         if (flags.last_pulse) {
             flags.last_pulse = 0;
 
             update_pwm_timeslots();
+
+            UDR = pwm.count;
+            while (!(UCSRA & (1<<UDRE)));
         }
     }
 }
-/* }}} */
 
 
