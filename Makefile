@@ -65,7 +65,7 @@ bootloader.hex:
 	cd boot/v0_7 && make clean && make
 	cp boot/v0_7/main.hex bootloader.hex
 
-%.o: %.c
+%.o: %.c tags
 	${CC} -Wa,-adhlns=$(basename $@).lst ${CFLAGS} -c $<
 
 %.elf: %.o

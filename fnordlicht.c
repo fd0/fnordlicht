@@ -75,8 +75,8 @@ struct Channel_t { /* {{{ */
 
         /* for accessing brightness directly */
         struct {
-            uint8_t brightness;
             uint8_t remainder;
+            uint8_t brightness;
         };
     };
 
@@ -332,41 +332,38 @@ void update_pwm_timeslots(void) { /* {{{ */
 /** fade any channels not already at their target brightness */
 void do_fading(void) { /* {{{ */
     uint8_t i;
-    uint16_t value;
 
     /* iterate over the channels */
     for (i=0; i<PWM_CHANNELS; i++) {
+        uint8_t old_brightness;
 
         /* increase brightness */
         if (channels[i].brightness < channels[i].target_brightness) {
+            /* safe brightness, for later compare with calculated value */
+            old_brightness = channels[i].brightness;
+
             /* calculate new brightness value, high byte is brightness, low byte is remainder */
-            value = (uint16_t)channels[i].remainder + (uint16_t)(channels[i].brightness << 8) + channels[i].speed;
+            channels[i].brightness_and_remainder += channels[i].speed;
 
-            /* if new brightness is lower than before or brightness is higher than the target, just set the target brightness */
-            if (HIGH(value) < channels[i].brightness || HIGH(value) > channels[i].target_brightness) {
+            /* if new brightness is lower than before or brightness is higher than the target,
+             * just set the target brightness and reset the remainder, since we addedd too much */
+            if (channels[i].brightness < old_brightness || channels[i].brightness > channels[i].target_brightness) {
                 channels[i].brightness = channels[i].target_brightness;
-            } else {
-                /* set new brightness */
-                channels[i].brightness = HIGH(value);
-
-                /* save remainder */
-                channels[i].remainder = LOW(value);
+                channels[i].remainder = 0;
             }
 
         /* or decrease brightness */
         } else if (channels[i].brightness > channels[i].target_brightness) {
+            /* safe brightness, for later compare with calculated value */
+            old_brightness = channels[i].brightness;
+
             /* calculate new brightness value, high byte is brightness, low byte is remainder */
-            value = (uint16_t)channels[i].remainder + (uint16_t)(channels[i].brightness << 8) - channels[i].speed;
+            channels[i].brightness_and_remainder -= channels[i].speed;
 
             /* if new brightness is higher than before or brightness is lower than the target, just set the target brightness */
-            if (HIGH(value) > channels[i].brightness || HIGH(value) < channels[i].target_brightness) {
+            if (channels[i].brightness > old_brightness || channels[i].brightness < channels[i].target_brightness) {
                 channels[i].brightness = channels[i].target_brightness;
-            } else {
-                /* set new brightness */
-                channels[i].brightness = HIGH(value);
-
-                /* save remainder */
-                channels[i].remainder = LOW(value);
+                channels[i].remainder = 0;
             }
         }
     }
@@ -517,23 +514,12 @@ int main(void) {
             flags.new_cycle = 0;
 
             do_fading();
-
-            /*
-            UDR = channels[0].brightness;
-            while (!(UCSRA & (1<<UDRE)));
-            UDR = channels[1].brightness;
-            while (!(UCSRA & (1<<UDRE)));
-            */
-
         }
 
         if (flags.last_pulse) {
             flags.last_pulse = 0;
 
             update_pwm_timeslots();
-
-            UDR = pwm.count;
-            while (!(UCSRA & (1<<UDRE)));
         }
     }
 }
