@@ -48,6 +48,9 @@
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 
+#include "common.h"
+#include "static_scripts.h"
+
 /* macros for extracting low and high byte */
 #define LOW(x) (uint8_t)(0x00ff & x)
 #define HIGH(x) (uint8_t)((0xff00 & x) >> 8)
@@ -56,8 +59,6 @@
 #define UART_BAUDRATE 19200
 #define UART_UCSRC _BV(URSEL) | _BV(UCSZ0) | _BV(UCSZ1)
 #define UART_UBRR (F_CPU/(UART_BAUDRATE * 16L)-1)
-
-#define PWM_CHANNELS 3
 
 /* possible pwm interrupts in a pwm cycle */
 #define PWM_MAX_TIMESLOTS (PWM_CHANNELS+1)
@@ -392,6 +393,9 @@ static inline void prepare_next_timeslot(void) { /* {{{ */
 
 /* }}} */
 
+
+/** interrupts*/
+
 /** timer1 overflow (=output compare a) interrupt */
 SIGNAL(SIG_OUTPUT_COMPARE1A) { /* {{{ */
     /* decide if this interrupt is the beginning of a pwm cycle */
@@ -496,6 +500,7 @@ SIGNAL(SIG_UART_RECV) { /* {{{ */
 }
 /* }}} */
 
+
 /** main function
  */
 int main(void) {
@@ -503,6 +508,7 @@ int main(void) {
     init_uart();
     init_timer1();
     init_pwm();
+    init_script_threads();
 
     /* some color */
     channels[0].target_brightness = 200;
@@ -513,10 +519,13 @@ int main(void) {
     sei();
 
     while (1) {
+        /* at the beginning of each pwm cycle, call the fading engine and
+         * execute all script threads */
         if (flags.new_cycle) {
             flags.new_cycle = 0;
 
             update_brightness();
+            execute_script_threads();
         }
 
         if (flags.last_pulse) {

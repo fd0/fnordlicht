@@ -68,6 +68,9 @@ bootloader.hex:
 %.o: %.c tags
 	${CC} -Wa,-adhlns=$(basename $@).lst ${CFLAGS} -c $<
 
+fnordlicht.elf: static_scripts.o fnordlicht.o
+	${CC} ${CFLAGS} -o $@ static_scripts.o fnordlicht.o
+
 %.elf: %.o
 	${CC} ${CFLAGS} -o $@ $<
 
