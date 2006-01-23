@@ -31,7 +31,7 @@
 #include "static_scripts.h"
 
 /* init all structures in the global array 'script_threads' */
-void init_script_threads(void) { /* {{{ */
+inline void init_script_threads(void) { /* {{{ */
     uint8_t i;
 
     /* iterate over all threads */
@@ -49,7 +49,7 @@ void init_script_threads(void) { /* {{{ */
 /* }}} */
 
 /* iterate over all threads and execute each, if enabled */
-void execute_script_threads(void) { /* {{{ */
+inline void execute_script_threads(void) { /* {{{ */
     uint8_t i;
 
     /* iterate over all threads */

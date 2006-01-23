@@ -62,7 +62,7 @@ struct Thread_t { /* {{{ */
 struct Thread_t script_threads[MAX_THREADS];
 
 /* prototypes */
-inline void init_script_threads(void);
-inline void execute_script_threads(void);
+void init_script_threads(void);
+void execute_script_threads(void);
 
 #endif
