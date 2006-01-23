@@ -32,9 +32,10 @@
 #ifndef fnordlicht_thread_h
 #define fnordlicht_thread_h
 
+#include "config.h"
+#include "common.h"
 #include <avr/io.h>
 #include <stdint.h>
-#include "common.h"
 
 #define MAX_THREAD_STACK_DEPTH 3
 #define MAX_THREADS 3
@@ -47,19 +48,19 @@ struct script_handler_t { /* {{{ */
 }; /* }}} */
 
 struct thread_t { /* {{{ */
-    struct ScriptHandler_t handler;
+    struct script_handler_t handler;
 
     struct {
         uint8_t channel_target_reached:PWM_CHANNELS;    /* these channels reached their target brightness value lately */
         uint8_t disabled;                               /* disable execution of this thread */
     } flags;
 
-    struct ScriptHandler_t stack[MAX_THREAD_STACK_DEPTH];
+    struct script_handler_t stack[MAX_THREAD_STACK_DEPTH];
     uint8_t stack_offset;
 }; /* }}} */
 
 /* global variables */
-struct Thread_t script_threads[MAX_THREADS];
+struct thread_t script_threads[MAX_THREADS];
 
 /* prototypes */
 void init_script_threads(void);
