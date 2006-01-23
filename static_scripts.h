@@ -2,7 +2,7 @@
  vim:fdm=marker ts=4 et ai
  */
 
-/*
+/* {{{
  *         fnordlicht firmware next generation
  *
  *    for additional information please
@@ -26,7 +26,7 @@
  *
  * For more information on the GPL, please go to:
  * http://www.gnu.org/copyleft/gpl.html
- */
+ }}} */
 
 
 #ifndef fnordlicht_thread_h
@@ -41,12 +41,12 @@
 
 /* structs */
 
-struct ScriptHandler_t { /* {{{ */
+struct script_handler_t { /* {{{ */
     uint8_t (*execute)(uint8_t thread_table_offset);
     uint16_t position;
 }; /* }}} */
 
-struct Thread_t { /* {{{ */
+struct thread_t { /* {{{ */
     struct ScriptHandler_t handler;
 
     struct {
