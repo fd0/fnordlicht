@@ -57,7 +57,7 @@ inline void execute_script_threads(void) { /* {{{ */
 
         /* execute enabled threads */
         if (!script_threads[i].flags.disabled) {
-            script_threads[i].handler.execute(i);
+            script_threads[i].handler.execute(&script_threads[i].handler.position);
         }
     }
 }

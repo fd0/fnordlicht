@@ -43,7 +43,7 @@
 /* structs */
 
 struct script_handler_t { /* {{{ */
-    uint8_t (*execute)(uint8_t thread_table_offset);
+    uint8_t (*execute)(uint16_t *position);
     uint16_t position;
 }; /* }}} */
 
@@ -52,7 +52,7 @@ struct thread_t { /* {{{ */
 
     struct {
         uint8_t channel_target_reached:PWM_CHANNELS;    /* these channels reached their target brightness value lately */
-        uint8_t disabled;                               /* disable execution of this thread */
+        uint8_t disabled:1;                             /* disable execution of this thread */
     } flags;
 
     struct script_handler_t stack[MAX_THREAD_STACK_DEPTH];
