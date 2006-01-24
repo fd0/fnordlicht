@@ -56,5 +56,5 @@ program-serial-%: %.hex
 %.hex: %
 	$(OBJCOPY) -O ihex -R .eeprom $< $@
 
-%.lst: %
+%.lss: %
 	$(OBJDUMP) -h -S $< > $@
