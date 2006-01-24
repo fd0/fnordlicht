@@ -1,8 +1,5 @@
-/*
- vim:fdm=marker ts=4 et ai
- */
-
-/*
+/* vim:fdm=marker ts=4 et ai
+ * {{{
  *         fnordlicht firmware next generation
  *
  *    for additional information please
@@ -26,7 +23,7 @@
  *
  * For more information on the GPL, please go to:
  * http://www.gnu.org/copyleft/gpl.html
- */
+ }}} */
 
 
 #ifndef COMMON_H

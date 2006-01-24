@@ -1,8 +1,5 @@
-/*
- vim:fdm=marker ts=4 et ai
- */
-
-/* {{{
+/* vim:fdm=marker ts=4 et ai
+ * {{{
  *         fnordlicht firmware next generation
  *
  *    for additional information please
