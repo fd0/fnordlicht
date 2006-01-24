@@ -4,7 +4,7 @@ TARGET=fnordlicht
 OBJECTS += $(patsubst %.c,%.o,$(shell echo *.c))
 HEADERS += $(shell echo *.h)
 
-all: $(TARGET).hex $(TARGET).lst
+all: $(TARGET).hex $(TARGET).lss
 
 $(TARGET): $(OBJECTS) $(TARGET).o
 
