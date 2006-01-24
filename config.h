@@ -41,3 +41,9 @@
 
 #define UART_FIFO_SIZE 32
 #define UART_BAUDRATE 19200
+
+
+/* color <-> channel assignment */
+#define CHANNEL_RED     1
+#define CHANNEL_GREEN   2
+#define CHNANEL_BLUE    3

@@ -65,9 +65,9 @@ int main(void) {
     init_script_threads();
 
     /* some color */
-    global_pwm.channels[0].target_brightness = 200;
-    global_pwm.channels[0].speed = 0x0200;
-    global_pwm.channels[1].target_brightness = 100;
+    //global_pwm.channels[0].target_brightness = 200;
+    //global_pwm.channels[0].speed = 0x0200;
+    //global_pwm.channels[1].target_brightness = 100;
 
     /* enable interrupts globally */
     sei();

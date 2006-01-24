@@ -36,11 +36,53 @@
 #define MAX_THREAD_STACK_DEPTH 3
 #define MAX_THREADS 3
 
-/* structs */
+/* opcodes */
+/* {{{ */
+#define OP_NOP              0x00
+#define OP_FADE_CHANNEL     0x10
+#define OP_FADE_CHANNELS    0x20
+#define OP_JUMP             0x30
+#define OP_SET_CHANNEL      0x40
+#define OP_SLEEP            0x50
+#define OP_WAIT             0x60
+#define OP_CLEAR            0x70
+#define OP_STOP             0x80
+/* }}} */
 
+/* opcode macros */
+/* {{{ */
+#define MACRO_NOP() \
+    OP_NOP, 0, 0, 0
+
+#define MACRO_FADE_CHANNEL(channel, target_brightness, speed) \
+    (OP_FADE_CHANNEL | channel), target_brightness, LOW(speed), HIGH(speed)
+
+#define MACRO_FADE_CHANNELS(brightness1, brightness2, brightness3) \
+    OP_FADE_CHANNELS, brightness1, brightness2, brightness3
+
+#define MACRO_JUMP(offset) \
+    OP_JUMP, offset, 0, 0
+
+#define MACRO_SET_CHANNEL(channel, target_brightness) \
+    OP_SET_CHANNEL, channel, target_brightness
+
+#define MACRO_SLEEP(delay_cycles) \
+    OP_SLEEP, LOW(delay_cycles), HIGH(delay_cycles)
+
+#define MACRO_WAIT(eventmask) \
+    OP_WAIT, eventmask, 0, 0
+
+#define MACRO_CLEAR() \
+    OP_CLEAR, 0, 0, 0
+
+#define MACRO_STOP() \
+    OP_STOP, 0, 0, 0
+/* }}} */
+
+/* structs */
 struct script_handler_t { /* {{{ */
-    uint8_t (*execute)(uint16_t *position);
-    uint16_t position;
+    void (*execute)(uint16_t volatile *script_position);
+    volatile uint16_t position;
 }; /* }}} */
 
 struct thread_t { /* {{{ */
@@ -51,8 +93,8 @@ struct thread_t { /* {{{ */
         uint8_t disabled:1;                             /* disable execution of this thread */
     } flags;
 
-    struct script_handler_t stack[MAX_THREAD_STACK_DEPTH];
-    uint8_t stack_offset;
+    struct script_handler_t handler_stack[MAX_THREAD_STACK_DEPTH];
+    uint8_t handler_stack_offset;
 }; /* }}} */
 
 /* global variables */
@@ -61,5 +103,9 @@ struct thread_t script_threads[MAX_THREADS];
 /* prototypes */
 void init_script_threads(void);
 void execute_script_threads(void);
+
+/* memory handlers */
+void memory_handler_flash(uint16_t volatile *script_position);
+
 
 #endif
