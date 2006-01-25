@@ -39,6 +39,9 @@
 #include "uart.h"
 #include "static_scripts.h"
 
+/* static scripts */
+#include "testscript.h"
+
 /* structs */
 volatile struct global_t global = {{0, 0}};
 
@@ -64,10 +67,14 @@ int main(void) {
     init_pwm();
     init_script_threads();
 
-    /* some color */
-    //global_pwm.channels[0].target_brightness = 200;
-    //global_pwm.channels[0].speed = 0x0200;
-    //global_pwm.channels[1].target_brightness = 100;
+    /* start the example scripts */
+    script_threads[0].handler.execute = &memory_handler_flash;
+    script_threads[0].handler.position = (uint16_t) &testscript_flash1;
+    script_threads[0].flags.disabled = 0;
+
+    script_threads[1].handler.execute = &memory_handler_flash;
+    script_threads[1].handler.position = (uint16_t) &testscript_flash2;
+    script_threads[1].flags.disabled = 0;
 
     /* enable interrupts globally */
     sei();
