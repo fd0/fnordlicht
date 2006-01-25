@@ -45,6 +45,17 @@ interactive-isp:
 interactive-serial:
 	$(AVRDUDE) -p m8 -c $(SERIAL_PROG) -P $(SERIAL_DEV) -t
 
+fuse:
+	$(AVRDUDE) -p m8 -c $(ISP_PROG) -P $(ISP_DEV) -U hfuse:w:0xD0:m
+	$(AVRDUDE) -p m8 -c $(ISP_PROG) -P $(ISP_DEV) -U lfuse:w:0xE0:m
+
+install-bootloader: bootloader.hex program-isp-bootloader
+
+bootloader.hex:
+	cd boot/v0_7 && make
+	cp boot/v0_7/main.hex bootloader.hex
+
+
 .PHONY: all clean interactive-isp interactive-serial
 
 program-isp-%: %.hex
