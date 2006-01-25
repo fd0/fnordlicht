@@ -37,7 +37,7 @@ endif
 all:
 
 clean:
-	$(RM) *.hex *.o *.lst
+	$(RM) *.hex *.o *.lst *.lss
 
 interactive-isp:
 	$(AVRDUDE) -p m8 -c $(ISP_PROG) -P $(ISP_DEV) -t
