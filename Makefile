@@ -16,3 +16,5 @@ clean: clean-$(TARGET)
 
 clean-$(TARGET):
 	$(RM) $(TARGET) $(OBJECTS)
+
+bootstrap: fuse install-bootloader install
