@@ -145,6 +145,40 @@ void memory_handler_flash(struct thread_t *current_thread)
 }
 /* }}} */
 
+void memory_handler_eeprom(struct thread_t *current_thread)
+/* {{{ */ {
+    uint8_t opcode;
+    uint8_t parameters[4];
+    uint8_t i;
+
+    while (1) {
+        /* read opcode and parameters and call the appropiate opcode processing function */
+        opcode = eeprom_read_byte((uint8_t *)(current_thread->handler.position)++);
+
+        /* safe flags as first parameter */
+        parameters[0] = (opcode & 0x0f);
+
+        /* extract real opcode */
+        opcode >>= 4;
+
+        /* load other parameters */
+        for (i=1; i<4; i++) {
+            parameters[i] = eeprom_read_byte((uint8_t *)(current_thread->handler.position)++);
+        }
+
+        /* call opcode handler */
+        i = (opcode_lookup_table[opcode])(parameters, current_thread);
+
+        if (i == OP_RETURN_STOP) {
+            (*current_thread).flags.disabled = 1;
+            break;
+        } else if (i == OP_RETURN_BREAK) {
+            break;
+        }
+    }
+}
+/* }}} */
+
 /* other (module-local) handlers */
 void sleep_handler(struct thread_t *current_thread)
 /* {{{ */ {

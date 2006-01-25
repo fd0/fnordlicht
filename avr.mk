@@ -37,7 +37,7 @@ endif
 all:
 
 clean:
-	$(RM) *.hex *.o *.lst *.lss
+	$(RM) *.hex *.eep.hex *.o *.lst *.lss
 
 interactive-isp:
 	$(AVRDUDE) -p m8 -c $(ISP_PROG) -P $(ISP_DEV) -t
@@ -50,11 +50,20 @@ interactive-serial:
 program-isp-%: %.hex
 	$(AVRDUDE) -p m8 -c $(ISP_PROG) -P $(ISP_DEV) -U f:w:$<
 
+program-isp-eeprom-%: %.eep.hex
+	$(AVRDUDE) -p m8 -c $(ISP_PROG) -P $(ISP_DEV) -U e:w:$<
+
 program-serial-%: %.hex
 	$(AVRDUDE) -p m8 -c $(SERIAL_PROG) -P $(SERIAL_DEV) -U f:w:$<
 
+program-serial-eeprom-%: %.eep.hex
+	$(AVRDUDE) -p m8 -c $(SERIAL_PROG) -P $(SERIAL_DEV) -U e:w:$<
+
 %.hex: %
 	$(OBJCOPY) -O ihex -R .eeprom $< $@
+
+%.eep.hex: %
+	$(OBJCOPY) --set-section-flags=.eeprom="alloc,load" --change-section-lma .eeprom=0 -O ihex -j .eeprom $< $@
 
 %.lss: %
 	$(OBJDUMP) -h -S $< > $@
