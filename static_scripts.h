@@ -32,6 +32,7 @@
 #include "common.h"
 #include <avr/io.h>
 #include <stdint.h>
+#include <avr/eeprom.h>
 
 #define MAX_THREAD_STACK_DEPTH 3
 #define MAX_THREADS 3
@@ -118,6 +119,7 @@ void execute_script_threads(void);
 
 /* memory handlers */
 void memory_handler_flash(struct thread_t *current_thread);
+void memory_handler_eeprom(struct thread_t *current_thread);
 
 
 #endif
