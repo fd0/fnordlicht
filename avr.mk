@@ -27,7 +27,7 @@ ifneq ($(DEBUG),)
 	CFLAGS += -Wall -W -Wchar-subscripts -Wmissing-prototypes
 	CFLAGS += -Wmissing-declarations -Wredundant-decls
 	CFLAGS += -Wstrict-prototypes -Wshadow -Wbad-function-cast
-	CFLAGS += -Winline -Wpointer-arith -Wsign-compare -Werror
+	CFLAGS += -Winline -Wpointer-arith -Wsign-compare
 	CFLAGS += -Wunreachable-code -Wdisabled-optimization
 	CFLAGS += -Wcast-align -Wwrite-strings -Wnested-externs -Wundef
 	CFLAGS += -Wa,-adhlns=$(basename $@).lst
