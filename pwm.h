@@ -51,7 +51,16 @@ struct channel_t
 
     /* fade speed, the msb is added directly to brightness,
      * the lsb is added to the remainder until an overflow happens */
-    uint16_t speed;
+    union {
+        /* for accessing speed as an uint16_t */
+        uint16_t speed;
+
+        /* for accessing lsb und msb directly */
+        struct {
+            uint8_t speed_l;
+            uint8_t speed_h;
+        };
+    };
 
     /* output mask for switching on the leds for this channel */
     uint8_t mask;

@@ -44,6 +44,6 @@
 
 
 /* color <-> channel assignment */
-#define CHANNEL_RED     1
-#define CHANNEL_GREEN   2
-#define CHNANEL_BLUE    3
+#define CHANNEL_RED     0
+#define CHANNEL_GREEN   1
+#define CHANNEL_BLUE    2

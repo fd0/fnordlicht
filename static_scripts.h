@@ -64,10 +64,10 @@
     OP_JUMP, offset, 0, 0
 
 #define MACRO_SET_CHANNEL(channel, target_brightness) \
-    OP_SET_CHANNEL, channel, target_brightness
+    OP_SET_CHANNEL, channel, target_brightness, 0
 
 #define MACRO_SLEEP(delay_cycles) \
-    OP_SLEEP, LOW(delay_cycles), HIGH(delay_cycles)
+    OP_SLEEP, LOW(delay_cycles), HIGH(delay_cycles), 0
 
 #define MACRO_WAIT(eventmask) \
     OP_WAIT, eventmask, 0, 0
@@ -79,13 +79,25 @@
     OP_STOP, 0, 0, 0
 /* }}} */
 
+/* opcode function return values */
+/* {{{ */
+#define OP_RETURN_OK        0   /* do nothing */
+#define OP_RETURN_BREAK     1   /* execution has been completed for this cycle, jump to next thread */
+#define OP_RETURN_STOP      2   /* disable this script */
+/* }}} */
+
+/* workaround prototype for handler 'execute' function definition */
+struct thread_t;
+
 /* structs */
-struct script_handler_t { /* {{{ */
-    void (*execute)(uint16_t volatile *script_position);
-    volatile uint16_t position;
+struct script_handler_t
+/* {{{ */ {
+    void (*execute)(struct thread_t *current_thread);
+    uint16_t position;
 }; /* }}} */
 
-struct thread_t { /* {{{ */
+struct thread_t
+/* {{{ */ {
     struct script_handler_t handler;
 
     struct {
@@ -105,7 +117,7 @@ void init_script_threads(void);
 void execute_script_threads(void);
 
 /* memory handlers */
-void memory_handler_flash(uint16_t volatile *script_position);
+void memory_handler_flash(struct thread_t *current_thread);
 
 
 #endif
