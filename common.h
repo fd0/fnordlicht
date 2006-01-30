@@ -30,6 +30,7 @@
 #define COMMON_H
 
 #define PWM_CHANNELS 3
+
 /* macros for extracting low and high byte */
 #define LOW(x) (uint8_t)(0x00ff & (x))
 #define HIGH(x) (uint8_t)((0xff00 & (x)) >> 8)

@@ -33,11 +33,11 @@
 
 #include "common.h"
 #include "pwm.h"
+#include "fifo.h"
 #include "uart.h"
 
-/* define uart baud rate (19200) and mode (8N1) */
-#define UART_UCSRC _BV(URSEL) | _BV(UCSZ0) | _BV(UCSZ1)
-#define UART_UBRR (F_CPU/(UART_BAUDRATE * 16L)-1)
+/* global variables */
+volatile struct global_uart_t global_uart;
 
 /** init the hardware uart */
 void init_uart(void)
@@ -52,11 +52,16 @@ void init_uart(void)
     /* enable transmitter, receiver and receiver complete interrupt */
     UCSRB = _BV(TXEN) | _BV(RXEN) | _BV(RXCIE);
 
+    /* init fifos */
+    fifo_init(&(global_uart.rx_fifo));
+    fifo_init(&global_uart.tx_fifo);
+
     /* send boot message */
-    UDR = 'B';
+    //UDR = 'B';
+    fifo_store(&global_uart.tx_fifo, 'B');
 
     /* wait until boot message has been sent over the wire */
-    while (!(UCSRA & (1<<UDRE)));
+    //while (!(UCSRA & (1<<UDRE)));
 } /* }}} */
 
 /** interrupts*/
@@ -64,8 +69,30 @@ void init_uart(void)
 /** uart receive interrupt */
 SIGNAL(SIG_UART_RECV)
 /*{{{*/ {
-    uint8_t data = UDR;
 
+    /* store received data */
+    fifo_store(&global_uart.tx_fifo, UDR);
+
+} /*}}}*/
+
+/** uart data register empty interrupt */
+SIGNAL(SIG_UART_DATA)
+/*{{{*/ {
+
+    /* load next byte to transfer */
+    UDR = fifo_load(&global_uart.tx_fifo);
+
+    /* check if this interrupt is still needed */
+    if ( (global_uart.tx_fifo.front - global_uart.tx_fifo.back) == 0) {
+        /* disable this interrupt */
+        UCSRB &= ~_BV(UDRIE);
+    }
+
+
+} /*}}}*/
+
+
+/*
     switch (data) {
         case '1':
             global_pwm.channels[0].target_brightness-=1;
@@ -120,4 +147,4 @@ SIGNAL(SIG_UART_RECV)
             while (!(UCSRA & _BV(UDRE)));
             break;
     }
-} /*}}}*/
+*/

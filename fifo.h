@@ -6,7 +6,6 @@
  *    see http://koeln.ccc.de/prozesse/running/fnordlicht
  *
  * (c) by Alexander Neumann <alexander@bumpern.de>
- *     Lars Noschinski <lars@public.noschinski.de>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -26,27 +25,35 @@
  }}} */
 
 
-#ifndef UART_H
-#define UART_H
+#ifndef FIFO_H
+#define FIFO_H
 
-#include "fifo.h"
+#include "config.h"
 
+#include <stdint.h>
+#include <avr/interrupt.h>
 
-/* define uart baud rate (19200) and mode (8N1) */
-#define UART_UCSRC _BV(URSEL) | _BV(UCSZ0) | _BV(UCSZ1)
-#define UART_UBRR (F_CPU/(UART_BAUDRATE * 16L)-1)
+#ifndef UART_FIFO_SIZE
+#error UART_FIFO_SIZE is not defined
+#endif
 
+#if (UART_FIFO_SIZE & (UART_FIFO_SIZE-1))
+#error UART_FIFO_SIZE is not a power of 2!
+#endif
 
-/* structs */
-struct global_uart_t {
-    struct fifo_t rx_fifo;
-    struct fifo_t tx_fifo;
+/* structures */
+
+/* capacity is UART_FIFO_SIZE-1 */
+struct fifo_t {
+    uint8_t buffer[UART_FIFO_SIZE];
+    uint8_t front;
+    uint8_t back;
 };
 
-/* global variables */
-extern volatile struct global_uart_t global_uart;
-
 /* prototypes */
-void init_uart(void);
+void fifo_init(struct fifo_t *fifo);
+void fifo_store(struct fifo_t *fifo, uint8_t data);
+uint8_t fifo_load(struct fifo_t *fifo);
+uint8_t fifo_fill(struct fifo_t *fifo);
 
 #endif

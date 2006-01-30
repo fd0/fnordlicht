@@ -28,7 +28,8 @@ ifneq ($(DEBUG),)
 	CFLAGS += -Wmissing-declarations -Wredundant-decls
 	CFLAGS += -Wstrict-prototypes -Wshadow -Wbad-function-cast
 	CFLAGS += -Winline -Wpointer-arith -Wsign-compare
-	CFLAGS += -Wunreachable-code -Wdisabled-optimization -Werror
+	#CFLAGS += -Wunreachable-code -Wdisabled-optimization -Werror
+	CFLAGS += -Wunreachable-code -Wdisabled-optimization
 	CFLAGS += -Wcast-align -Wwrite-strings -Wnested-externs -Wundef
 	CFLAGS += -Wa,-adhlns=$(basename $@).lst
 	CFLAGS += -DDEBUG
@@ -44,16 +45,6 @@ interactive-isp:
 
 interactive-serial:
 	$(AVRDUDE) -p m8 -c $(SERIAL_PROG) -P $(SERIAL_DEV) -t
-
-fuse:
-	$(AVRDUDE) -p m8 -c $(ISP_PROG) -P $(ISP_DEV) -U hfuse:w:0xD0:m
-	$(AVRDUDE) -p m8 -c $(ISP_PROG) -P $(ISP_DEV) -U lfuse:w:0xE0:m
-
-install-bootloader: bootloader.hex program-isp-bootloader
-
-bootloader.hex:
-	cd boot/v0_7 && make
-	cp boot/v0_7/main.hex bootloader.hex
 
 
 .PHONY: all clean interactive-isp interactive-serial
