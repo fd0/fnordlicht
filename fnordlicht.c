@@ -157,7 +157,6 @@ int main(void) {
             global.flags.last_pulse = 0;
 
             update_pwm_timeslots();
-            continue;
         }
 
         /* at the beginning of each pwm cycle, call the fading engine and
