@@ -6,7 +6,6 @@
  *    see http://koeln.ccc.de/prozesse/running/fnordlicht
  *
  * (c) by Alexander Neumann <alexander@bumpern.de>
- *     Lars Noschinski <lars@public.noschinski.de>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -25,30 +24,39 @@
  * http://www.gnu.org/copyleft/gpl.html
  }}} */
 
+#include <avr/io.h>
+#include <stdint.h>
+#include <avr/interrupt.h>
+#include <util/parity.h>
 
-#ifndef UART_H
-#define UART_H
-
-#include "fifo.h"
-
-
-/* define uart baud rate (19200) and mode (8N1) */
-#define UART_UCSRC _BV(URSEL) | _BV(UCSZ0) | _BV(UCSZ1)
-#define UART_UBRR (F_CPU/(UART_BAUDRATE * 16L)-1)
-
+#define PS2_CLOCK PD3
+#define PS2_DATA PD4
 
 /* structs */
-struct global_uart_t {
-    struct fifo_t rx_fifo;
-    struct fifo_t tx_fifo;
+union key_t {
+    uint16_t bits;
+    struct {
+        uint8_t scancode:8;
+        uint8_t parity_bit:1;
+        uint8_t stop_bit:1;
+    };
+};
+
+struct keyboard_flags {
+    uint8_t receiption_active:1;
+    uint8_t transmission_active:1;
+    uint8_t transmission_start:1;
+    uint8_t transmission_ack:1;
+    uint8_t receive_complete:1;
+    union {
+        uint8_t received_scancode;
+        uint8_t transmit_scancode;
+    };
 };
 
 /* global variables */
-extern volatile struct global_uart_t global_uart;
+volatile struct keyboard_flags global_keyboard;
 
 /* prototypes */
-void init_uart(void);
-void uart_putc(uint8_t data);
-void uart_puts(uint8_t buffer[]);
-
-#endif
+void init_at_keyboard(void);
+void send_byte_to_keyboard(uint8_t data);

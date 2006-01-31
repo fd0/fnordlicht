@@ -47,6 +47,7 @@ volatile struct global_t global = {{0, 0}};
 
 /* prototypes */
 static inline void init_output(void);
+static inline void check_serial_input(uint8_t data);
 
 /** init output channels */
 void init_output(void) { /* {{{ */
@@ -57,6 +58,66 @@ void init_output(void) { /* {{{ */
 }
 
 /* }}} */
+
+
+void check_serial_input(uint8_t data)
+/* {{{ */ {
+    switch (data) {
+        case '1':
+            global_pwm.channels[0].target_brightness-=1;
+            break;
+        case '4':
+            global_pwm.channels[0].target_brightness+=1;
+            break;
+        case '2':
+            global_pwm.channels[1].target_brightness-=1;
+            break;
+        case '5':
+            global_pwm.channels[1].target_brightness+=1;
+            break;
+        case '3':
+            global_pwm.channels[2].target_brightness-=1;
+            break;
+        case '6':
+            global_pwm.channels[2].target_brightness+=1;
+            break;
+        case '0':
+            global_pwm.channels[0].target_brightness=0;
+            global_pwm.channels[1].target_brightness=0;
+            global_pwm.channels[2].target_brightness=0;
+            break;
+        case '=':
+            global_pwm.channels[0].target_brightness=global_pwm.channels[0].brightness;
+            global_pwm.channels[1].target_brightness=global_pwm.channels[1].brightness;
+            global_pwm.channels[2].target_brightness=global_pwm.channels[2].brightness;
+            break;
+        case '>':
+            global_pwm.channels[0].speed >>= 1;
+            global_pwm.channels[1].speed >>= 1;
+            global_pwm.channels[2].speed >>= 1;
+            break;
+        case '<':
+            global_pwm.channels[0].speed <<= 1;
+            global_pwm.channels[1].speed <<= 1;
+            global_pwm.channels[2].speed <<= 1;
+            break;
+        case 's':
+            UDR = HIGH(global_pwm.channels[0].speed);
+            while (!(UCSRA & _BV(UDRE)));
+            UDR = LOW(global_pwm.channels[0].speed);
+            while (!(UCSRA & _BV(UDRE)));
+            break;
+        case 'b':
+            UDR = global_pwm.channels[0].brightness;
+            while (!(UCSRA & _BV(UDRE)));
+            UDR = global_pwm.channels[1].brightness;
+            while (!(UCSRA & _BV(UDRE)));
+            UDR = global_pwm.channels[2].brightness;
+            while (!(UCSRA & _BV(UDRE)));
+            break;
+    }
+} /* }}} */
+
 
 /** main function
  */
@@ -84,6 +145,14 @@ int main(void) {
     sei();
 
     while (1) {
+        /* after the last pwm timeslot, rebuild the timeslot table */
+        if (global.flags.last_pulse) {
+            global.flags.last_pulse = 0;
+
+            update_pwm_timeslots();
+            continue;
+        }
+
         /* at the beginning of each pwm cycle, call the fading engine and
          * execute all script threads */
         if (global.flags.new_cycle) {
@@ -91,12 +160,14 @@ int main(void) {
 
             update_brightness();
             execute_script_threads();
+
+            continue;
         }
 
-        if (global.flags.last_pulse) {
-            global.flags.last_pulse = 0;
+        if (fifo_fill(&global_uart.rx_fifo) > 0) {
+            uart_putc('r');
 
-            update_pwm_timeslots();
+            check_serial_input(fifo_load(&global_uart.rx_fifo));
         }
     }
 }

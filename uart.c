@@ -39,6 +39,26 @@
 /* global variables */
 volatile struct global_uart_t global_uart;
 
+/** output one character */
+inline void uart_putc(uint8_t data)
+/*{{{*/ {
+    /* store data */
+    fifo_store(&global_uart.tx_fifo, data);
+
+    /* enable interrupt */
+    UCSRB |= _BV(UDRIE);
+} /* }}} */
+
+/** output a string */
+inline void uart_puts(uint8_t buffer[])
+/*{{{*/ {
+    /* store data */
+    fifo_store_buffer(&global_uart.tx_fifo, buffer);
+
+    /* enable interrupt */
+    UCSRB |= _BV(UDRIE);
+} /* }}} */
+
 /** init the hardware uart */
 void init_uart(void)
 /*{{{*/ {
@@ -53,16 +73,13 @@ void init_uart(void)
     UCSRB = _BV(TXEN) | _BV(RXEN) | _BV(RXCIE);
 
     /* init fifos */
-    fifo_init(&(global_uart.rx_fifo));
-    fifo_init(&global_uart.tx_fifo);
+    fifo_init(&global_uart.rx_fifo, UART_FIFO_SIZE-1);
+    fifo_init(&global_uart.tx_fifo, UART_FIFO_SIZE-1);
 
     /* send boot message */
-    //UDR = 'B';
-    fifo_store(&global_uart.tx_fifo, 'B');
-
-    /* wait until boot message has been sent over the wire */
-    //while (!(UCSRA & (1<<UDRE)));
+    uart_putc('B');
 } /* }}} */
+
 
 /** interrupts*/
 
@@ -71,7 +88,7 @@ SIGNAL(SIG_UART_RECV)
 /*{{{*/ {
 
     /* store received data */
-    fifo_store(&global_uart.tx_fifo, UDR);
+    fifo_store(&global_uart.rx_fifo, UDR);
 
 } /*}}}*/
 
@@ -83,68 +100,11 @@ SIGNAL(SIG_UART_DATA)
     UDR = fifo_load(&global_uart.tx_fifo);
 
     /* check if this interrupt is still needed */
-    if ( (global_uart.tx_fifo.front - global_uart.tx_fifo.back) == 0) {
+    if ( fifo_fill(&global_uart.tx_fifo) == 0) {
         /* disable this interrupt */
         UCSRB &= ~_BV(UDRIE);
     }
 
-
 } /*}}}*/
 
 
-/*
-    switch (data) {
-        case '1':
-            global_pwm.channels[0].target_brightness-=1;
-            break;
-        case '4':
-            global_pwm.channels[0].target_brightness+=1;
-            break;
-        case '2':
-            global_pwm.channels[1].target_brightness-=1;
-            break;
-        case '5':
-            global_pwm.channels[1].target_brightness+=1;
-            break;
-        case '3':
-            global_pwm.channels[2].target_brightness-=1;
-            break;
-        case '6':
-            global_pwm.channels[2].target_brightness+=1;
-            break;
-        case '0':
-            global_pwm.channels[0].target_brightness=0;
-            global_pwm.channels[1].target_brightness=0;
-            global_pwm.channels[2].target_brightness=0;
-            break;
-        case '=':
-            global_pwm.channels[0].target_brightness=global_pwm.channels[0].brightness;
-            global_pwm.channels[1].target_brightness=global_pwm.channels[1].brightness;
-            global_pwm.channels[2].target_brightness=global_pwm.channels[2].brightness;
-            break;
-        case '>':
-            global_pwm.channels[0].speed >>= 1;
-            global_pwm.channels[1].speed >>= 1;
-            global_pwm.channels[2].speed >>= 1;
-            break;
-        case '<':
-            global_pwm.channels[0].speed <<= 1;
-            global_pwm.channels[1].speed <<= 1;
-            global_pwm.channels[2].speed <<= 1;
-            break;
-        case 's':
-            UDR = HIGH(global_pwm.channels[0].speed);
-            while (!(UCSRA & _BV(UDRE)));
-            UDR = LOW(global_pwm.channels[0].speed);
-            while (!(UCSRA & _BV(UDRE)));
-            break;
-        case 'b':
-            UDR = global_pwm.channels[0].brightness;
-            while (!(UCSRA & _BV(UDRE)));
-            UDR = global_pwm.channels[1].brightness;
-            while (!(UCSRA & _BV(UDRE)));
-            UDR = global_pwm.channels[2].brightness;
-            while (!(UCSRA & _BV(UDRE)));
-            break;
-    }
-*/

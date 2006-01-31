@@ -48,12 +48,15 @@ struct fifo_t {
     uint8_t buffer[UART_FIFO_SIZE];
     uint8_t front;
     uint8_t back;
+    uint8_t size;
 };
 
 /* prototypes */
-void fifo_init(struct fifo_t *fifo);
-void fifo_store(struct fifo_t *fifo, uint8_t data);
-uint8_t fifo_load(struct fifo_t *fifo);
-uint8_t fifo_fill(struct fifo_t *fifo);
+void fifo_init(volatile struct fifo_t *fifo, uint8_t fifo_size);
+void fifo_store(volatile struct fifo_t *fifo, uint8_t data);
+void fifo_store_buffer(volatile struct fifo_t *fifo, uint8_t data[]);
+uint8_t fifo_load(volatile struct fifo_t *fifo);
+uint8_t fifo_fill(volatile struct fifo_t *fifo);
+uint8_t fifo_capacity(volatile struct fifo_t *fifo);
 
 #endif
