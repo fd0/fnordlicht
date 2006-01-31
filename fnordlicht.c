@@ -37,10 +37,15 @@
 #include "fnordlicht.h"
 #include "pwm.h"
 #include "uart.h"
+
+#if STATIC_SCRIPTS
 #include "static_scripts.h"
 
 /* static scripts */
 #include "testscript.h"
+
+#endif
+
 
 /* structs */
 volatile struct global_t global = {{0, 0}};
@@ -126,6 +131,7 @@ int main(void) {
     init_uart();
     init_timer1();
     init_pwm();
+#if STATIC_SCRIPTS
     init_script_threads();
 
     /* start the example scripts */
@@ -140,6 +146,7 @@ int main(void) {
     //script_threads[2].handler.execute = &memory_handler_eeprom;
     //script_threads[2].handler.position = (uint16_t) &testscript_eeprom;
     //script_threads[2].flags.disabled = 0;
+#endif
 
     /* enable interrupts globally */
     sei();
@@ -159,7 +166,9 @@ int main(void) {
             global.flags.new_cycle = 0;
 
             update_brightness();
+#if STATIC_SCRIPTS
             execute_script_threads();
+#endif
 
             continue;
         }

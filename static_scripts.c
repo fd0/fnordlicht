@@ -25,6 +25,10 @@
  * http://www.gnu.org/copyleft/gpl.html
  }}} */
 
+#include "config.h"
+
+#if STATIC_SCRIPTS
+
 #include "static_scripts.h"
 #include "pwm.h"
 #include <stdint.h>
@@ -326,3 +330,5 @@ uint8_t opcode_handler_stop(uint8_t parameters[], struct thread_t *current_threa
 /* }}} */
 
 
+
+#endif

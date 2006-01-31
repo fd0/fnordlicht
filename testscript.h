@@ -1,3 +1,8 @@
+
+#include "config.h"
+
+#if STATIC_SCRIPTS
+
 #include "static_scripts.h"
 
 /* testscript */
@@ -45,3 +50,4 @@ static const uint8_t colorchange_red[] PROGMEM = {
 
 
 
+#endif

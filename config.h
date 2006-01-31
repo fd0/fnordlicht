@@ -39,6 +39,11 @@
 #define DEBUG 0
 #endif
 
+/* include the script intpreter per default */
+#ifndef STATIC_SCRIPTS
+#define STATIC_SCRIPTS 1
+#endif
+
 /* fifo size must be a power of 2 and below 128 */
 #define UART_FIFO_SIZE 32
 #define UART_BAUDRATE 19200

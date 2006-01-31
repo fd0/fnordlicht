@@ -29,6 +29,9 @@
 #define fnordlicht_thread_h
 
 #include "config.h"
+
+#if STATIC_SCRIPTS
+
 #include "common.h"
 #include <avr/io.h>
 #include <stdint.h>
@@ -121,5 +124,7 @@ void execute_script_threads(void);
 void memory_handler_flash(struct thread_t *current_thread);
 void memory_handler_eeprom(struct thread_t *current_thread);
 
+
+#endif
 
 #endif
