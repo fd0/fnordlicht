@@ -25,8 +25,8 @@
  * http://www.gnu.org/copyleft/gpl.html
  }}} */
 
-#ifndef fnordlicht_thread_h
-#define fnordlicht_thread_h
+#ifndef fnordlicht_static_script_h
+#define fnordlicht_static_script_h
 
 #include "config.h"
 
@@ -111,6 +111,8 @@ struct thread_t
 
     struct script_handler_t handler_stack[MAX_THREAD_STACK_DEPTH];
     uint8_t handler_stack_offset;
+
+    int8_t speed_adjustment;
 }; /* }}} */
 
 /* global variables */

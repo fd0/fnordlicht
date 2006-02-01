@@ -83,6 +83,8 @@ void init_script_threads(void)
         script_threads[i].flags.disabled = 1;
 
         script_threads[i].handler_stack_offset = 0;
+
+        script_threads[i].speed_adjustment = 0;
     }
 }
 /* }}} */
@@ -228,11 +230,21 @@ uint8_t opcode_handler_nop(uint8_t parameters[], struct thread_t *current_thread
 
 uint8_t opcode_handler_fade_channel(uint8_t parameters[], struct thread_t *current_thread)
 /* {{{ */ {
-    (void) current_thread;
+    uint16_t speed = (parameters[3] << 8) + parameters[2];
+
+    if ((current_thread->speed_adjustment) < 0) {
+        speed >>= -current_thread->speed_adjustment;
+        if (speed == 0)
+            speed = 1;
+    } else if (current_thread->speed_adjustment > 0) {
+        speed <<= current_thread->speed_adjustment;
+        if (speed == 0)
+            speed = 0xff;
+    }
 
     global_pwm.channels[parameters[0]].target_brightness = parameters[1];
-    global_pwm.channels[parameters[0]].speed_l = parameters[2];
-    global_pwm.channels[parameters[0]].speed_h = parameters[3];
+    global_pwm.channels[parameters[0]].speed_l = LOW(speed);
+    global_pwm.channels[parameters[0]].speed_h = HIGH(speed);
 
     return OP_RETURN_OK;
 }
@@ -281,12 +293,24 @@ uint8_t opcode_handler_set_channel(uint8_t parameters[], struct thread_t *curren
 
 uint8_t opcode_handler_sleep(uint8_t parameters[], struct thread_t *current_thread)
 /* {{{ */ {
+    uint16_t speed = (parameters[2] << 8) + parameters[1];
+
+    if ((current_thread->speed_adjustment) < 0) {
+        speed <<= current_thread->speed_adjustment;
+        if (speed == 0)
+            speed = 0xff;
+    } else if (current_thread->speed_adjustment > 0) {
+        speed >>= -current_thread->speed_adjustment;
+        if (speed == 0)
+            speed = 1;
+    }
+
     /* save old handler and old position onto the handler stack in the current thread */
     current_thread->handler_stack[current_thread->handler_stack_offset].execute = current_thread->handler.execute;
     current_thread->handler_stack[current_thread->handler_stack_offset].position = current_thread->handler.position;
 
     current_thread->handler.execute = &sleep_handler;
-    current_thread->handler.position = (uint16_t) parameters[1] + (uint16_t)(parameters[2] << 8);
+    current_thread->handler.position = speed;
 
     current_thread->handler_stack_offset++;
 

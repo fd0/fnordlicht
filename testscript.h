@@ -69,5 +69,12 @@ static const uint8_t green_flash[] PROGMEM = {
     MACRO_STOP()
     };
 
+static const uint8_t green_blink[] PROGMEM = {
+    MACRO_SET_CHANNEL(CHANNEL_GREEN, 150),
+    MACRO_SLEEP(125),
+    MACRO_SET_CHANNEL(CHANNEL_GREEN, 0),
+    MACRO_SLEEP(125),
+    MACRO_JUMP(-4)
+    };
 
 #endif
