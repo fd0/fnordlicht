@@ -28,6 +28,8 @@
 
 #include "config.h"
 
+#if SERIAL_UART
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
@@ -108,3 +110,4 @@ ISR(SIG_UART_DATA)
 } /*}}}*/
 
 
+#endif

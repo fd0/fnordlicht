@@ -44,8 +44,13 @@
 #define STATIC_SCRIPTS 1
 #endif
 
+/* include uart support per default */
+#ifndef SERIAL_UART
+#define SERIAL_UART 1
+#endif
+
 /* disable at keyboard decoder per default */
-/* ATTENTION: THIS IS EXPERIMENTAL AND DOES NOT WORK BY DEFAULT! */
+/* ATTENTION: THIS IS EXPERIMENTAL AND DOES NOT ATM! */
 #ifndef AT_KEYBOARD
 #define AT_KEYBOARD 0
 #endif

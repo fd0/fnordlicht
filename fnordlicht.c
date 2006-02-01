@@ -57,7 +57,10 @@ volatile struct global_t global = {{0, 0}};
 
 /* prototypes */
 static inline void init_output(void);
+
+#if SERIAL_UART
 static inline void check_serial_input(uint8_t data);
+#endif
 
 /** init output channels */
 void init_output(void) { /* {{{ */
@@ -69,9 +72,11 @@ void init_output(void) { /* {{{ */
 
 /* }}} */
 
+#if SERIAL_UART
 /** process serial data received by uart */
 void check_serial_input(uint8_t data)
 /* {{{ */ {
+
     switch (data) {
         case '1':
             global_pwm.channels[0].target_brightness-=1;
@@ -127,6 +132,7 @@ void check_serial_input(uint8_t data)
             break;
     }
 } /* }}} */
+#endif
 
 /** catch-all interrupt vector */
 ISR(__vector_default)
@@ -142,9 +148,13 @@ ISR(__vector_default)
  */
 int main(void) {
     init_output();
-    init_uart();
     init_timer1();
     init_pwm();
+
+#if SERIAL_UART
+    init_uart();
+#endif
+
 #if RC5_DECODER
     init_rc5();
 #endif
@@ -193,6 +203,8 @@ int main(void) {
             continue;
         }
 
+
+#if SERIAL_UART
         /* check if we received something via uart */
         if (fifo_fill(&global_uart.rx_fifo) > 0) {
             uart_putc('r');
@@ -200,6 +212,8 @@ int main(void) {
             check_serial_input(fifo_load(&global_uart.rx_fifo));
             continue;
         }
+#endif
+
 
 #if RC5_DECODER
         /* check if we received something via ir */

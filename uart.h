@@ -30,8 +30,10 @@
 #define UART_H
 
 #include "config.h"
-#include "fifo.h"
 
+#if SERIAL_UART
+
+#include "fifo.h"
 
 /* define uart baud rate (19200) and mode (8N1) */
 #define UART_UCSRC _BV(URSEL) | _BV(UCSZ0) | _BV(UCSZ1)
@@ -51,5 +53,7 @@ extern volatile struct global_uart_t global_uart;
 void init_uart(void);
 void uart_putc(uint8_t data);
 void uart_puts(uint8_t buffer[]);
+
+#endif
 
 #endif
