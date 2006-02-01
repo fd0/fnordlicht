@@ -84,7 +84,7 @@ void init_uart(void)
 /** interrupts*/
 
 /** uart receive interrupt */
-SIGNAL(SIG_UART_RECV)
+ISR(SIG_UART_RECV)
 /*{{{*/ {
 
     /* store received data */
@@ -93,7 +93,7 @@ SIGNAL(SIG_UART_RECV)
 } /*}}}*/
 
 /** uart data register empty interrupt */
-SIGNAL(SIG_UART_DATA)
+ISR(SIG_UART_DATA)
 /*{{{*/ {
 
     /* load next byte to transfer */

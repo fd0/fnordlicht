@@ -24,6 +24,13 @@
  * http://www.gnu.org/copyleft/gpl.html
  }}} */
 
+#include "../config.h"
+
+#ifndef AT_KEYBOARD_H
+#define AT_KEYBOARD_H
+
+#if AT_KEYBOARD
+
 #include <avr/io.h>
 #include <stdint.h>
 #include <avr/interrupt.h>
@@ -60,3 +67,7 @@ volatile struct keyboard_flags global_keyboard;
 /* prototypes */
 void init_at_keyboard(void);
 void send_byte_to_keyboard(uint8_t data);
+
+#endif
+
+#endif

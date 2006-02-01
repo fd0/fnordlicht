@@ -24,6 +24,10 @@
  * http://www.gnu.org/copyleft/gpl.html
  }}} */
 
+#include "../config.h"
+
+#if AT_KEYBOARD
+
 #include "at_keyboard.h"
 
 #define F_CPU 16000000UL
@@ -215,4 +219,4 @@ SIGNAL(SIG_INTERRUPT1)
     MCUCR ^= _BV(ISC10);
 } /*}}}*/
 
-
+#endif

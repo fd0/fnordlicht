@@ -6,7 +6,6 @@
  *    see http://koeln.ccc.de/prozesse/running/fnordlicht
  *
  * (c) by Alexander Neumann <alexander@bumpern.de>
- *     Lars Noschinski <lars@public.noschinski.de>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -25,31 +24,48 @@
  * http://www.gnu.org/copyleft/gpl.html
  }}} */
 
-
-#ifndef UART_H
-#define UART_H
+#ifndef RC5_H
+#define RC5_H
 
 #include "config.h"
-#include "fifo.h"
 
+#if RC5_DECODER
 
-/* define uart baud rate (19200) and mode (8N1) */
-#define UART_UCSRC _BV(URSEL) | _BV(UCSZ0) | _BV(UCSZ1)
-#define UART_UBRR (F_CPU/(UART_BAUDRATE * 16L)-1)
+#include <inttypes.h>
+
+/* warn, if F_CPU is not defined */
+#ifndef F_CPU
+#error F_CPU not defined
+#endif
 
 
 /* structs */
-struct global_uart_t {
-    struct fifo_t rx_fifo;
-    struct fifo_t tx_fifo;
+struct rc5_t {
+    union {
+        uint16_t raw;
+        struct {
+            uint8_t code:6;             /* first 6 bits: control code */
+            uint8_t address:5;          /* next 5 bits: address */
+            uint8_t toggle_bit:1;       /* next bit is the toggle bit */
+            uint8_t spare:4;            /* spare bits */
+        };
+    };
+};
+
+struct global_rc5_t {
+    struct rc5_t received_command;
+    struct {
+        uint8_t enabled:1;              /* if one, decoder is active */
+        uint8_t new_data:1;             /* if one, new data is available */
+    };
 };
 
 /* global variables */
-extern volatile struct global_uart_t global_uart;
+extern volatile struct global_rc5_t global_rc5;
 
 /* prototypes */
-void init_uart(void);
-void uart_putc(uint8_t data);
-void uart_puts(uint8_t buffer[]);
+void init_rc5(void);
+
+#endif
 
 #endif

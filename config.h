@@ -44,6 +44,17 @@
 #define STATIC_SCRIPTS 1
 #endif
 
+/* disable at keyboard decoder per default */
+/* ATTENTION: THIS IS EXPERIMENTAL AND DOES NOT WORK BY DEFAULT! */
+#ifndef AT_KEYBOARD
+#define AT_KEYBOARD 0
+#endif
+
+/* disable rc5-decoder per default */
+#ifndef RC5_DECODER
+#define RC5_DECODER 0
+#endif
+
 /* fifo size must be a power of 2 and below 128 */
 #define UART_FIFO_SIZE 32
 #define UART_BAUDRATE 19200

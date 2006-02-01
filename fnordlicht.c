@@ -38,10 +38,15 @@
 #include "pwm.h"
 #include "uart.h"
 
-#if STATIC_SCRIPTS
-#include "static_scripts.h"
+#if RC5_DECODER
+#include "rc5.h"
+#endif
 
-/* static scripts */
+
+#if STATIC_SCRIPTS
+
+/* include static scripts */
+#include "static_scripts.h"
 #include "testscript.h"
 
 #endif
@@ -64,7 +69,7 @@ void init_output(void) { /* {{{ */
 
 /* }}} */
 
-
+/** process serial data received by uart */
 void check_serial_input(uint8_t data)
 /* {{{ */ {
     switch (data) {
@@ -123,6 +128,15 @@ void check_serial_input(uint8_t data)
     }
 } /* }}} */
 
+/** catch-all interrupt vector */
+ISR(__vector_default)
+{
+    UDR = 'F';
+
+    while (1) {}
+}
+
+
 
 /** main function
  */
@@ -131,12 +145,16 @@ int main(void) {
     init_uart();
     init_timer1();
     init_pwm();
+#if RC5_DECODER
+    init_rc5();
+#endif
+
 #if STATIC_SCRIPTS
     init_script_threads();
 
     /* start the example scripts */
     script_threads[0].handler.execute = &memory_handler_flash;
-    script_threads[0].handler.position = (uint16_t) &colorchange_red;
+    script_threads[0].handler.position = (uint16_t) &colorchange_red_blue;
     script_threads[0].flags.disabled = 0;
 
     //script_threads[1].handler.execute = &memory_handler_flash;
@@ -146,7 +164,10 @@ int main(void) {
     //script_threads[2].handler.execute = &memory_handler_eeprom;
     //script_threads[2].handler.position = (uint16_t) &testscript_eeprom;
     //script_threads[2].flags.disabled = 0;
+    //
+    //
 #endif
+
 
     /* enable interrupts globally */
     sei();
@@ -172,10 +193,43 @@ int main(void) {
             continue;
         }
 
+        /* check if we received something via uart */
         if (fifo_fill(&global_uart.rx_fifo) > 0) {
             uart_putc('r');
 
             check_serial_input(fifo_load(&global_uart.rx_fifo));
+            continue;
         }
+
+#if RC5_DECODER
+        /* check if we received something via ir */
+        if (global_rc5.new_data) {
+            static uint8_t toggle_bit = 2;
+
+            /* if key has been pressed again */
+            if (global_rc5.received_command.toggle_bit != toggle_bit) {
+
+                /* if code is 0x01 (key '1' on a default remote) */
+                if (global_rc5.received_command.code == 0x01) {
+
+                    /* install script into thread 1 */
+                    script_threads[1].handler.execute = &memory_handler_flash;
+                    script_threads[1].handler.position = (uint16_t) &green_flash;
+                    script_threads[1].flags.disabled = 0;
+                    script_threads[1].handler_stack_offset = 0;
+
+                }
+
+                /* store new toggle bit state */
+                toggle_bit = global_rc5.received_command.toggle_bit;
+
+            }
+
+            /* reset the new_data flag, so that new commands can be received */
+            global_rc5.new_data = 0;
+
+            continue;
+        }
+#endif
     }
 }
