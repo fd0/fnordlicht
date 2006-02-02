@@ -54,7 +54,7 @@ volatile struct global_rc5_t global_rc5;
 
 /*
  * Overview:
- *
+ * {{{
  * An rc5 word is composed of 14 bits:  SSTAAAAACCCCCC
  *   - two start bits (always 1)
  *   - one toggle bit (changes value a key is released and pressed again)
@@ -185,12 +185,14 @@ volatile struct global_rc5_t global_rc5;
  *                     interrupt to fire at the falling edge again, disable timer
  *                     overflow interrupt, copy output to global public structure.
  *
+ * }}}
  */
 
 
 /* local variables */
 static uint8_t rc5_halfbitcount;
 static uint8_t rc5_interrupts;
+static uint8_t rc5_disabled;
 /* temp command buffer */
 static struct rc5_t temp_rc5;
 
@@ -202,6 +204,9 @@ void init_rc5(void)
     rc5_halfbitcount = 0;
     rc5_interrupts = 0;
 
+    /* reset disable flag */
+    rc5_disabled = 0;
+
     /* init global structures */
     global_rc5.enabled = 1;
     global_rc5.new_data = 0;
@@ -210,9 +215,9 @@ void init_rc5(void)
     /* enable timer0, set prescaler and enabled overflow interrupt */
     TCCR0 = _BV(CS02) | _BV(CS00);
 
-    /* configure int0 to fire at falling edge */
-    MCUCR |= _BV(ISC01);
-    MCUCR &= ~_BV(ISC00);
+    /* configure int0 to fire at any logical change */
+    MCUCR |= _BV(ISC00);
+    MCUCR &= ~_BV(ISC01);
 
     /* clear any old interrupts and enable int0 interrupt */
     GIFR = _BV(INTF0);
@@ -224,14 +229,10 @@ void init_rc5(void)
 ISR(SIG_INTERRUPT0)
 /* {{{ */ {
 
-    if (global_rc5.enabled) {
+    if (global_rc5.enabled && !rc5_disabled) {
 
         /* if this is the first interrupt */
         if (rc5_interrupts == 0) {
-            /* enable interrupt on any logical change */
-            MCUCR &= ~_BV(ISC01);
-            MCUCR |= _BV(ISC00);
-
             /* reset counter, clear old overflows and enable
              * timer0 overflow interrupt */
             TCNT0 = 0;
@@ -262,8 +263,9 @@ ISR(SIG_INTERRUPT0)
 
             /* else signal is invalid */
             } else {
-                /* disable int0, enable timer overflow interrupt: -> timeout */
-                GICR &= ~_BV(INT0);
+                /* disable interrupt, enable timer overflow interrupt: -> timeout */
+                //GICR &= ~_BV(INT0);
+                rc5_disabled = 1;
 
                 /* reset bitcounter */
                 rc5_halfbitcount = 0;
@@ -329,11 +331,8 @@ ISR(SIG_OVERFLOW0)
     /* if decoder is enabled, reconfigure int0 */
     if (global_rc5.enabled) {
 
-        /* enable int0 on falling edge and clear interrupt flags */
-        MCUCR |= _BV(ISC01);
-        MCUCR &= ~_BV(ISC00);
-        GIFR = _BV(INTF0);
-        GICR |= _BV(INT0);
+        /* re-enable int0 */
+        rc5_disabled = 0;
 
     }
 

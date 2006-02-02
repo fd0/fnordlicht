@@ -50,7 +50,7 @@
 #endif
 
 /* disable at keyboard decoder per default */
-/* ATTENTION: THIS IS EXPERIMENTAL AND DOES NOT ATM! */
+/* ATTENTION: THIS IS EXPERIMENTAL AND DOES NOT WORK ATM! */
 #ifndef AT_KEYBOARD
 #define AT_KEYBOARD 0
 #endif
