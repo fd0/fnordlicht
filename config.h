@@ -60,6 +60,11 @@
 #define RC5_DECODER 0
 #endif
 
+/* disable scripts speed control per default */
+#ifndef SCRIPT_SPEED_CONTROL
+#define SCRIPT_SPEED_CONTROL 0
+#endif
+
 /* fifo size must be a power of 2 and below 128 */
 #define UART_FIFO_SIZE 32
 #define UART_BAUDRATE 19200

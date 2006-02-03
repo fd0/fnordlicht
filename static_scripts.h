@@ -112,7 +112,9 @@ struct thread_t
     struct script_handler_t handler_stack[MAX_THREAD_STACK_DEPTH];
     uint8_t handler_stack_offset;
 
+#if SCRIPT_SPEED_CONTROL
     int8_t speed_adjustment;
+#endif
 }; /* }}} */
 
 /* global variables */

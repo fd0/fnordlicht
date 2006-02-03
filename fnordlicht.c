@@ -106,6 +106,7 @@ void check_serial_input(uint8_t data)
             global_pwm.channels[1].target_brightness=global_pwm.channels[1].brightness;
             global_pwm.channels[2].target_brightness=global_pwm.channels[2].brightness;
             break;
+#if SCRIPT_SPEED_CONTROL
         case '>':
             script_threads[0].speed_adjustment--;
             script_threads[1].speed_adjustment--;
@@ -116,6 +117,7 @@ void check_serial_input(uint8_t data)
             script_threads[1].speed_adjustment++;
             script_threads[2].speed_adjustment++;
             break;
+#endif
         case 's':
             UDR = HIGH(global_pwm.channels[0].speed);
             while (!(UCSRA & _BV(UDRE)));

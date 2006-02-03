@@ -84,7 +84,9 @@ void init_script_threads(void)
 
         script_threads[i].handler_stack_offset = 0;
 
+#if SCRIPT_SPEED_CONTROL
         script_threads[i].speed_adjustment = 0;
+#endif
     }
 }
 /* }}} */
@@ -232,6 +234,7 @@ uint8_t opcode_handler_fade_channel(uint8_t parameters[], struct thread_t *curre
 /* {{{ */ {
     uint16_t speed = (parameters[3] << 8) + parameters[2];
 
+#if SCRIPT_SPEED_CONTROL
     if ((current_thread->speed_adjustment) < 0) {
         speed >>= -current_thread->speed_adjustment;
         if (speed == 0)
@@ -241,6 +244,9 @@ uint8_t opcode_handler_fade_channel(uint8_t parameters[], struct thread_t *curre
         if (speed == 0)
             speed = 0xff;
     }
+#else
+    (void) current_thread;
+#endif
 
     global_pwm.channels[parameters[0]].target_brightness = parameters[1];
     global_pwm.channels[parameters[0]].speed_l = LOW(speed);
@@ -295,6 +301,7 @@ uint8_t opcode_handler_sleep(uint8_t parameters[], struct thread_t *current_thre
 /* {{{ */ {
     uint16_t speed = (parameters[2] << 8) + parameters[1];
 
+#if SCRIPT_SPEED_CONTROL
     if ((current_thread->speed_adjustment) < 0) {
         speed <<= current_thread->speed_adjustment;
         if (speed == 0)
@@ -304,6 +311,7 @@ uint8_t opcode_handler_sleep(uint8_t parameters[], struct thread_t *current_thre
         if (speed == 0)
             speed = 1;
     }
+#endif
 
     /* save old handler and old position onto the handler stack in the current thread */
     current_thread->handler_stack[current_thread->handler_stack_offset].execute = current_thread->handler.execute;
