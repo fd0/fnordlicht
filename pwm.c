@@ -106,10 +106,13 @@ inline void init_timer1(void)
     TCCR1B = _BV(CS10) | _BV(WGM12);
     //TCCR1B = _BV(CS12) | _BV(CS10) | _BV(WGM12);
     TCCR1A = 0;
+#ifdef _ATMEGA88
+    TCCR1C = 0;
+#endif
 
     /* enable timer1 overflow (=output compare 1a)
      * and output compare 1b interrupt */
-    TIMSK |= _BV(OCIE1A) | _BV(OCIE1B);
+    _TIMSK_TIMER1 |= _BV(OCIE1A) | _BV(OCIE1B);
 
     /* set TOP for CTC mode */
     OCR1A = 64000;
@@ -124,6 +127,8 @@ inline void init_timer1(void)
 inline void init_pwm(void)
 /*{{{*/ {
     uint8_t i;
+
+    init_timer1();
 
     for (i=0; i<3; i++) {
         global_pwm.channels[i].brightness = 0;

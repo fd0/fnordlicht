@@ -1,9 +1,17 @@
-include avr.mk
 
-TARGET=fnordlicht
+# microcontroller and project specific settings
+TARGET = fnordlicht
+F_CPU = 16000000UL
+MCU = atmega8
+
 SUBDIRS = at_keyboard
 OBJECTS += $(patsubst %.c,%.o,$(shell echo *.c)) at_keyboard/at_keyboard.o
 HEADERS += $(shell echo *.h) at_keyboard/at_keyboard.h
+CFLAGS += -Werror
+LDFLAGS += -L/usr/local/avr/avr/lib
+
+include avr.mk
+
 
 .PHONY: all $(SUBDIRS)
 
@@ -14,7 +22,7 @@ $(TARGET): $(OBJECTS) $(TARGET).o
 %.o: $(HEADERS)
 
 $(SUBDIRS):
-	$(MAKE) -C $@
+	$(MAKE) -e -C $@
 
 bootloader.hex:
 	$(MAKE) -C boot/v0_7
@@ -41,7 +49,7 @@ clean-bootloader:
 
 bootstrap: fuse install-bootloader install
 
-fuse:
+fuse-atmega8:
 	$(AVRDUDE) -p m8 -c $(ISP_PROG) -P $(ISP_DEV) -U hfuse:w:0xD0:m
 	$(AVRDUDE) -p m8 -c $(ISP_PROG) -P $(ISP_DEV) -U lfuse:w:0xE0:m
 

@@ -36,7 +36,16 @@
 #include "fifo.h"
 
 /* define uart baud rate (19200) and mode (8N1) */
+#if defined(__AVR_ATmega8__)
+/* in atmega8, we need a special switching bit
+ * for addressing UCSRC */
 #define UART_UCSRC _BV(URSEL) | _BV(UCSZ0) | _BV(UCSZ1)
+
+#elif defined(__AVR_ATmega88__)
+/* in atmega88, this isn't needed any more */
+#define UART_UCSRC _BV(_UCSZ0_UART0) | _BV(_UCSZ1_UART0)
+#endif
+
 #define UART_UBRR (F_CPU/(UART_BAUDRATE * 16L)-1)
 
 

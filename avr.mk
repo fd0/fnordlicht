@@ -6,8 +6,6 @@ ISP_DEV = /dev/parport0
 SERIAL_PROG = butterfly
 # device the serial programmer is connected to
 SERIAL_DEV = /dev/ttyS0
-# device name (for avr-gcc)
-MCU = atmega8
 
 # programs
 CC = avr-gcc
@@ -21,7 +19,7 @@ AVRDUDE = avrdude
 -include config.mk
 
 # flags for the compiler
-CFLAGS += -g -Os -finline-limit=800 -mmcu=$(MCU)
+CFLAGS += -g -Os -finline-limit=800 -mmcu=$(MCU) -DF_CPU=$(F_CPU)
 
 ifneq ($(DEBUG),)
 	CFLAGS += -Wall -W -Wchar-subscripts -Wmissing-prototypes
