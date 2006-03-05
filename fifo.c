@@ -33,7 +33,7 @@ inline uint8_t fifo_fill(volatile struct fifo_t *fifo)
     if (fifo->front >= fifo->back) {
         return fifo->front - fifo->back;
     } else {
-        return (fifo->size) - (fifo->back - fifo->front);
+        return (fifo->size) - (fifo->back - fifo->front + 1);
     }
 } /* }}} */
 
