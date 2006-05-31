@@ -42,7 +42,7 @@
 
 /* check if this cpu is supported */
 #if !(defined(__AVR_ATmega8__) || defined(__AVR_ATmega88__))
-#error this cpu isn't supported yet!
+#error "this cpu isn't supported yet!"
 #endif
 
 /* cpu specific configuration registers */
