@@ -19,7 +19,10 @@ ifeq ($(MCU),atmega8)
 	# atmega8 with 512 words bootloader:
 	# bootloader section starts at 0xe00 (word-address) == 0x1c00 (byte-address)
 	BOOT_SECTION_START = 0x1c00
-else ifeq ($(MCU),atmega88)
+	# 7kb data memory (raw memory minus bootloader space)
+	DATA_MEM = 7
+endif
+ifeq ($(MCU),atmega88)
 	# atmega88 with 1024 words bootloader:
 	# bootloader section starts at 0xc00 (word-address) == 0x1800 (byte-address)
 	#BOOT_SECTION_START = 0x1800
@@ -27,7 +30,10 @@ else ifeq ($(MCU),atmega88)
 	# atmega88 with 512 words bootloader:
 	# bootloader section starts at 0xe00 (word-address) == 0x1c00 (byte-address)
 	BOOT_SECTION_START = 0x1c00
-else ifeq ($(MCU),atmega168)
+	# 7kb data memory (raw memory minus bootloader space)
+	DATA_MEM = 7
+endif
+ifeq ($(MCU),atmega168)
 	# atmega168 with 1024 words bootloader:
 	# bootloader section starts at 0x1c00 (word-address) == 0x3800 (byte-address)
 	BOOT_SECTION_START = 0x3800
@@ -35,7 +41,10 @@ else ifeq ($(MCU),atmega168)
 	# atmega168 with 512 words bootloader:
 	# bootloader section starts at 0x1e00 (word-address) == 0x3c00 (byte-address)
 	#BOOT_SECTION_START = 0x3c00
-else ifeq ($(MCU),atmega32)
+	# 14kb data memory (raw memory minus bootloader space)
+	DATA_MEM = 14
+endif
+ifeq ($(MCU),atmega32)
 	# atmega32 with 1024 words bootloader:
 	# bootloader section starts at 0x3c00 (word-address) == 0x7800 (byte-address)
 	#BOOT_SECTION_START = 0x7800
@@ -43,7 +52,10 @@ else ifeq ($(MCU),atmega32)
 	# atmega32 with 512 words bootloader:
 	# bootloader section starts at 0x3e00 (word-address) == 0x7c00 (byte-address)
 	BOOT_SECTION_START = 0x7c00
-else ifeq ($(MCU),atmega644)
+	# 31kb data memory (raw memory minus bootloader space)
+	DATA_MEM = 31
+endif
+ifeq ($(MCU),atmega644)
 	# atmega644 with 1024 words bootloader:
 	# bootloader section starts at 0x7c00 (word-address) == 0xf800 (byte-address)
 	BOOT_SECTION_START = 0xf800
@@ -51,6 +63,8 @@ else ifeq ($(MCU),atmega644)
 	# atmega644 with 512 words bootloader:
 	# bootloader section starts at 0x7e00 (word-address) == 0xfc00 (byte-address)
 	#BOOT_SECTION_START = 0xfc00
+	# 62kb data memory (raw memory minus bootloader space)
+	DATA_MEM = 62
 endif
 
 LDFLAGS += -Wl,--section-start=.text=$(BOOT_SECTION_START)
@@ -94,7 +108,7 @@ clean-launcher:
 	$(MAKE) -C launcher clean
 
 datatestfile.raw:
-	dd if=/dev/urandom of=datatestfile.raw bs=1 count=$$((1024*14))
+	dd if=/dev/urandom of=datatestfile.raw bs=1 count=$$((1024*$(DATA_MEM)))
 
 uploadtest: datatestfile.raw
 	@echo "uploading datatestfile"
