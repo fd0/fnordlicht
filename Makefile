@@ -41,7 +41,7 @@ clean-bootloader:
 
 .PHONY: bootstrap fuse install-bootloader
 
-bootstrap: fuse install-bootloader install
+bootstrap: fuse-$(MCU) install-bootloader install
 
 fuse-atmega8:
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -c avr910 -P $(ISP_DEV) -U hfuse:w:0xD0:m
@@ -52,4 +52,5 @@ fuse-atmega168:
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -c avr910 -P $(ISP_DEV) -U lfuse:w:0xE0:m
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -c avr910 -P $(ISP_DEV) -U efuse:w:0x01:m
 
-install-bootloader: bootloader.hex program-isp-bootloader
+install-bootloader:
+	$(MAKE) -C bootloader install lock
