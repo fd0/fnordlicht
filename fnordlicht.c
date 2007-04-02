@@ -37,6 +37,7 @@
 #include "fnordlicht.h"
 #include "pwm.h"
 #include "uart.h"
+#include "i2c.h"
 
 #if RC5_DECODER
 #include "rc5.h"
@@ -56,6 +57,7 @@
 volatile struct global_t global = {{0, 0}};
 
 /* prototypes */
+void (*jump_to_bootloader)(void) = (void *)0xc00;
 static inline void init_output(void);
 
 #if SERIAL_UART
@@ -78,6 +80,7 @@ void check_serial_input(uint8_t data)
 /* {{{ */ {
 
     switch (data) {
+#if 0
         case '1':
             global_pwm.channels[0].target_brightness-=1;
             break;
@@ -118,39 +121,21 @@ void check_serial_input(uint8_t data)
             script_threads[2].speed_adjustment++;
             break;
 #endif
-        case 's':
-            UDR = HIGH(global_pwm.channels[0].speed);
-            while (!(UCSRA & _BV(UDRE)));
-            UDR = LOW(global_pwm.channels[0].speed);
-            while (!(UCSRA & _BV(UDRE)));
+        case 'i':
+            TWCR |= _BV(TWSTA) | _BV(TWINT);
             break;
-        case 'b':
-            UDR = global_pwm.channels[0].brightness;
-            while (!(UCSRA & _BV(UDRE)));
-            UDR = global_pwm.channels[1].brightness;
-            while (!(UCSRA & _BV(UDRE)));
-            UDR = global_pwm.channels[2].brightness;
-            while (!(UCSRA & _BV(UDRE)));
+#endif
+        case 'p':
+            jump_to_bootloader();
             break;
     }
 } /* }}} */
 #endif
 
-/** catch-all interrupt vector */
-ISR(__vector_default)
-{
-    UDR = 'F';
-
-    while (1) {}
-}
-
-
-
 /** main function
  */
 int main(void) {
     init_output();
-    init_timer1();
     init_pwm();
 
 #if SERIAL_UART
@@ -161,14 +146,21 @@ int main(void) {
     init_rc5();
 #endif
 
+#if I2C
+    init_i2c();
+#endif
+
+    global_pwm.channels[0].brightness = 50;
+    global_pwm.channels[0].target_brightness = 50;
+
 #if STATIC_SCRIPTS
     init_script_threads();
 
     /* start the example scripts */
-    script_threads[0].handler.execute = &memory_handler_flash;
-    script_threads[0].handler.position = (uint16_t) &colorchange_red_blue;
-    script_threads[0].flags.disabled = 0;
-
+    //script_threads[0].handler.execute = &memory_handler_flash;
+    //script_threads[0].handler.position = (uint16_t) &colorchange_red_blue;
+    //script_threads[0].flags.disabled = 0;
+    //
     //script_threads[1].handler.execute = &memory_handler_flash;
     //script_threads[1].handler.position = (uint16_t) &testscript_flash2;
     //script_threads[1].flags.disabled = 0;
@@ -176,10 +168,34 @@ int main(void) {
     //script_threads[2].handler.execute = &memory_handler_eeprom;
     //script_threads[2].handler.position = (uint16_t) &testscript_eeprom;
     //script_threads[2].flags.disabled = 0;
-    //
-    //
+
+    //script_threads[0].handler.execute = &memory_handler_flash;
+    //script_threads[0].handler.position = (uint16_t) &blinken;
+    //script_threads[0].flags.disabled = 0;
+
 #endif
 
+#if I2C_MASTER
+    i2c_global.send_messages[0].command.size = 4;
+    i2c_global.send_messages[0].command.code = COMMAND_SET_COLOR;
+    i2c_global.send_messages[0].command.set_color_parameters.colors[0] = 0x10;
+    i2c_global.send_messages[0].command.set_color_parameters.colors[1] = 0x10;
+    i2c_global.send_messages[0].command.set_color_parameters.colors[2] = 0x10;
+
+    i2c_global.send_messages_count = 1;
+#endif
+
+    /* init command bus */
+    UCSR0A = _BV(MPCM0); /* enable multi-processor communication mode */
+    UCSR0C = _BV(UCSZ00) | _BV(UCSZ01); /* 9 bit frame size */
+
+    #define UART_UBRR 8 /* 115200 baud at 16mhz */
+    UBRR0H = HIGH(UART_UBRR);
+    UBRR0L = LOW(UART_UBRR);
+
+    UCSR0B = _BV(RXEN0) | _BV(TXEN0) | _BV(UCSZ02); /* enable receiver and transmitter */
+
+    //UDR0 = 'B';
 
     /* enable interrupts globally */
     sei();
@@ -209,8 +225,6 @@ int main(void) {
 #if SERIAL_UART
         /* check if we received something via uart */
         if (fifo_fill(&global_uart.rx_fifo) > 0) {
-            uart_putc('r');
-
             check_serial_input(fifo_load(&global_uart.rx_fifo));
             continue;
         }
@@ -246,6 +260,67 @@ int main(void) {
 
             continue;
         }
+#endif
+
+        if (UCSR0A & _BV(RXC0)) {
+
+            uint8_t address = UCSR0B & _BV(RXB80); /* read nineth bit, zero if data, one if address */
+            uint8_t data = UDR0;
+            static uint8_t buffer[8];
+            static uint8_t fill = 0;
+
+            if (UCSR0A & _BV(MPCM0) || address) { /* if MPCM mode is still active, or ninth bit set, this is an address packet */
+
+                /* check if we are ment */
+                if (data == 0 || data == OWN_ADDRESS) {
+
+                    /* remove MPCM flag and reset buffer fill counter */
+                    UCSR0A &= ~_BV(MPCM0);
+                    fill = 0;
+
+                    continue;
+
+                } else {/* turn on MPCM */
+
+                    UCSR0A |= _BV(MPCM0);
+                    continue;
+
+                }
+            }
+
+            /* else this is a data packet, put data into buffer */
+            buffer[fill++] = data;
+
+            if (buffer[0] == 0x01) {  /* soft reset */
+
+                jump_to_bootloader();
+
+            } else if (buffer[0] == 0x02 && fill == 4) { /* set color */
+
+                for (uint8_t pos = 0; pos < 3; pos++) {
+                    global_pwm.channels[pos].target_brightness = buffer[pos + 1];
+                    global_pwm.channels[pos].brightness = buffer[pos + 1];
+                }
+
+                UCSR0A |= _BV(MPCM0); /* return to MPCM mode */
+
+            } else if (buffer[0] == 0x03 && fill == 6) { /* fade to color */
+
+                //global_pwm.channels[2].target_brightness = 0xff;
+
+                for (uint8_t pos = 0; pos < 3; pos++) {
+                    global_pwm.channels[pos].speed_h = buffer[1];
+                    global_pwm.channels[pos].speed_l = buffer[2];
+                    global_pwm.channels[pos].target_brightness = buffer[pos + 3];
+                }
+
+                UCSR0A |= _BV(MPCM0); /* return to MPCM mode */
+            }
+
+        }
+
+#if I2C_MASTER
+        i2c_master_check_queue();
 #endif
     }
 }

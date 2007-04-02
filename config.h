@@ -41,7 +41,7 @@
 #endif
 
 /* check if this cpu is supported */
-#if !(defined(__AVR_ATmega8__) || defined(__AVR_ATmega88__))
+#if !(defined(__AVR_ATmega8__) || defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__))
 #error "this cpu isn't supported yet!"
 #endif
 
@@ -64,8 +64,23 @@
 #define _SIG_UART_RECV_UART0 SIG_UART_RECV
 #define _SIG_UART_DATA_UART0 SIG_UART_DATA
 #define _UDR_UART0 UDR
+#define UCSR0A UCSRA
+#define UCSR0C UCSRC
+#define MPCM0 MPCM
+#define UCSZ00 UCSZ0
+#define UCSZ01 UCSZ1
+#define UCSZ02 UCSZ2
+#define UBRR0H UBRRH
+#define UBRR0L UBRRL
+#define UCSR0B UCSRB
+#define RXEN0 RXEN
+#define TXEN0 TXEN
+#define RXC0 RXC
+#define RXB80 RXB8
+#define UDR0 UDR
+
 /* }}} */
-#elif defined(__AVR_ATmega88__)
+#elif defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__)
 /* {{{ */
 #define _ATMEGA88
 
