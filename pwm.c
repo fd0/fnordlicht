@@ -105,10 +105,6 @@ inline void init_timer1(void)
     /* no prescaler, CTC mode */
     TCCR1B = _BV(CS10) | _BV(WGM12);
     //TCCR1B = _BV(CS12) | _BV(CS10) | _BV(WGM12);
-    TCCR1A = 0;
-#ifdef _ATMEGA88
-    TCCR1C = 0;
-#endif
 
     /* enable timer1 overflow (=output compare 1a)
      * and output compare 1b interrupt */
@@ -304,9 +300,7 @@ ISR(SIG_OUTPUT_COMPARE1A)
         while (TCNT1 + 500 > pwm.slots[pwm.index].top)
         {
             /* spin until timer interrupt is near enough */
-            while (pwm.slots[pwm.index].top > TCNT1) {
-                asm volatile ("nop");
-            }
+            while (pwm.slots[pwm.index].top > TCNT1);
 
             /* output value */
             PORTB |= pwm.slots[pwm.index].mask;
