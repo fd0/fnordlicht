@@ -1,0 +1,17 @@
+RS485 CONTROL PROTOCOL
+----------------------
+
+115200 Baud, 9N1
+
+opcodes:
+=======
+0x01    do soft reset
+
+0x02    set color
+       data:
+               R, G, B (uint8)
+
+0x03    fade to color
+       data:
+               SPEEDH, SPEEDL, R, G, B (uint8)
+

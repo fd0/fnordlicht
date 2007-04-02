@@ -52,7 +52,6 @@
 
 #endif
 
-
 /* structs */
 volatile struct global_t global = {{0, 0}};
 
@@ -156,11 +155,12 @@ int main(void) {
 #if STATIC_SCRIPTS
     init_script_threads();
 
+    #if RS485_CTRL == 0
     /* start the example scripts */
-    //script_threads[0].handler.execute = &memory_handler_flash;
-    //script_threads[0].handler.position = (uint16_t) &colorchange_red_blue;
-    //script_threads[0].flags.disabled = 0;
-    //
+    script_threads[0].handler.execute = &memory_handler_flash;
+    script_threads[0].handler.position = (uint16_t) &colorchange_red;
+    script_threads[0].flags.disabled = 0;
+
     //script_threads[1].handler.execute = &memory_handler_flash;
     //script_threads[1].handler.position = (uint16_t) &testscript_flash2;
     //script_threads[1].flags.disabled = 0;
@@ -172,6 +172,7 @@ int main(void) {
     //script_threads[0].handler.execute = &memory_handler_flash;
     //script_threads[0].handler.position = (uint16_t) &blinken;
     //script_threads[0].flags.disabled = 0;
+    #endif
 
 #endif
 
@@ -185,6 +186,7 @@ int main(void) {
     i2c_global.send_messages_count = 1;
 #endif
 
+#if RS485_CTRL
     /* init command bus */
     UCSR0A = _BV(MPCM0); /* enable multi-processor communication mode */
     UCSR0C = _BV(UCSZ00) | _BV(UCSZ01); /* 9 bit frame size */
@@ -194,8 +196,7 @@ int main(void) {
     UBRR0L = LOW(UART_UBRR);
 
     UCSR0B = _BV(RXEN0) | _BV(TXEN0) | _BV(UCSZ02); /* enable receiver and transmitter */
-
-    //UDR0 = 'B';
+#endif
 
     /* enable interrupts globally */
     sei();
@@ -262,6 +263,7 @@ int main(void) {
         }
 #endif
 
+#if RS485_CTRL
         if (UCSR0A & _BV(RXC0)) {
 
             uint8_t address = UCSR0B & _BV(RXB80); /* read nineth bit, zero if data, one if address */
@@ -272,7 +274,7 @@ int main(void) {
             if (UCSR0A & _BV(MPCM0) || address) { /* if MPCM mode is still active, or ninth bit set, this is an address packet */
 
                 /* check if we are ment */
-                if (data == 0 || data == OWN_ADDRESS) {
+                if (data == 0 || data == RS485_ADDRESS) {
 
                     /* remove MPCM flag and reset buffer fill counter */
                     UCSR0A &= ~_BV(MPCM0);
@@ -306,8 +308,6 @@ int main(void) {
 
             } else if (buffer[0] == 0x03 && fill == 6) { /* fade to color */
 
-                //global_pwm.channels[2].target_brightness = 0xff;
-
                 for (uint8_t pos = 0; pos < 3; pos++) {
                     global_pwm.channels[pos].speed_h = buffer[1];
                     global_pwm.channels[pos].speed_l = buffer[2];
@@ -318,6 +318,7 @@ int main(void) {
             }
 
         }
+#endif
 
 #if I2C_MASTER
         i2c_master_check_queue();
