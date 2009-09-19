@@ -33,7 +33,6 @@
 #include "fnordlicht.h"
 #include "pwm.h"
 #include "uart.h"
-#include "i2c.h"
 
 #if RC5_DECODER
 #include "rc5.h"
@@ -144,10 +143,6 @@ int main(void) {
     init_rc5();
 #endif
 
-#if I2C
-    init_i2c();
-#endif
-
     global_pwm.channels[0].brightness = 50;
     global_pwm.channels[0].target_brightness = 50;
 
@@ -173,16 +168,6 @@ int main(void) {
     //script_threads[0].flags.disabled = 0;
     #endif
 
-#endif
-
-#if I2C_MASTER
-    i2c_global.send_messages[0].command.size = 4;
-    i2c_global.send_messages[0].command.code = COMMAND_SET_COLOR;
-    i2c_global.send_messages[0].command.set_color_parameters.colors[0] = 0x10;
-    i2c_global.send_messages[0].command.set_color_parameters.colors[1] = 0x10;
-    i2c_global.send_messages[0].command.set_color_parameters.colors[2] = 0x10;
-
-    i2c_global.send_messages_count = 1;
 #endif
 
 #if RS485_CTRL
@@ -317,10 +302,6 @@ int main(void) {
             }
 
         }
-#endif
-
-#if I2C_MASTER
-        i2c_master_check_queue();
 #endif
     }
 }

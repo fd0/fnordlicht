@@ -113,12 +113,6 @@
 #define SERIAL_UART 1
 #endif
 
-/* disable at keyboard decoder per default (EXPERIMENTAL) */
-/* ATTENTION: THIS IS EXPERIMENTAL AND DOES NOT WORK ATM! */
-#ifndef AT_KEYBOARD
-#define AT_KEYBOARD 0
-#endif
-
 /* disable rc5-decoder per default */
 #ifndef RC5_DECODER
 #define RC5_DECODER 0
@@ -127,20 +121,6 @@
 /* disable scripts speed control per default */
 #ifndef SCRIPT_SPEED_CONTROL
 #define SCRIPT_SPEED_CONTROL 0
-#endif
-
-/* disable i2c support per default (EXPERIMENTAL) */
-/* ATTENTION: THIS IS EXPERIMENTAL AND DOES NOT WORK ATM! */
-#ifndef I2C
-#define I2C 0
-#endif
-
-#ifndef I2C_MASTER
-#define I2C_MASTER 0
-#endif
-
-#ifndef I2C_SLAVE
-#define I2C_SLAVE 0
 #endif
 
 /* fifo size must be a power of 2 and below 128 */
