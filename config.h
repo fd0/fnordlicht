@@ -132,15 +132,6 @@
 #define CHANNEL_GREEN   1
 #define CHANNEL_BLUE    2
 
-/* enable this if you want to control a fnordlicht via RS485 */
-#ifndef RS485_CTRL
-#define RS485_CTRL 0
-#endif
-
-#if (RS485_CTRL == 1) && (SERIAL_UART == 1)
-#error "RS485_CTRL and SERIAL_UART are mutually exclusive!"
-#endif
-
 /* configure normal or inverted pwm */
 #if !defined(PWM_INVERTED) && defined(HARDWARE_fnordlicht)
 #define PWM_INVERTED

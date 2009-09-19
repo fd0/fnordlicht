@@ -144,13 +144,13 @@ int main(void)
     init_rc5();
 #endif
 
+    /* default color */
     global_pwm.channels[0].brightness = 50;
     global_pwm.channels[0].target_brightness = 50;
 
 #if STATIC_SCRIPTS
     init_script_threads();
 
-    #if RS485_CTRL == 0
     /* start the example scripts */
     script_threads[0].handler.execute = &memory_handler_flash;
     script_threads[0].handler.position = (uint16_t) &colorchange_red;
@@ -167,20 +167,6 @@ int main(void)
     //script_threads[0].handler.execute = &memory_handler_flash;
     //script_threads[0].handler.position = (uint16_t) &blinken;
     //script_threads[0].flags.disabled = 0;
-    #endif
-
-#endif
-
-#if RS485_CTRL
-    /* init command bus */
-    UCSR0A = _BV(MPCM0); /* enable multi-processor communication mode */
-    UCSR0C = _BV(UCSZ00) | _BV(UCSZ01); /* 9 bit frame size */
-
-    #define UART_UBRR 8 /* 115200 baud at 16mhz */
-    UBRR0H = HIGH(UART_UBRR);
-    UBRR0L = LOW(UART_UBRR);
-
-    UCSR0B = _BV(RXEN0) | _BV(TXEN0) | _BV(UCSZ02); /* enable receiver and transmitter */
 #endif
 
     /* enable interrupts globally */
@@ -246,63 +232,6 @@ int main(void)
             global_rc5.new_data = 0;
 
             continue;
-        }
-#endif
-
-#if RS485_CTRL
-        if (UCSR0A & _BV(RXC0)) {
-
-            uint8_t address = UCSR0B & _BV(RXB80); /* read nineth bit, zero if data, one if address */
-            uint8_t data = UDR0;
-            static uint8_t buffer[8];
-            static uint8_t fill = 0;
-
-            if (UCSR0A & _BV(MPCM0) || address) { /* if MPCM mode is still active, or ninth bit set, this is an address packet */
-
-                /* check if we are ment */
-                if (data == 0 || data == RS485_ADDRESS) {
-
-                    /* remove MPCM flag and reset buffer fill counter */
-                    UCSR0A &= ~_BV(MPCM0);
-                    fill = 0;
-
-                    continue;
-
-                } else {/* turn on MPCM */
-
-                    UCSR0A |= _BV(MPCM0);
-                    continue;
-
-                }
-            }
-
-            /* else this is a data packet, put data into buffer */
-            buffer[fill++] = data;
-
-            if (buffer[0] == 0x01) {  /* soft reset */
-
-                jump_to_bootloader();
-
-            } else if (buffer[0] == 0x02 && fill == 4) { /* set color */
-
-                for (uint8_t pos = 0; pos < 3; pos++) {
-                    global_pwm.channels[pos].target_brightness = buffer[pos + 1];
-                    global_pwm.channels[pos].brightness = buffer[pos + 1];
-                }
-
-                UCSR0A |= _BV(MPCM0); /* return to MPCM mode */
-
-            } else if (buffer[0] == 0x03 && fill == 6) { /* fade to color */
-
-                for (uint8_t pos = 0; pos < 3; pos++) {
-                    global_pwm.channels[pos].speed_h = buffer[1];
-                    global_pwm.channels[pos].speed_l = buffer[2];
-                    global_pwm.channels[pos].target_brightness = buffer[pos + 3];
-                }
-
-                UCSR0A |= _BV(MPCM0); /* return to MPCM mode */
-            }
-
         }
 #endif
     }
