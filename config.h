@@ -109,11 +109,6 @@
 #define SERIAL_UART 1
 #endif
 
-/* disable rc5-decoder per default */
-#ifndef RC5_DECODER
-#define RC5_DECODER 0
-#endif
-
 /* disable scripts speed control per default */
 #ifndef SCRIPT_SPEED_CONTROL
 #define SCRIPT_SPEED_CONTROL 0
