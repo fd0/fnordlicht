@@ -32,6 +32,7 @@
 #include "common.h"
 #include "fnordlicht.h"
 #include "pwm.h"
+#include "static_scripts.h"
 
 /* TYPES AND PROTOTYPES */
 
@@ -94,10 +95,28 @@ static struct timeslots_t pwm;
 volatile struct global_pwm_t global_pwm;
 
 /* FUNCTIONS AND INTERRUPTS */
+/* prototypes */
+void update_pwm_timeslots(void);
+void update_brightness(void);
 
-/** init timer 1 */
-inline void init_timer1(void)
+/* initialize pwm hardware and structures */
+void pwm_init(void)
 {
+    /* init output pins */
+
+#ifdef PWM_INVERTED
+    /* set all pins high -> leds off */
+    PWM_PORT |= PWM_CHANNEL_MASK;
+#else
+    /* set all pins low -> leds off */
+    PWM_PORT &= ~(PWM_CHANNEL_MASK);
+#endif
+
+    /* configure pins as outputs */
+    PWM_DDR = PWM_CHANNEL_MASK;
+
+    /* initialize timer 1 */
+
     /* no prescaler, CTC mode */
     TCCR1B = _BV(CS10) | _BV(WGM12);
 
@@ -110,15 +129,8 @@ inline void init_timer1(void)
 
     /* load initial delay, trigger an overflow */
     OCR1B = 65000;
-}
 
-
-
-/** init pwm */
-inline void init_pwm(void)
-{
-    init_timer1();
-
+    /* reset structures */
     for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
         global_pwm.channels[i].brightness = 0;
         global_pwm.channels[i].target_brightness = 0;
@@ -128,10 +140,31 @@ inline void init_pwm(void)
         global_pwm.channels[i].mask = _BV(i);
     }
 
+    /* calculate initial timeslots */
     update_pwm_timeslots();
 }
 
+/* prepare new timeslots */
+void pwm_poll(void)
+{
+    /* after the last pwm timeslot, rebuild the timeslot table */
+    if (global.flags.pwm_last_pulse) {
+        global.flags.pwm_last_pulse = 0;
 
+        update_pwm_timeslots();
+    }
+
+    /* at the beginning of each pwm cycle, call the fading engine and
+     * execute all script threads */
+    if (global.flags.pwm_start) {
+        global.flags.pwm_start = 0;
+
+        update_brightness();
+#if STATIC_SCRIPTS
+        execute_script_threads();
+#endif
+    }
+}
 
 /** update pwm timeslot table */
 void update_pwm_timeslots(void)
@@ -277,7 +310,7 @@ static inline void prepare_next_timeslot(void)
     if (pwm.index >= pwm.count) {
         /* select first timeslot and trigger timeslot rebuild */
         pwm.index = 0;
-        global.flags.last_pulse = 1;
+        global.flags.pwm_last_pulse = 1;
         OCR1B = 65000;
     } else {
         /* load new top and bitmask */
@@ -297,7 +330,7 @@ ISR(SIG_OUTPUT_COMPARE1A)
     /* decide if this interrupt is the beginning of a pwm cycle */
     if (pwm.new_cycle) {
         /* output initial values */
-        PORTB = (PORTB & ~(PWM_CHANNEL_MASK)) | pwm.next_bitmask;
+        PWM_PORT = (PWM_PORT & ~(PWM_CHANNEL_MASK)) | pwm.next_bitmask;
 
         /* if next timeslot would happen too fast or has already happened, just spinlock */
         while (TCNT1 + 500 > pwm.slots[pwm.index].top)
@@ -306,7 +339,7 @@ ISR(SIG_OUTPUT_COMPARE1A)
             while (pwm.slots[pwm.index].top > TCNT1);
 
             /* output value */
-            PORTB = (PORTB & ~(PWM_CHANNEL_MASK)) | pwm.slots[pwm.index].mask;
+            PWM_PORT = (PWM_PORT & ~(PWM_CHANNEL_MASK)) | pwm.slots[pwm.index].mask;
 
             /* we can safely increment index here, since we are in the first timeslot and there
              * will always be at least one timeslot after this (middle) */
@@ -314,7 +347,7 @@ ISR(SIG_OUTPUT_COMPARE1A)
         }
 
         /* signal new cycle to main procedure */
-        global.flags.new_cycle = 1;
+        global.flags.pwm_start = 1;
 
         pwm.new_cycle = 0;
     }
@@ -327,7 +360,7 @@ ISR(SIG_OUTPUT_COMPARE1A)
 ISR(SIG_OUTPUT_COMPARE1B)
 {
     /* normal interrupt, output pre-calculated bitmask */
-    PORTB = (PORTB & ~(PWM_CHANNEL_MASK)) | pwm.next_bitmask;
+    PWM_PORT = (PWM_PORT & ~(PWM_CHANNEL_MASK)) | pwm.next_bitmask;
 
     /* and calculate the next timeslot */
     prepare_next_timeslot();

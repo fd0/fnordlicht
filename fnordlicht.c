@@ -52,24 +52,10 @@ volatile struct global_t global = {{0, 0}};
 
 /* prototypes */
 void (*jump_to_bootloader)(void) = (void *)0xc00;
-static inline void init_output(void);
 
 #if SERIAL_UART
 static inline void check_serial_input(uint8_t data);
 #endif
-
-/** init output channels */
-void init_output(void) {
-#ifdef PWM_INVERTED
-    /* set all channels high -> leds off */
-    PORTB = _BV(PB0) | _BV(PB1) | _BV(PB2);
-#endif
-
-    /* configure PB0-PB2 as outputs */
-    DDRB = _BV(PB0) | _BV(PB1) | _BV(PB2);
-}
-
-
 
 #if SERIAL_UART
 /** process serial data received by uart */
@@ -133,8 +119,7 @@ void check_serial_input(uint8_t data)
  */
 int main(void)
 {
-    init_output();
-    init_pwm();
+    pwm_init();
 
 #if SERIAL_UART
     init_uart();
@@ -174,26 +159,8 @@ int main(void)
 
     while (1)
     {
-        /* after the last pwm timeslot, rebuild the timeslot table */
-        if (global.flags.last_pulse) {
-            global.flags.last_pulse = 0;
-
-            update_pwm_timeslots();
-        }
-
-        /* at the beginning of each pwm cycle, call the fading engine and
-         * execute all script threads */
-        if (global.flags.new_cycle) {
-            global.flags.new_cycle = 0;
-
-            update_brightness();
-#if STATIC_SCRIPTS
-            execute_script_threads();
-#endif
-
-            continue;
-        }
-
+        /* update pwm */
+        pwm_poll();
 
 #if SERIAL_UART
         /* check if we received something via uart */

@@ -68,7 +68,8 @@ struct channel_t
 
 };
 
-struct global_pwm_t {
+struct global_pwm_t
+{
     /* current channel records */
     struct channel_t channels[PWM_CHANNELS];
 };
@@ -76,9 +77,7 @@ struct global_pwm_t {
 extern volatile struct global_pwm_t global_pwm;
 
 /* prototypes */
-void init_timer1(void);
-void init_pwm(void);
-void update_pwm_timeslots(void);
-void update_brightness(void);
+void pwm_init(void);
+void pwm_poll(void);
 
 #endif

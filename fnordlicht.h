@@ -25,10 +25,10 @@
 struct flags_t {
     /* set by pwm interrupt after burst, signals the beginning of a new pwm
      * cycle to the main loop. */
-    uint8_t new_cycle:1;
+    uint8_t pwm_start:1;
     /* set by pwm interrupt after last interrupt in the current cycle, signals
      * the main loop to rebuild the pwm timslot table */
-    uint8_t last_pulse:1;
+    uint8_t pwm_last_pulse:1;
 };
 
 struct global_t {

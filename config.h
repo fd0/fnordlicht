@@ -125,7 +125,9 @@
 
 /* number of pwm channels */
 #define PWM_CHANNELS 3
-#define PWM_CHANNEL_MASK 0b111
+#define PWM_CHANNEL_MASK (_BV(PB0) | _BV(PB1) | _BV(PB2))
+#define PWM_DDR DDRB
+#define PWM_PORT PORTB
 
 /* color <-> channel assignment */
 #define CHANNEL_RED     0
