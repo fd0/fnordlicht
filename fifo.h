@@ -30,11 +30,11 @@
 #include <avr/interrupt.h>
 
 #ifndef UART_FIFO_SIZE
-#error UART_FIFO_SIZE is not defined
+#error "UART_FIFO_SIZE is not defined"
 #endif
 
 #if (UART_FIFO_SIZE & (UART_FIFO_SIZE-1))
-#error UART_FIFO_SIZE is not a power of 2!
+#error "UART_FIFO_SIZE is not a power of 2!"
 #endif
 
 /* structures */

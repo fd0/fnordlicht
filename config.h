@@ -27,13 +27,13 @@
 #include <avr/version.h>
 
 /* check for avr-libc version */
-#if __AVR_LIBC_VERSION__ < 10402UL
-#error newer libc version (>= 1.4.2) needed!
+#if __AVR_LIBC_VERSION__ < 10600UL
+#error "newer libc version (>= 1.6.0) needed!"
 #endif
 
 /* check if cpu speed is defined */
 #ifndef F_CPU
-#error please define F_CPU!
+#error "please define F_CPU! (see Makefile)"
 #endif
 
 /* check if this cpu is supported */

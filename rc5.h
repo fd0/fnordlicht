@@ -32,7 +32,7 @@
 
 /* warn, if F_CPU is not defined */
 #ifndef F_CPU
-#error F_CPU not defined
+#error "F_CPU not defined!"
 #endif
 
 
