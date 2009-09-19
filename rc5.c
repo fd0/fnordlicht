@@ -193,7 +193,7 @@ static struct rc5_t temp_rc5;
 
 /* init rc5 decoder */
 void init_rc5(void)
-/* {{{ */ {
+{
 
     /* init halfbit and interrupt counter */
     rc5_halfbitcount = 0;
@@ -217,12 +217,12 @@ void init_rc5(void)
     /* clear any old interrupts and enable int0 interrupt */
     GIFR = _BV(INTF0);
     GICR |= _BV(INT0);
-} /* }}} */
+}
 
 
 /* int0 interrupt */
 ISR(SIG_INTERRUPT0)
-/* {{{ */ {
+{
 
     if (global_rc5.enabled && !rc5_disabled) {
 
@@ -293,11 +293,11 @@ ISR(SIG_INTERRUPT0)
         /* increase interrupt counter */
         rc5_interrupts++;
     }
-} /* }}} */
+}
 
 /* timer0 overflow interrupt */
 ISR(SIG_OVERFLOW0)
-/* {{{ */ {
+{
     /* disable overflow interrupt */
     TIMSK &= ~_BV(TOIE0);
 
@@ -331,6 +331,6 @@ ISR(SIG_OVERFLOW0)
 
     }
 
-} /* }}} */
+}
 
 #endif

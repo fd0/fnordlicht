@@ -37,7 +37,7 @@
 #define MAX_THREADS 3
 
 /* opcodes */
-/* {{{ */
+
 #define OP_NOP              0x00
 #define OP_FADE_CHANNEL     0x10
 #define OP_FADE_CHANNELS    0x20
@@ -47,10 +47,10 @@
 #define OP_WAIT             0x60
 #define OP_CLEAR            0x70
 #define OP_STOP             0x80
-/* }}} */
+
 
 /* opcode macros */
-/* {{{ */
+
 #define MACRO_NOP() \
     OP_NOP, 0, 0, 0
 
@@ -77,27 +77,27 @@
 
 #define MACRO_STOP() \
     OP_STOP, 0, 0, 0
-/* }}} */
+
 
 /* opcode function return values */
-/* {{{ */
+
 #define OP_RETURN_OK        0   /* do nothing */
 #define OP_RETURN_BREAK     1   /* execution has been completed for this cycle, jump to next thread */
 #define OP_RETURN_STOP      2   /* disable this script */
-/* }}} */
+
 
 /* workaround prototype for handler 'execute' function definition */
 struct thread_t;
 
 /* structs */
 struct script_handler_t
-/* {{{ */ {
+{
     void (*execute)(struct thread_t *current_thread);
     uint16_t position;
-}; /* }}} */
+};
 
 struct thread_t
-/* {{{ */ {
+{
     struct script_handler_t handler;
 
     struct {
@@ -111,7 +111,7 @@ struct thread_t
 #if SCRIPT_SPEED_CONTROL
     int8_t speed_adjustment;
 #endif
-}; /* }}} */
+};
 
 /* global variables */
 struct thread_t script_threads[MAX_THREADS];

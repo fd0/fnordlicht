@@ -25,29 +25,29 @@
 
 
 inline uint8_t fifo_fill(volatile struct fifo_t *fifo)
-/* {{{ */ {
+{
     if (fifo->front >= fifo->back) {
         return fifo->front - fifo->back;
     } else {
         return (fifo->size) - (fifo->back - fifo->front + 1);
     }
-} /* }}} */
+}
 
 inline uint8_t fifo_capacity(volatile struct fifo_t *fifo)
-/* {{{ */ {
+{
     return (fifo->size - fifo_fill(fifo) - 1);
-} /* }}} */
+}
 
 inline void fifo_init(volatile struct fifo_t *fifo, uint8_t fifo_size)
-/* {{{ */ {
+{
     /* reset pointer */
     fifo->front = 0;
     fifo->back = 0;
     fifo->size = fifo_size;
-} /* }}} */
+}
 
 inline void fifo_store(volatile struct fifo_t *fifo, uint8_t data)
-/* {{{ */ {
+{
     /* check if there is some space for saving a byte */
     if ( fifo_capacity(fifo) > 0) {
         /* safe byte */
@@ -56,10 +56,10 @@ inline void fifo_store(volatile struct fifo_t *fifo, uint8_t data)
         /* calculate new front pointer */
         fifo->front = (fifo->front+1) & fifo->size;
     }
-} /* }}} */
+}
 
 inline void fifo_store_buffer(volatile struct fifo_t *fifo, uint8_t data[])
-/* {{{ */ {
+{
     uint8_t i = 0;
 
     /* while there is still enough space in the fifo and we haven't reached the
@@ -67,10 +67,10 @@ inline void fifo_store_buffer(volatile struct fifo_t *fifo, uint8_t data[])
     while (data[i] != 0 && fifo_capacity(fifo) > 0) {
         fifo_store(fifo, data[i++]);
     }
-} /* }}} */
+}
 
 inline uint8_t fifo_load(volatile struct fifo_t *fifo)
-/* {{{ */ {
+{
     uint8_t data = 0;
 
     /* check if the fifo contains something */
@@ -84,5 +84,4 @@ inline uint8_t fifo_load(volatile struct fifo_t *fifo)
     }
 
     return data;
-} /* }}} */
-
+}

@@ -36,7 +36,6 @@ void sleep_handler(struct thread_t *current_thread);
 void wait_handler(struct thread_t *current_thread);
 
 /* opcode handlers */
-/* {{{ */
 uint8_t opcode_handler_nop(uint8_t parameters[], struct thread_t *current_thread);
 uint8_t opcode_handler_fade_channel(uint8_t parameters[], struct thread_t *current_thread);
 uint8_t opcode_handler_fade_channels(uint8_t parameters[], struct thread_t *current_thread);
@@ -46,11 +45,9 @@ uint8_t opcode_handler_sleep(uint8_t parameters[], struct thread_t *current_thre
 uint8_t opcode_handler_wait(uint8_t parameters[], struct thread_t *current_thread);
 uint8_t opcode_handler_clear(uint8_t parameters[], struct thread_t *current_thread);
 uint8_t opcode_handler_stop(uint8_t parameters[], struct thread_t *current_thread);
-/* }}} */
 
 
 /* opcode lookup table */
-/* {{{ */
 uint8_t (*opcode_lookup_table[])(uint8_t parameters[], struct thread_t *current_thread) = {
     &opcode_handler_nop,            /* opcode 0x00 */
     &opcode_handler_fade_channel,   /* opcode 0x10 */
@@ -61,13 +58,12 @@ uint8_t (*opcode_lookup_table[])(uint8_t parameters[], struct thread_t *current_
     &opcode_handler_wait,           /* opcode 0x60 */
     &opcode_handler_clear,          /* opcode 0x70 */
     &opcode_handler_stop            /* opcode 0x80 */
-        };
-/* }}} */
+};
 
 
 /* init all structures in the global array 'script_threads' */
 void init_script_threads(void)
-/* {{{ */ {
+{
     uint8_t i;
 
     /* iterate over all threads */
@@ -85,11 +81,10 @@ void init_script_threads(void)
 #endif
     }
 }
-/* }}} */
 
 /* iterate over all threads and execute each, if enabled */
 void execute_script_threads(void)
-/* {{{ */ {
+{
     uint8_t i;
     uint8_t target_mask = 0;
 
@@ -112,11 +107,10 @@ void execute_script_threads(void)
         }
     }
 }
-/* }}} */
 
 /* memory handlers */
 void memory_handler_flash(struct thread_t *current_thread)
-/* {{{ */ {
+{
     uint8_t opcode;
     uint8_t parameters[4];
     uint8_t i;
@@ -147,10 +141,9 @@ void memory_handler_flash(struct thread_t *current_thread)
         }
     }
 }
-/* }}} */
 
 void memory_handler_eeprom(struct thread_t *current_thread)
-/* {{{ */ {
+{
     uint8_t opcode;
     uint8_t parameters[4];
     uint8_t i;
@@ -181,11 +174,10 @@ void memory_handler_eeprom(struct thread_t *current_thread)
         }
     }
 }
-/* }}} */
 
 /* other (module-local) handlers */
 void sleep_handler(struct thread_t *current_thread)
-/* {{{ */ {
+{
     /* restore old handler, if time is over */
     if ((--current_thread->handler.position) == 0) {
         current_thread->handler_stack_offset--;
@@ -194,10 +186,10 @@ void sleep_handler(struct thread_t *current_thread)
     }
 
 }
-/* }}} */
+
 
 void wait_handler(struct thread_t *current_thread)
-/* {{{ */ {
+{
     /* restore old handler and clear target_reached mask, if a channel we wait
      * for has reached it's target */
 
@@ -212,22 +204,21 @@ void wait_handler(struct thread_t *current_thread)
     }
 
 }
-/* }}} */
 
 
 /* opcode handlers */
 uint8_t opcode_handler_nop(uint8_t parameters[], struct thread_t *current_thread)
-/* {{{ */ {
+{
     /* do exactly nothing */
     (void) parameters;
     (void) current_thread;
 
     return OP_RETURN_BREAK;
 }
-/* }}} */
+
 
 uint8_t opcode_handler_fade_channel(uint8_t parameters[], struct thread_t *current_thread)
-/* {{{ */ {
+{
     uint16_t speed = (parameters[3] << 8) + parameters[2];
 
 #if SCRIPT_SPEED_CONTROL
@@ -250,10 +241,10 @@ uint8_t opcode_handler_fade_channel(uint8_t parameters[], struct thread_t *curre
 
     return OP_RETURN_OK;
 }
-/* }}} */
+
 
 uint8_t opcode_handler_fade_channels(uint8_t parameters[], struct thread_t *current_thread)
-/* {{{ */ {
+{
     (void) current_thread;
 
     global_pwm.channels[0].target_brightness = parameters[1];
@@ -262,10 +253,10 @@ uint8_t opcode_handler_fade_channels(uint8_t parameters[], struct thread_t *curr
 
     return OP_RETURN_OK;
 }
-/* }}} */
+
 
 uint8_t opcode_handler_jump(uint8_t parameters[], struct thread_t *current_thread)
-/* {{{ */ {
+{
     int16_t offset = ((int8_t) parameters[1]);
 
     /* correct offset so that -1 really jumps to the instruction _before_ this one */
@@ -280,10 +271,10 @@ uint8_t opcode_handler_jump(uint8_t parameters[], struct thread_t *current_threa
 
     return OP_RETURN_OK;
 }
-/* }}} */
+
 
 uint8_t opcode_handler_set_channel(uint8_t parameters[], struct thread_t *current_thread)
-/* {{{ */ {
+{
     (void) current_thread;
 
     global_pwm.channels[parameters[1]].brightness = parameters[2];
@@ -291,10 +282,10 @@ uint8_t opcode_handler_set_channel(uint8_t parameters[], struct thread_t *curren
 
     return OP_RETURN_OK;
 }
-/* }}} */
+
 
 uint8_t opcode_handler_sleep(uint8_t parameters[], struct thread_t *current_thread)
-/* {{{ */ {
+{
     uint16_t speed = (parameters[2] << 8) + parameters[1];
 
 #if SCRIPT_SPEED_CONTROL
@@ -320,10 +311,10 @@ uint8_t opcode_handler_sleep(uint8_t parameters[], struct thread_t *current_thre
 
     return OP_RETURN_BREAK;
 }
-/* }}} */
+
 
 uint8_t opcode_handler_wait(uint8_t parameters[], struct thread_t *current_thread)
-/* {{{ */ {
+{
     /* save old handler and old position onto the handler stack in the current thread */
     current_thread->handler_stack[current_thread->handler_stack_offset].execute = current_thread->handler.execute;
     current_thread->handler_stack[current_thread->handler_stack_offset].position = current_thread->handler.position;
@@ -335,10 +326,10 @@ uint8_t opcode_handler_wait(uint8_t parameters[], struct thread_t *current_threa
 
     return OP_RETURN_BREAK;
 }
-/* }}} */
+
 
 uint8_t opcode_handler_clear(uint8_t parameters[], struct thread_t *current_thread)
-/* {{{ */ {
+{
     (void) parameters;
 
     /* clear channel target reached flags for this thread */
@@ -346,16 +337,16 @@ uint8_t opcode_handler_clear(uint8_t parameters[], struct thread_t *current_thre
 
     return OP_RETURN_OK;
 }
-/* }}} */
+
 
 uint8_t opcode_handler_stop(uint8_t parameters[], struct thread_t *current_thread)
-/* {{{ */ {
+{
     (void) current_thread;
     (void) parameters;
 
     return OP_RETURN_STOP;
 }
-/* }}} */
+
 
 
 

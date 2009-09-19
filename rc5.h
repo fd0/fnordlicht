@@ -28,7 +28,7 @@
 
 #if RC5_DECODER
 
-#include <inttypes.h>
+#include <stdint.h>
 
 /* warn, if F_CPU is not defined */
 #ifndef F_CPU

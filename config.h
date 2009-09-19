@@ -43,7 +43,6 @@
 
 /* cpu specific configuration registers */
 #if defined(__AVR_ATmega8__)
-/* {{{ */
 #define _ATMEGA8
 
 #define _TIMSK_TIMER1 TIMSK
@@ -75,9 +74,7 @@
 #define RXB80 RXB8
 #define UDR0 UDR
 
-/* }}} */
 #elif defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__)
-/* {{{ */
 #define _ATMEGA88
 
 #define _TIMSK_TIMER1 TIMSK1
@@ -94,7 +91,6 @@
 #define _SIG_UART_RECV_UART0 SIG_USART_RECV
 #define _SIG_UART_DATA_UART0 SIG_USART_DATA
 #define _UDR_UART0 UDR0
-/* }}} */
 #endif
 
 

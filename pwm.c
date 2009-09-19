@@ -37,7 +37,7 @@
 
 /* encapsulates all pwm data including timeslot and output mask array */
 struct timeslots_t
-/*{{{*/ {
+{
     struct {
         uint8_t mask;
         uint16_t top;
@@ -47,7 +47,7 @@ struct timeslots_t
     uint8_t count;  /* number of entries in slots */
     uint8_t next_bitmask; /* next output bitmask, or signal for start or middle of pwm cycle */
     uint8_t initial_bitmask; /* output mask set at beginning */
-}; /*}}}*/
+};
 
 static inline void prepare_next_timeslot(void);
 
@@ -55,7 +55,7 @@ static inline void prepare_next_timeslot(void);
 
 /* timer top values for 256 brightness levels (stored in flash) */
 static const uint16_t timeslot_table[] PROGMEM =
-/*{{{*/ {
+{
       2,     8,    18,    31,    49,    71,    96,   126,
     159,   197,   238,   283,   333,   386,   443,   504,
     569,   638,   711,   787,   868,   953,  1041,  1134,
@@ -87,7 +87,7 @@ static const uint16_t timeslot_table[] PROGMEM =
   35654, 36542, 37433, 38329, 39229, 40132, 41040, 41951,
   42866, 43786, 44709, 45636, 46567, 47502, 48441, 49384,
   50331, 51282, 52236, 53195, 54158, 55124, 56095, 57069,
-  58047, 59030, 60016, 61006, 62000, 62998 }; /*}}}*/
+  58047, 59030, 60016, 61006, 62000, 62998 };
 
 /* pwm timeslots (the top values and masks for the timer1 interrupt) */
 static struct timeslots_t pwm;
@@ -97,7 +97,7 @@ volatile struct global_pwm_t global_pwm;
 
 /** init timer 1 */
 inline void init_timer1(void)
-/*{{{*/ {
+{
     /* no prescaler, CTC mode */
     TCCR1B = _BV(CS10) | _BV(WGM12);
     //TCCR1B = _BV(CS12) | _BV(CS10) | _BV(WGM12);
@@ -113,11 +113,11 @@ inline void init_timer1(void)
     OCR1B = 65000;
 }
 
-/* }}} */
+
 
 /** init pwm */
 inline void init_pwm(void)
-/*{{{*/ {
+{
     uint8_t i;
 
     init_timer1();
@@ -134,11 +134,11 @@ inline void init_pwm(void)
     update_pwm_timeslots();
 }
 
-/* }}} */
+
 
 /** update pwm timeslot table */
 void update_pwm_timeslots(void)
-/*{{{*/ {
+{
     uint8_t sorted[PWM_CHANNELS] = { 0, 1, 2 };
     uint8_t i, j;
     uint8_t mask = 0;
@@ -212,11 +212,11 @@ void update_pwm_timeslots(void)
     for (i=0; i < PWM_CHANNELS; i++)
         if (global_pwm.channels[i].brightness > 0)
             pwm.initial_bitmask &= ~global_pwm.channels[i].mask;
-} /*}}}*/
+}
 
 /** fade any channels not already at their target brightness */
 void update_brightness(void)
-/*{{{*/ {
+{
     uint8_t i;
 
     /* iterate over the channels */
@@ -258,11 +258,11 @@ void update_brightness(void)
             }
         }
     }
-} /*}}}*/
+}
 
 /** prepare next timeslot */
 static inline void prepare_next_timeslot(void)
-/*{{{*/ {
+{
     /* check if this is the last interrupt */
     if (pwm.index >= pwm.count) {
         /* select first timeslot and trigger timeslot rebuild */
@@ -280,13 +280,13 @@ static inline void prepare_next_timeslot(void)
 
     /* clear compare interrupts which might have in the meantime happened */
     //TIFR |= _BV(OCF1B);
-} /*}}}*/
+}
 
 /** interrupts*/
 
 /** timer1 overflow (=output compare a) interrupt */
 ISR(SIG_OUTPUT_COMPARE1A)
-/*{{{*/ {
+{
     /* decide if this interrupt is the beginning of a pwm cycle */
     if (pwm.next_bitmask == 0) {
         /* output initial values */
@@ -320,11 +320,11 @@ ISR(SIG_OUTPUT_COMPARE1A)
 
     /* prepare the next timeslot */
     prepare_next_timeslot();
-} /*}}}*/
+}
 
 /** timer1 output compare b interrupt */
 ISR(SIG_OUTPUT_COMPARE1B)
-/*{{{*/ {
+{
     /* normal interrupt, output pre-calculated bitmask */
 #if HARDWARE_fnordlicht
     PORTB |= pwm.next_bitmask;
@@ -334,4 +334,4 @@ ISR(SIG_OUTPUT_COMPARE1B)
 
     /* and calculate the next timeslot */
     prepare_next_timeslot();
-} /*}}}*/
+}

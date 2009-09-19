@@ -29,7 +29,7 @@
 
 /* contains all the data for one color channel */
 struct channel_t
-/*{{{*/ {
+{
     union {
         /* for adding fade-speed to brightness, and save the remainder */
         uint16_t brightness_and_remainder;
@@ -66,7 +66,7 @@ struct channel_t
         uint8_t target_reached:1;
     } flags;
 
-}; /*}}}*/
+};
 
 struct global_pwm_t {
     /* current channel records */

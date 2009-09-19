@@ -38,27 +38,27 @@ volatile struct global_uart_t global_uart;
 
 /** output one character */
 inline void uart_putc(uint8_t data)
-/*{{{*/ {
+{
     /* store data */
     fifo_store(&global_uart.tx_fifo, data);
 
     /* enable interrupt */
     _UCSRB_UART0 |= _BV(_UDRIE_UART0);
-} /* }}} */
+}
 
 /** output a string */
 inline void uart_puts(uint8_t buffer[])
-/*{{{*/ {
+{
     /* store data */
     fifo_store_buffer(&global_uart.tx_fifo, buffer);
 
     /* enable interrupt */
     _UCSRB_UART0 |= _BV(_UDRIE_UART0);
-} /* }}} */
+}
 
 /** init the hardware uart */
 void init_uart(void)
-/*{{{*/ {
+{
     /* set baud rate */
     _UBRRH_UART0 = (uint8_t)(UART_UBRR >> 8);  /* high byte */
     _UBRRL_UART0 = (uint8_t)UART_UBRR;         /* low byte */
@@ -75,23 +75,23 @@ void init_uart(void)
 
     /* send boot message */
     uart_putc('B');
-} /* }}} */
+}
 
 
 /** interrupts*/
 
 /** uart receive interrupt */
 ISR(_SIG_UART_RECV_UART0)
-/*{{{*/ {
+{
 
     /* store received data */
     fifo_store(&global_uart.rx_fifo, _UDR_UART0);
 
-} /*}}}*/
+}
 
 /** uart data register empty interrupt */
 ISR(_SIG_UART_DATA_UART0)
-/*{{{*/ {
+{
 
     /* load next byte to transfer */
     _UDR_UART0 = fifo_load(&global_uart.tx_fifo);
@@ -102,7 +102,7 @@ ISR(_SIG_UART_DATA_UART0)
         _UCSRB_UART0 &= ~_BV(_UDRIE_UART0);
     }
 
-} /*}}}*/
+}
 
 
 #endif

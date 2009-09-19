@@ -59,7 +59,7 @@ static inline void check_serial_input(uint8_t data);
 #endif
 
 /** init output channels */
-void init_output(void) { /* {{{ */
+void init_output(void) {
 #ifdef HARDWARE_fnordlicht
     /* set all channels high -> leds off */
     PORTB = _BV(PB0) | _BV(PB1) | _BV(PB2);
@@ -69,12 +69,12 @@ void init_output(void) { /* {{{ */
     DDRB = _BV(PB0) | _BV(PB1) | _BV(PB2);
 }
 
-/* }}} */
+
 
 #if SERIAL_UART
 /** process serial data received by uart */
 void check_serial_input(uint8_t data)
-/* {{{ */ {
+{
 
     switch (data) {
 #if 0
@@ -126,7 +126,7 @@ void check_serial_input(uint8_t data)
             jump_to_bootloader();
             break;
     }
-} /* }}} */
+}
 #endif
 
 /** main function
