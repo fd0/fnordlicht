@@ -21,6 +21,9 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __FNORDLICHT_H
+#define __FNORDLICHT_H
+
 /* global flag(=bit) structure */
 struct flags_t {
     /* set by pwm interrupt after burst, signals the beginning of a new pwm
@@ -36,3 +39,5 @@ struct global_t {
 };
 
 extern volatile struct global_t global;
+
+#endif
