@@ -55,7 +55,7 @@
     OP_NOP, 0, 0, 0
 
 #define MACRO_FADE_CHANNEL(channel, target_brightness, speed) \
-    (OP_FADE_CHANNEL | channel), target_brightness, LOW(speed), HIGH(speed)
+    (OP_FADE_CHANNEL | channel), target_brightness, LO8(speed), HI8(speed)
 
 #define MACRO_FADE_CHANNELS(brightness1, brightness2, brightness3) \
     OP_FADE_CHANNELS, brightness1, brightness2, brightness3
@@ -67,7 +67,7 @@
     OP_SET_CHANNEL, channel, target_brightness, 0
 
 #define MACRO_SLEEP(delay_cycles) \
-    OP_SLEEP, LOW(delay_cycles), HIGH(delay_cycles), 0
+    OP_SLEEP, LO8(delay_cycles), HI8(delay_cycles), 0
 
 #define MACRO_WAIT(eventmask) \
     OP_WAIT, eventmask, 0, 0

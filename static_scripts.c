@@ -245,8 +245,8 @@ uint8_t opcode_handler_fade_channel(uint8_t parameters[], struct thread_t *curre
 #endif
 
     global_pwm.channels[parameters[0]].target_brightness = parameters[1];
-    global_pwm.channels[parameters[0]].speed_l = LOW(speed);
-    global_pwm.channels[parameters[0]].speed_h = HIGH(speed);
+    global_pwm.channels[parameters[0]].speed_l = LO8(speed);
+    global_pwm.channels[parameters[0]].speed_h = HI8(speed);
 
     return OP_RETURN_OK;
 }
