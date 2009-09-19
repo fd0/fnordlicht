@@ -115,8 +115,8 @@
 #endif
 
 /* fifo size must be a power of 2 and below 128 */
-#define UART_FIFO_SIZE 32
-#define UART_BAUDRATE 19200
+#define UART_FIFO_SIZE 64
+#define UART_BAUDRATE 115200
 
 /* number of pwm channels */
 #define PWM_CHANNELS 3

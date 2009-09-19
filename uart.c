@@ -33,24 +33,36 @@
 #include "fifo.h"
 #include "uart.h"
 
+/* define uart baud rate (19200) and mode (8N1) */
+#if defined(__AVR_ATmega8__)
+/* in atmega8, we need a special switching bit
+ * for addressing UCSRC */
+#define UART_UCSRC _BV(URSEL) | _BV(UCSZ0) | _BV(UCSZ1)
+
+#elif defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__)
+/* in atmega88, this isn't needed any more */
+#define UART_UCSRC _BV(_UCSZ0_UART0) | _BV(_UCSZ1_UART0)
+#endif
+
+#if UART_BAUDRATE == 115200 && F_CPU == 16000000UL
+    #define UART_UBRR 8
+#elif UART_BAUDRATE == 115200 && F_CPU == 20000000UL
+    #define UART_UBRR 10
+#else
+    #if UART_BAUDRATE > 57600
+    #warn "high uart baudrate, UART_UBRR might not be correct!"
+    #endif
+    #define UART_UBRR (F_CPU/(UART_BAUDRATE * 16L)-1)
+#endif
+
 /* global variables */
 volatile struct global_uart_t global_uart;
 
 /** output one character */
-inline void uart_putc(uint8_t data)
+void uart_putc(uint8_t data)
 {
     /* store data */
     fifo_store(&global_uart.tx_fifo, data);
-
-    /* enable interrupt */
-    _UCSRB_UART0 |= _BV(_UDRIE_UART0);
-}
-
-/** output a string */
-inline void uart_puts(uint8_t buffer[])
-{
-    /* store data */
-    fifo_store_buffer(&global_uart.tx_fifo, buffer);
 
     /* enable interrupt */
     _UCSRB_UART0 |= _BV(_UDRIE_UART0);
@@ -72,9 +84,6 @@ void init_uart(void)
     /* init fifos */
     fifo_init(&global_uart.rx_fifo, UART_FIFO_SIZE-1);
     fifo_init(&global_uart.tx_fifo, UART_FIFO_SIZE-1);
-
-    /* send boot message */
-    uart_putc('B');
 }
 
 
