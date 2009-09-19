@@ -70,7 +70,7 @@ struct channel_t
 
 struct global_pwm_t {
     /* current channel records */
-    struct channel_t channels[3];
+    struct channel_t channels[PWM_CHANNELS];
 };
 
 extern volatile struct global_pwm_t global_pwm;

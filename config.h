@@ -123,6 +123,8 @@
 #define UART_FIFO_SIZE 32
 #define UART_BAUDRATE 19200
 
+/* number of pwm channels */
+#define PWM_CHANNELS 3
 
 /* color <-> channel assignment */
 #define CHANNEL_RED     0

@@ -24,8 +24,6 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#define PWM_CHANNELS 3
-
 /* macros for extracting low and high byte */
 #define LO8(x) (uint8_t)(0x00ff & (x))
 #define HI8(x) (uint8_t)((0xff00 & (x)) >> 8)
