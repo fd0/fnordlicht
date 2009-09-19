@@ -125,6 +125,7 @@
 
 /* number of pwm channels */
 #define PWM_CHANNELS 3
+#define PWM_CHANNEL_MASK 0b111
 
 /* color <-> channel assignment */
 #define CHANNEL_RED     0
@@ -140,5 +141,9 @@
 #error "RS485_CTRL and SERIAL_UART are mutually exclusive!"
 #endif
 
+/* configure normal or inverted pwm */
+#if !defined(PWM_INVERTED) && defined(HARDWARE_fnordlicht)
+#define PWM_INVERTED
+#endif
 
 #endif /* _FNORDLICHT_CONFIG_H */

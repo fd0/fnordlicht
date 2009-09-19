@@ -60,7 +60,7 @@ static inline void check_serial_input(uint8_t data);
 
 /** init output channels */
 void init_output(void) {
-#ifdef HARDWARE_fnordlicht
+#ifdef PWM_INVERTED
     /* set all channels high -> leds off */
     PORTB = _BV(PB0) | _BV(PB1) | _BV(PB2);
 #endif
@@ -131,7 +131,8 @@ void check_serial_input(uint8_t data)
 
 /** main function
  */
-int main(void) {
+int main(void)
+{
     init_output();
     init_pwm();
 
@@ -185,7 +186,8 @@ int main(void) {
     /* enable interrupts globally */
     sei();
 
-    while (1) {
+    while (1)
+    {
         /* after the last pwm timeslot, rebuild the timeslot table */
         if (global.flags.last_pulse) {
             global.flags.last_pulse = 0;
