@@ -119,6 +119,7 @@ struct thread_t script_threads[MAX_THREADS];
 /* prototypes */
 void init_script_threads(void);
 void execute_script_threads(void);
+void disable_script_threads(void);
 
 /* memory handlers */
 void memory_handler_flash(struct thread_t *current_thread);

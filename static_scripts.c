@@ -82,6 +82,14 @@ void init_script_threads(void)
     }
 }
 
+/* disable all script handlers */
+void disable_script_threads(void)
+{
+    /* iterate over all threads */
+    for (uint8_t i = 0; i < MAX_THREADS; i++)
+        script_threads[i].flags.disabled = 1;
+}
+
 /* iterate over all threads and execute each, if enabled */
 void execute_script_threads(void)
 {
