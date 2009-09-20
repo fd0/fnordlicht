@@ -23,65 +23,39 @@
 
 #include "fifo.h"
 
-
-inline uint8_t fifo_fill(volatile struct fifo_t *fifo)
+void fifo_init(fifo_t *f)
 {
-    if (fifo->front >= fifo->back) {
-        return fifo->front - fifo->back;
-    } else {
-        return (fifo->size) - (fifo->back - fifo->front + 1);
-    }
+    f->read = 0;
+    f->write = 0;
 }
 
-inline uint8_t fifo_capacity(volatile struct fifo_t *fifo)
+void fifo_enqueue(fifo_t *f, fifo_content_t data)
 {
-    return (fifo->size - fifo_fill(fifo) - 1);
+    f->buffer[f->write] = data;
+    f->write = (f->write + 1) % FIFO_SIZE;
 }
 
-inline void fifo_init(volatile struct fifo_t *fifo, uint8_t fifo_size)
+fifo_content_t fifo_dequeue(fifo_t *f)
 {
-    /* reset pointer */
-    fifo->front = 0;
-    fifo->back = 0;
-    fifo->size = fifo_size;
-}
-
-inline void fifo_store(volatile struct fifo_t *fifo, uint8_t data)
-{
-    /* check if there is some space for saving a byte */
-    if ( fifo_capacity(fifo) > 0) {
-        /* safe byte */
-        fifo->buffer[fifo->front] = data;
-
-        /* calculate new front pointer */
-        fifo->front = (fifo->front+1) & fifo->size;
-    }
-}
-
-inline void fifo_store_buffer(volatile struct fifo_t *fifo, uint8_t data[])
-{
-    uint8_t i = 0;
-
-    /* while there is still enough space in the fifo and we haven't reached the
-     * end of the buffer, store byte */
-    while (data[i] != 0 && fifo_capacity(fifo) > 0) {
-        fifo_store(fifo, data[i++]);
-    }
-}
-
-inline uint8_t fifo_load(volatile struct fifo_t *fifo)
-{
-    uint8_t data = 0;
-
-    /* check if the fifo contains something */
-    if ( fifo_fill(fifo) > 0) {
-
-        /* load data */
-        data = fifo->buffer[fifo->back];
-
-        /* calculate new back pointer */
-        fifo->back = (fifo->back+1) & fifo->size;
-    }
-
+    fifo_content_t data = f->buffer[f->read];
+    f->read = (f->read + 1) % FIFO_SIZE;
     return data;
+}
+
+fifo_size_t fifo_fill(fifo_t *f)
+{
+    if (f->write >= f->read)
+        return f->write - f->read;
+    else
+        return FIFO_SIZE - (f->read - f->write);
+}
+
+bool fifo_empty(fifo_t *f)
+{
+    return f->read == f->write;
+}
+
+bool fifo_full(fifo_t *f)
+{
+    return fifo_fill(f) == FIFO_SIZE-1;
 }

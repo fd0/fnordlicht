@@ -33,6 +33,7 @@
 #include "fnordlicht.h"
 #include "pwm.h"
 #include "uart.h"
+#include "remote.h"
 
 #if STATIC_SCRIPTS
 /* include static scripts */
@@ -42,71 +43,6 @@
 
 /* structs */
 volatile struct global_t global = {{0, 0}};
-
-/* prototypes */
-void (*jump_to_bootloader)(void) = (void *)0xc00;
-
-#if SERIAL_UART
-static inline void check_serial_input(uint8_t data);
-#endif
-
-#if SERIAL_UART
-/** process serial data received by uart */
-void check_serial_input(uint8_t data)
-{
-
-    switch (data) {
-#if 0
-        case '1':
-            global_pwm.channels[0].target_brightness-=1;
-            break;
-        case '4':
-            global_pwm.channels[0].target_brightness+=1;
-            break;
-        case '2':
-            global_pwm.channels[1].target_brightness-=1;
-            break;
-        case '5':
-            global_pwm.channels[1].target_brightness+=1;
-            break;
-        case '3':
-            global_pwm.channels[2].target_brightness-=1;
-            break;
-        case '6':
-            global_pwm.channels[2].target_brightness+=1;
-            break;
-        case '0':
-            global_pwm.channels[0].target_brightness=0;
-            global_pwm.channels[1].target_brightness=0;
-            global_pwm.channels[2].target_brightness=0;
-            break;
-        case '=':
-            global_pwm.channels[0].target_brightness=global_pwm.channels[0].brightness;
-            global_pwm.channels[1].target_brightness=global_pwm.channels[1].brightness;
-            global_pwm.channels[2].target_brightness=global_pwm.channels[2].brightness;
-            break;
-#if SCRIPT_SPEED_CONTROL
-        case '>':
-            script_threads[0].speed_adjustment--;
-            script_threads[1].speed_adjustment--;
-            script_threads[2].speed_adjustment--;
-            break;
-        case '<':
-            script_threads[0].speed_adjustment++;
-            script_threads[1].speed_adjustment++;
-            script_threads[2].speed_adjustment++;
-            break;
-#endif
-        case 'i':
-            TWCR |= _BV(TWSTA) | _BV(TWINT);
-            break;
-#endif
-        case 'p':
-            jump_to_bootloader();
-            break;
-    }
-}
-#endif
 
 /** main function
  */
@@ -140,11 +76,8 @@ int main(void)
         pwm_poll();
 
 #if SERIAL_UART
-        /* check if we received something via uart */
-        if (fifo_fill(&global_uart.rx_fifo) > 0) {
-            check_serial_input(fifo_load(&global_uart.rx_fifo));
-            continue;
-        }
+        /* check for remote commands */
+        remote_poll();
 #endif
     }
 }

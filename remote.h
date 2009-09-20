@@ -6,7 +6,6 @@
  *    see http://lochraster.org/fnordlicht
  *
  * (c) by Alexander Neumann <alexander@bumpern.de>
- *     Lars Noschinski <lars@public.noschinski.de>
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3 as published by
@@ -21,28 +20,14 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UART_H
-#define UART_H
+#ifndef __REMOTE_H
+#define __REMOTE_H
 
-#include "config.h"
-
+/* we depend on serial uart */
 #if SERIAL_UART
 
-#include "fifo.h"
-
-/* structs */
-struct global_uart_t {
-    fifo_t rx_fifo;
-    fifo_t tx_fifo;
-};
-
-/* global variables */
-extern volatile struct global_uart_t global_uart;
-
-/* prototypes */
-void init_uart(void);
-void uart_putc(uint8_t data);
+void remote_init(void);
+void remote_poll(void);
 
 #endif
-
 #endif

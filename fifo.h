@@ -21,38 +21,28 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef FIFO_H
-#define FIFO_H
-
-#include "config.h"
+#ifndef __FIFO_H
+#define __FIFO_H
 
 #include <stdint.h>
-#include <avr/interrupt.h>
+#include <stdbool.h>
+#include "config.h"
 
-#ifndef UART_FIFO_SIZE
-#error "UART_FIFO_SIZE is not defined"
-#endif
+typedef uint8_t fifo_content_t;
+typedef uint8_t fifo_size_t;
 
-#if (UART_FIFO_SIZE & (UART_FIFO_SIZE-1))
-#error "UART_FIFO_SIZE is not a power of 2!"
-#endif
+typedef struct
+{
+    fifo_size_t read;
+    fifo_size_t write;
+    fifo_content_t buffer[FIFO_SIZE];
+} fifo_t;
 
-/* structures */
-
-/* capacity is UART_FIFO_SIZE-1 */
-struct fifo_t {
-    uint8_t buffer[UART_FIFO_SIZE];
-    uint8_t front;
-    uint8_t back;
-    uint8_t size;
-};
-
-/* prototypes */
-void fifo_init(volatile struct fifo_t *fifo, uint8_t fifo_size);
-void fifo_store(volatile struct fifo_t *fifo, uint8_t data);
-void fifo_store_buffer(volatile struct fifo_t *fifo, uint8_t data[]);
-uint8_t fifo_load(volatile struct fifo_t *fifo);
-uint8_t fifo_fill(volatile struct fifo_t *fifo);
-uint8_t fifo_capacity(volatile struct fifo_t *fifo);
+void fifo_init(fifo_t *f);
+void fifo_enqueue(fifo_t *f, fifo_content_t data);
+fifo_content_t fifo_dequeue(fifo_t *f);
+fifo_size_t fifo_fill(fifo_t *f);
+bool fifo_empty(fifo_t *f);
+bool fifo_full(fifo_t *f);
 
 #endif

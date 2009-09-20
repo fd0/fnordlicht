@@ -109,13 +109,17 @@
 #define SERIAL_UART 1
 #endif
 
+/* configure remote command parser */
+#define REMOTE_BUFSIZE 100
+
 /* disable scripts speed control per default */
 #ifndef SCRIPT_SPEED_CONTROL
 #define SCRIPT_SPEED_CONTROL 0
 #endif
 
-/* fifo size must be a power of 2 and below 128 */
-#define UART_FIFO_SIZE 64
+/* fifo size should be a power of 2 and below 128 */
+#define FIFO_SIZE 64
+
 #define UART_BAUDRATE 115200
 
 /* number of pwm channels */
