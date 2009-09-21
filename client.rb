@@ -2,7 +2,7 @@
 
 require 'serialport'
 
-dev = SerialPort.new("/dev/ttyUSB0", 115200)
+dev = SerialPort.new("/dev/ttyUSB0", 19200)
 
 #dev.write "\x00\x01\xff\x00\x00"
 #dev.write "\x01\x01\x00\xff\x00"
