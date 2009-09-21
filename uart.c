@@ -62,7 +62,7 @@ volatile struct global_uart_t global_uart;
 void uart_putc(uint8_t data)
 {
     /* store data */
-    fifo_enqueue((fifo_t *)&global_uart.tx_fifo, data);
+    fifo_enqueue((fifo_t *)&global_uart.tx, data);
 
     /* enable interrupt */
     _UCSRB_UART0 |= _BV(_UDRIE_UART0);
@@ -82,8 +82,8 @@ void init_uart(void)
     _UCSRB_UART0 = _BV(_TXEN_UART0) | _BV(_RXEN_UART0) | _BV(_RXCIE_UART0);
 
     /* init fifos */
-    fifo_init((fifo_t *)&global_uart.rx_fifo);
-    fifo_init((fifo_t *)&global_uart.tx_fifo);
+    fifo_init((fifo_t *)&global_uart.rx);
+    fifo_init((fifo_t *)&global_uart.tx);
 }
 
 
@@ -94,7 +94,7 @@ ISR(_SIG_UART_RECV_UART0)
 {
 
     /* store received data */
-    fifo_enqueue((fifo_t *)&global_uart.rx_fifo, _UDR_UART0);
+    fifo_enqueue((fifo_t *)&global_uart.rx, _UDR_UART0);
 
 }
 
@@ -103,10 +103,10 @@ ISR(_SIG_UART_DATA_UART0)
 {
 
     /* load next byte to transfer */
-    _UDR_UART0 = fifo_dequeue((fifo_t *)&global_uart.tx_fifo);
+    _UDR_UART0 = fifo_dequeue((fifo_t *)&global_uart.tx);
 
     /* check if this interrupt is still needed */
-    if ( fifo_fill((fifo_t *)&global_uart.tx_fifo) == 0) {
+    if ( fifo_fill((fifo_t *)&global_uart.tx) == 0) {
         /* disable this interrupt */
         _UCSRB_UART0 &= ~_BV(_UDRIE_UART0);
     }

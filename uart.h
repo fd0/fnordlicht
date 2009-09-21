@@ -32,8 +32,8 @@
 
 /* structs */
 struct global_uart_t {
-    fifo_t rx_fifo;
-    fifo_t tx_fifo;
+    fifo_t rx;
+    fifo_t tx;
 };
 
 /* global variables */
