@@ -20,7 +20,7 @@ dev = SerialPort.new("/dev/ttyUSB0", 115200)
 #dev.flush
 
 loop do
-    0.upto 3 do |addr|
+    0.upto 9 do |addr|
         puts addr
         dev.write addr.chr
         #dev.write "\xff"
