@@ -12,72 +12,136 @@ def color(addr, r, g, b)
     $dev.flush
 end
 
+def fade(addr, speedl, speedh, r, g, b)
+    $dev.write addr.chr
+    $dev.write "\x02"
+    $dev.write speedl.chr
+    $dev.write speedh.chr
+    $dev.write r.chr
+    $dev.write g.chr
+    $dev.write b.chr
+    $dev.write "\x00\x00\x00"
+    $dev.flush
+end
+
 $dev = SerialPort.new("/dev/ttyUSB0", 19200)
 
+color(255, 0, 0, 0)
 
 # white
-color(255, 255, 255, 255)
-$stdin.readline
+fade(255, 0, 5, 0, 0, 0)
+
+fade(255, 0, 5, 255, 255, 255)
+sleep 4
+
+fade(255, 0, 1, 0, 0, 0)
+sleep 4
 
 # primary colors
-color(255, 255, 0, 0)
-$stdin.readline
-color(255, 0, 255, 0)
-$stdin.readline
-color(255, 0, 0, 255)
-$stdin.readline
+fade(255, 0, 1, 255, 0, 0)
+sleep 4
+fade(255, 0, 1, 0, 255, 0)
+sleep 4
+fade(255, 0, 1, 0, 0, 255)
+sleep 4
 
 # secondary colors
-color(255, 255, 255, 0)
-$stdin.readline
-color(255, 0, 255, 255)
-$stdin.readline
-color(255, 255, 0, 255)
-$stdin.readline
+fade(255, 0, 1, 255, 255, 0)
+sleep 4
+fade(255, 0, 1, 0, 255, 255)
+sleep 4
+fade(255, 0, 1, 255, 0, 255)
+sleep 4
+
+# black
+fade(255, 0, 1, 0, 0, 0)
+sleep 4
 
 # rainbow
-color(0, 255,   0,   0)
-color(1, 255, 255,   0)
-color(2,   0, 255,   0)
-color(3,   0, 255, 255)
-color(4,   0,   0, 255)
-color(5, 255,   0,   0)
-color(6, 255, 255,   0)
-color(7,   0, 255,   0)
-color(8,   0, 255, 255)
-color(4,   0,   0, 255)
-$stdin.readline
-color(0, 255,   0,   0)
-color(1, 255,   0,   0)
-color(2, 255, 255,   0)
-color(3, 255, 255,   0)
-color(4,   0, 255,   0)
-color(5,   0, 255,   0)
-color(6,   0, 255, 255)
-color(7,   0, 255, 255)
-color(8,   0,   0, 255)
-$stdin.readline
-color(0, 255,   0,   0)
-color(1, 255,   0,   0)
-color(2, 255,   0,   0)
-color(3, 255, 255,   0)
-color(4, 255, 255,   0)
-color(5, 255, 255,   0)
-color(6,   0, 255,   0)
-color(7,   0, 255,   0)
-color(8,   0, 255,   0)
-$stdin.readline
-color(0,   0, 255, 255)
-color(1,   0, 255, 255)
-color(2,   0, 255, 255)
-color(3,   0,   0, 255)
-color(4,   0,   0, 255)
-color(5,   0,   0, 255)
-color(6, 255,   0, 255)
-color(7, 255,   0, 255)
-color(8, 255,   0, 255)
-$stdin.readline
+fade(0, 0, 1, 255,   0,   0)
+sleep 0.1
+fade(1, 0, 1, 255, 255,   0)
+sleep 0.1
+fade(2, 0, 1,   0, 255,   0)
+sleep 0.1
+fade(3, 0, 1,   0, 255, 255)
+sleep 0.1
+fade(4, 0, 1,   0,   0, 255)
+sleep 0.1
+fade(5, 0, 1, 255,   0,   0)
+sleep 0.1
+fade(6, 0, 1, 255, 255,   0)
+sleep 0.1
+fade(7, 0, 1,   0, 255,   0)
+sleep 0.1
+fade(8, 0, 1,   0, 255, 255)
+sleep 0.1
+fade(4, 0, 1,   0,   0, 255)
+sleep 4
+fade(0, 0, 1, 255,   0,   0)
+fade(1, 0, 1, 255,   0,   0)
+fade(2, 0, 1, 255, 255,   0)
+fade(3, 0, 1, 255, 255,   0)
+fade(4, 0, 1,   0, 255,   0)
+fade(5, 0, 1,   0, 255,   0)
+fade(6, 0, 1,   0, 255, 255)
+fade(7, 0, 1,   0, 255, 255)
+fade(8, 0, 1,   0,   0, 255)
+sleep 4
+fade(0, 0, 1, 255,   0,   0)
+fade(1, 0, 1, 255,   0,   0)
+fade(2, 0, 1, 255,   0,   0)
+fade(3, 0, 1, 255, 255,   0)
+fade(4, 0, 1, 255, 255,   0)
+fade(5, 0, 1, 255, 255,   0)
+fade(6, 0, 1,   0, 255,   0)
+fade(7, 0, 1,   0, 255,   0)
+fade(8, 0, 1,   0, 255,   0)
+sleep 4
+fade(0, 0, 1,   0, 255, 255)
+fade(1, 0, 1,   0, 255, 255)
+fade(2, 0, 1,   0, 255, 255)
+fade(3, 0, 1,   0,   0, 255)
+fade(4, 0, 1,   0,   0, 255)
+fade(5, 0, 1,   0,   0, 255)
+fade(6, 0, 1, 255,   0, 255)
+fade(7, 0, 1, 255,   0, 255)
+fade(8, 0, 1, 255,   0, 255)
+sleep 4
 
 
+fade(255, 0, 2, 0, 0, 0)
+sleep 4
 
-color(255, 0, 0, 0)
+
+3.times do
+    delay = 0.2
+    0.upto 8 do |addr|
+        fade(addr, 0, 3, 255, 0, 0)
+        sleep delay
+    end
+    0.upto 8 do |addr|
+        fade(addr, 0, 3, 255, 255, 0)
+        sleep delay
+    end
+    0.upto 8 do |addr|
+        fade(addr, 0, 3, 0, 255, 0)
+        sleep delay
+    end
+    0.upto 8 do |addr|
+        fade(addr, 0, 3, 0, 255, 255)
+        sleep delay
+    end
+    0.upto 8 do |addr|
+        fade(addr, 0, 3, 0, 0, 255)
+        sleep delay
+    end
+    0.upto 8 do |addr|
+        fade(addr, 0, 3, 255, 0, 255)
+        sleep delay
+    end
+end
+
+sleep 4
+
+fade(255, 0, 1, 0, 0, 0)
