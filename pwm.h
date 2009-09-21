@@ -24,6 +24,8 @@
 #ifndef PWM_H
 #define PWM_H
 
+#include "timer.h"
+
 /* possible pwm interrupts in a pwm cycle */
 #define PWM_MAX_TIMESLOTS (PWM_CHANNELS+1)
 
@@ -72,6 +74,9 @@ struct global_pwm_t
 {
     /* current channel records */
     struct channel_t channels[PWM_CHANNELS];
+
+    /* timer for fading engine */
+    timer_t timer;
 };
 
 extern volatile struct global_pwm_t global_pwm;

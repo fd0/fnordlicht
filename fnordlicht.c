@@ -34,6 +34,7 @@
 #include "pwm.h"
 #include "uart.h"
 #include "remote.h"
+#include "timer.h"
 
 #if STATIC_SCRIPTS
 /* include static scripts */
@@ -42,20 +43,20 @@
 #endif
 
 /* structs */
-volatile struct global_t global = {{0, 0}};
+volatile struct global_t global = {{0}};
 
 /** main function
  */
 int main(void)
 {
     pwm_init();
+    timer_init();
 
 #if SERIAL_UART
     init_uart();
 #endif
 
     /* default color */
-    global_pwm.channels[0].brightness = 50;
     global_pwm.channels[0].target_brightness = 50;
 
 #if STATIC_SCRIPTS

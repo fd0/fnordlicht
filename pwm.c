@@ -33,6 +33,7 @@
 #include "fnordlicht.h"
 #include "pwm.h"
 #include "static_scripts.h"
+#include "timer.h"
 
 /* TYPES AND PROTOTYPES */
 
@@ -142,6 +143,9 @@ void pwm_init(void)
 
     /* calculate initial timeslots */
     update_pwm_timeslots();
+
+    /* start timer for fading engine */
+    timer_set(&global_pwm.timer, 1);
 }
 
 /* prepare new timeslots */
@@ -154,11 +158,10 @@ void pwm_poll(void)
         update_pwm_timeslots();
     }
 
-    /* at the beginning of each pwm cycle, call the fading engine and
-     * execute all script threads */
-    if (global.flags.pwm_start) {
-        global.flags.pwm_start = 0;
+    if (timer_expired(&global_pwm.timer)) {
+        timer_set(&global_pwm.timer, 1);
 
+        /* update brightness and run scripts */
         update_brightness();
 #if STATIC_SCRIPTS
         execute_script_threads();
@@ -345,9 +348,6 @@ ISR(SIG_OUTPUT_COMPARE1A)
              * will always be at least one timeslot after this (middle) */
             pwm.index++;
         }
-
-        /* signal new cycle to main procedure */
-        global.flags.pwm_start = 1;
 
         pwm.new_cycle = 0;
     }
