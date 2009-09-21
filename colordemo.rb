@@ -12,7 +12,7 @@ def color(addr, r, g, b)
     $dev.flush
 end
 
-$dev = SerialPort.new("/dev/ttyUSB0", 115200)
+$dev = SerialPort.new("/dev/ttyUSB0", 19200)
 
 
 # white

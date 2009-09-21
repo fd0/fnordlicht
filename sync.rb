@@ -2,7 +2,7 @@
 
 require 'serialport'
 
-dev = SerialPort.new("/dev/ttyUSB0", 115200)
+dev = SerialPort.new("/dev/ttyUSB0", 19200)
 
 # sync
 dev.write "\e\e\e\e\e\e\e\e\e\x00"
