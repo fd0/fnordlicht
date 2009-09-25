@@ -36,12 +36,6 @@
 #include "remote.h"
 #include "timer.h"
 
-#if STATIC_SCRIPTS
-/* include static scripts */
-#include "static_scripts.h"
-#include "testscript.h"
-#endif
-
 /* structs */
 volatile struct global_t global = {{0}};
 
@@ -58,15 +52,6 @@ int main(void)
 
     /* default color */
     global_pwm.channels[0].target_brightness = 50;
-
-#if STATIC_SCRIPTS
-    init_script_threads();
-
-    /* start the example script */
-    script_threads[0].handler.execute = &memory_handler_flash;
-    script_threads[0].handler.position = (uint16_t) &colorchange_red;
-    script_threads[0].flags.disabled = 0;
-#endif
 
     /* enable interrupts globally */
     sei();

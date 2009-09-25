@@ -32,7 +32,6 @@
 #include "common.h"
 #include "fnordlicht.h"
 #include "pwm.h"
-#include "static_scripts.h"
 #include "timer.h"
 
 /* TYPES AND PROTOTYPES */
@@ -158,14 +157,11 @@ void pwm_poll(void)
         update_pwm_timeslots();
     }
 
+    /* update brightness every 10ms */
     if (timer_expired(&global_pwm.timer)) {
         timer_set(&global_pwm.timer, 1);
 
-        /* update brightness and run scripts */
         update_brightness();
-#if STATIC_SCRIPTS
-        execute_script_threads();
-#endif
     }
 }
 

@@ -99,11 +99,6 @@
 #define DEBUG 0
 #endif
 
-/* include the script intpreter per default */
-#ifndef STATIC_SCRIPTS
-#define STATIC_SCRIPTS 1
-#endif
-
 /* include uart support per default */
 #ifndef SERIAL_UART
 #define SERIAL_UART 1
@@ -111,11 +106,6 @@
 
 /* configure remote command parser */
 #define REMOTE_BUFSIZE 100
-
-/* disable scripts speed control per default */
-#ifndef SCRIPT_SPEED_CONTROL
-#define SCRIPT_SPEED_CONTROL 0
-#endif
 
 /* fifo size should be a power of 2 and below 128 */
 #define FIFO_SIZE 64

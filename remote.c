@@ -24,7 +24,6 @@
 #include "remote.h"
 #include "fifo.h"
 #include "uart.h"
-#include "static_scripts.h"
 #include "pwm.h"
 #include "pt/pt.h"
 
@@ -138,10 +137,6 @@ void remote_poll(void)
             remote.synced = 1;
             PT_INIT(&remote.thread);
 
-#if STATIC_SCRIPTS
-            /* disable scripting, reset colors */
-            disable_script_threads();
-#endif
             for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
                 global_pwm.channels[i].target_brightness = 0;
                 global_pwm.channels[i].brightness = 0;
