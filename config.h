@@ -99,6 +99,16 @@
 #define CONFIG_DEBUG 0
 #endif
 
+/* include the script intpreter per default */
+#ifndef CONFIG_SCRIPT
+#define CONFIG_SCRIPT 1
+#endif
+
+/* define default supported number of tasks */
+#ifndef CONFIG_SCRIPT_TASKS
+#define CONFIG_SCRIPT_TASKS 1
+#endif
+
 /* include uart support per default */
 #ifndef CONFIG_SERIAL
 #define CONFIG_SERIAL 1

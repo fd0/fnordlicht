@@ -6,7 +6,6 @@
  *    see http://lochraster.org/fnordlicht
  *
  * (c) by Alexander Neumann <alexander@bumpern.de>
- *     Lars Noschinski <lars@public.noschinski.de>
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3 as published by
@@ -21,49 +20,43 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* includes */
-#include "config.h"
+#ifndef __SCRIPT_H
+#define __SCRIPT_H
 
-#include <avr/io.h>
 #include <stdint.h>
-#include <avr/interrupt.h>
-#include <avr/pgmspace.h>
-
-#include "common.h"
-#include "fnordlicht.h"
-#include "pwm.h"
-#include "uart.h"
-#include "remote.h"
+#include "config.h"
+#include "pt/pt.h"
 #include "timer.h"
-#include "script.h"
+
+#if !CONFIG_SCRIPT
+#define script_init(...)
+#define script_poll(...)
+
+#else
 
 /* structs */
-volatile struct global_t global = {{0}};
+struct process_t {
+    PT_THREAD((*execute)(struct process_t *current));
+    struct pt pt;
+    uint8_t enable:1;
+    uint16_t pos;
+};
 
-/** main function
- */
-int main(void)
-{
-    pwm_init();
-    timer_init();
-    uart_init();
-    script_init();
+struct script_global_t {
+    uint8_t enable:1;
+    struct process_t tasks[CONFIG_SCRIPT_TASKS];
+    timer_t timer;
+};
 
-    /* default color */
-    global_pwm.channels[0].target_brightness = 50;
+/* global variables */
+extern struct script_global_t script_global;
 
-    /* enable interrupts globally */
-    sei();
+/* prototypes for scripting engine */
+void script_init(void);
+void script_poll(void);
 
-    while (1)
-    {
-        /* update pwm */
-        pwm_poll();
+/* prototypes for handler */
+PT_THREAD(script_handler_fader_flash(struct process_t *process));
 
-        /* check for remote commands */
-        remote_poll();
-
-        /* call scripting */
-        script_poll();
-    }
-}
+#endif
+#endif
