@@ -25,10 +25,14 @@
 #define UART_H
 
 #include "config.h"
-
-#if SERIAL_UART
-
 #include "fifo.h"
+
+#if !SERIAL_UART
+
+#define uart_init(...)
+#define uart_putc(...)
+
+#else
 
 /* structs */
 struct global_uart_t {
@@ -40,7 +44,7 @@ struct global_uart_t {
 extern volatile struct global_uart_t global_uart;
 
 /* prototypes */
-void init_uart(void);
+void uart_init(void);
 void uart_putc(uint8_t data);
 
 #endif

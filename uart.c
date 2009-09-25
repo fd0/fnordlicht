@@ -69,7 +69,7 @@ void uart_putc(uint8_t data)
 }
 
 /** init the hardware uart */
-void init_uart(void)
+void uart_init(void)
 {
     /* set baud rate */
     _UBRRH_UART0 = (uint8_t)(UART_UBRR >> 8);  /* high byte */

@@ -24,7 +24,12 @@
 #define __REMOTE_H
 
 /* we depend on serial uart */
-#if SERIAL_UART
+#if !SERIAL_UART
+
+#define remote_init(...)
+#define remote_poll(...)
+
+#else
 
 void remote_init(void);
 void remote_poll(void);

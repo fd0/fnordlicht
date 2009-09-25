@@ -45,10 +45,7 @@ int main(void)
 {
     pwm_init();
     timer_init();
-
-#if SERIAL_UART
-    init_uart();
-#endif
+    uart_init();
 
     /* default color */
     global_pwm.channels[0].target_brightness = 50;
@@ -61,9 +58,7 @@ int main(void)
         /* update pwm */
         pwm_poll();
 
-#if SERIAL_UART
         /* check for remote commands */
         remote_poll();
-#endif
     }
 }
