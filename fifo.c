@@ -32,13 +32,13 @@ void fifo_init(fifo_t *f)
 void fifo_enqueue(fifo_t *f, fifo_content_t data)
 {
     f->buffer[f->write] = data;
-    f->write = (f->write + 1) % FIFO_SIZE;
+    f->write = (f->write + 1) % CONFIG_FIFO_SIZE;
 }
 
 fifo_content_t fifo_dequeue(fifo_t *f)
 {
     fifo_content_t data = f->buffer[f->read];
-    f->read = (f->read + 1) % FIFO_SIZE;
+    f->read = (f->read + 1) % CONFIG_FIFO_SIZE;
     return data;
 }
 
@@ -47,7 +47,7 @@ fifo_size_t fifo_fill(fifo_t *f)
     if (f->write >= f->read)
         return f->write - f->read;
     else
-        return FIFO_SIZE - (f->read - f->write);
+        return CONFIG_FIFO_SIZE - (f->read - f->write);
 }
 
 bool fifo_empty(fifo_t *f)
@@ -57,5 +57,5 @@ bool fifo_empty(fifo_t *f)
 
 bool fifo_full(fifo_t *f)
 {
-    return fifo_fill(f) == FIFO_SIZE-1;
+    return fifo_fill(f) == CONFIG_FIFO_SIZE-1;
 }

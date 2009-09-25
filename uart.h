@@ -27,7 +27,7 @@
 #include "config.h"
 #include "fifo.h"
 
-#if !SERIAL_UART
+#if !CONFIG_SERIAL
 
 #define uart_init(...)
 #define uart_putc(...)

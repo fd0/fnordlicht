@@ -35,7 +35,7 @@ typedef struct
 {
     fifo_size_t read;
     fifo_size_t write;
-    fifo_content_t buffer[FIFO_SIZE];
+    fifo_content_t buffer[CONFIG_FIFO_SIZE];
 } fifo_t;
 
 void fifo_init(fifo_t *f);

@@ -95,22 +95,20 @@
 
 
 /* debug defines */
-#ifndef DEBUG
-#define DEBUG 0
+#ifndef CONFIG_DEBUG
+#define CONFIG_DEBUG 0
 #endif
 
 /* include uart support per default */
-#ifndef SERIAL_UART
-#define SERIAL_UART 1
+#ifndef CONFIG_SERIAL
+#define CONFIG_SERIAL 1
 #endif
 
-/* configure remote command parser */
-#define REMOTE_BUFSIZE 100
+/* set default baudrate */
+#define CONFIG_SERIAL_BAUDRATE 19200
 
 /* fifo size should be a power of 2 and below 128 */
-#define FIFO_SIZE 64
-
-#define UART_BAUDRATE 19200
+#define CONFIG_FIFO_SIZE 64
 
 /* number of pwm channels */
 #define PWM_CHANNELS 3

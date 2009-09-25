@@ -23,7 +23,7 @@
 
 #include "config.h"
 
-#if SERIAL_UART
+#if CONFIG_SERIAL
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -44,15 +44,15 @@
 #define UART_UCSRC _BV(_UCSZ0_UART0) | _BV(_UCSZ1_UART0)
 #endif
 
-#if UART_BAUDRATE == 115200 && F_CPU == 16000000UL
+#if CONFIG_SERIAL_BAUDRATE == 115200 && F_CPU == 16000000UL
     #define UART_UBRR 8
-#elif UART_BAUDRATE == 115200 && F_CPU == 20000000UL
+#elif CONFIG_SERIAL_BAUDRATE == 115200 && F_CPU == 20000000UL
     #define UART_UBRR 10
 #else
-    #if UART_BAUDRATE > 57600
+    #if CONFIG_SERIAL_BAUDRATE > 57600
     #warn "high uart baudrate, UART_UBRR might not be correct!"
     #endif
-    #define UART_UBRR (F_CPU/(UART_BAUDRATE * 16L)-1)
+    #define UART_UBRR (F_CPU/(CONFIG_SERIAL_BAUDRATE * 16L)-1)
 #endif
 
 /* global variables */

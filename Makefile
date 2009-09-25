@@ -89,7 +89,7 @@ ifeq ($(DEBUG),1)
 	CFLAGS += -Wunreachable-code -Wdisabled-optimization
 	CFLAGS += -Wcast-align -Wwrite-strings -Wnested-externs -Wundef
 	CFLAGS += -Wa,-adhlns=$(basename $@).lst
-	CFLAGS += -DDEBUG
+	CFLAGS += -DCONFIG_DEBUG=1
 endif
 
 ####################################################

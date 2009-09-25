@@ -66,7 +66,7 @@ struct remote_state_t
 
 struct remote_state_t remote;
 
-#if SERIAL_UART
+#if CONFIG_SERIAL
 
 void remote_init(void)
 {
