@@ -26,11 +26,13 @@
 #include "uart.h"
 #include "pwm.h"
 #include "pt/pt.h"
+#include "script.h"
 
 #define REMOTE_MSGLEN 10
 
 #define REMOTE_CMD_SET 0x01
 #define REMOTE_CMD_FADE 0x02
+#define REMOTE_CMD_CONFIG 0x03
 #define REMOTE_CMD_RESYNC 0x1b
 
 #define REMOTE_ADDR_BROADCAST 0xff
@@ -48,6 +50,13 @@ struct remote_msg_fade
     uint8_t cmd;
     uint16_t speed;
     uint8_t target[PWM_CHANNELS];
+};
+
+struct remote_msg_config
+{
+    uint8_t address;
+    uint8_t cmd;
+    uint8_t scripting;
 };
 
 struct remote_state_t
@@ -101,6 +110,17 @@ static void remote_parse_msg(struct remote_msg_t *msg)
             global_pwm.channels[i].target_brightness = m->target[i];
         }
 
+        return;
+    }
+
+    if (msg->cmd == REMOTE_CMD_CONFIG) {
+        struct remote_msg_config *m = (struct remote_msg_config *)msg;
+
+        /* enable or disable scripting */
+        if (m->scripting)
+            script_global.enable = 1;
+        else
+            script_global.enable = 0;
         return;
     }
 }
