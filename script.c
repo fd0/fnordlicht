@@ -49,6 +49,9 @@ void script_init(void)
 
 void script_poll(void)
 {
+    if (!script_global.enable)
+        return;
+
     if (timer_expired(&script_global.timer)) {
         for (uint8_t i = 0; i < CONFIG_SCRIPT_TASKS; i++) {
             struct process_t *task = &script_global.tasks[i];
