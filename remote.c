@@ -136,11 +136,6 @@ void remote_poll(void)
             /* enable remote command thread */
             remote.synced = 1;
             PT_INIT(&remote.thread);
-
-            for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
-                global_pwm.channels[i].target_brightness = 0;
-                global_pwm.channels[i].brightness = 0;
-            }
         } else {
             /* just pass through data */
             uart_putc(data);
@@ -156,7 +151,6 @@ void remote_poll(void)
             remote.sync++;
         else
             remote.sync = 0;
-
     }
 
     if (remote.synced)
