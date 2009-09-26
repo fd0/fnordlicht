@@ -114,6 +114,11 @@
 #define CONFIG_SERIAL 1
 #endif
 
+/* include remote command support per default */
+#ifndef CONFIG_REMOTE
+#define CONFIG_REMOTE 1
+#endif
+
 /* set default baudrate */
 #define CONFIG_SERIAL_BAUDRATE 19200
 

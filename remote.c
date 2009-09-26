@@ -75,7 +75,7 @@ struct remote_state_t
 
 struct remote_state_t remote;
 
-#if CONFIG_SERIAL
+#if CONFIG_SERIAL && CONFIG_REMOTE
 
 void remote_init(void)
 {

@@ -24,7 +24,7 @@
 #define __REMOTE_H
 
 /* we depend on serial uart */
-#if !CONFIG_SERIAL
+#if !CONFIG_SERIAL || !CONFIG_REMOTE
 
 #define remote_init(...)
 #define remote_poll(...)
