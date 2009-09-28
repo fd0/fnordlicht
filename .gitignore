@@ -1,5 +1,6 @@
 .*.swp
 /.dep
+**/.dep
 *.o
 *.hex
 *.lst
