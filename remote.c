@@ -27,38 +27,7 @@
 #include "pwm.h"
 #include "pt/pt.h"
 #include "script.h"
-
-#define REMOTE_MSGLEN 10
-
-#define REMOTE_CMD_SET 0x01
-#define REMOTE_CMD_FADE 0x02
-#define REMOTE_CMD_CONFIG 0x03
-#define REMOTE_CMD_RESYNC 0x1b
-
-#define REMOTE_ADDR_BROADCAST 0xff
-
-struct remote_msg_t
-{
-    uint8_t address;
-    uint8_t cmd;
-    uint8_t data[REMOTE_MSGLEN-2];
-};
-
-struct remote_msg_fade
-{
-    uint8_t address;
-    uint8_t cmd;
-    uint8_t step;
-    uint8_t delay;
-    uint8_t target[PWM_CHANNELS];
-};
-
-struct remote_msg_config
-{
-    uint8_t address;
-    uint8_t cmd;
-    uint8_t scripting;
-};
+#include "remote-proto.h"
 
 struct remote_state_t
 {
