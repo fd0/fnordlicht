@@ -63,7 +63,16 @@ int main(void)
         /* check for remote commands */
         remote_poll();
 
+        /* update pwm */
+        pwm_poll();
+
         /* call scripting */
         script_poll();
+
+        /* update pwm */
+        pwm_poll();
+
+        /* update fading */
+        pwm_poll_fading();
     }
 }

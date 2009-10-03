@@ -84,5 +84,6 @@ extern volatile struct global_pwm_t global_pwm;
 /* prototypes */
 void pwm_init(void);
 void pwm_poll(void);
+void pwm_poll_fading(void);
 
 #endif

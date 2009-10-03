@@ -156,7 +156,11 @@ void pwm_poll(void)
 
         update_pwm_timeslots();
     }
+}
 
+/* update color values for current fading */
+void pwm_poll_fading(void)
+{
     /* update brightness every 10ms */
     if (timer_expired(&global_pwm.timer)) {
         timer_set(&global_pwm.timer, 1);
