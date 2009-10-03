@@ -40,7 +40,8 @@ void script_init(void)
     }
 
     /* enable static fading script */
-    script_global.tasks[0].execute = script_handler_fader_flash;
+    //script_global.tasks[0].execute = script_handler_fader_flash;
+    script_global.tasks[0].execute = script_handler_wheel;
     script_global.tasks[0].enable = 1;
 
     /* initialize timer, delay before start is 200ms */
@@ -87,10 +88,10 @@ PT_THREAD(script_handler_fader_flash(struct process_t *process))
         uint8_t delay = pgm_read_byte_near(&fader_flash[process->pos + PWM_CHANNELS + 1]);
 
         /* load new color */
+        struct rgb_color_t color;
         for (uint8_t c = 0; c < PWM_CHANNELS; c++) {
-            global_pwm.target.rgb[c] = pgm_read_byte_near(&fader_flash[process->pos + c]);
-            global_pwm.fade_step[c] = step;
-            global_pwm.fade_delay[c] = delay;
+            color.rgb[c] = pgm_read_byte_near(&fader_flash[process->pos + c]);
+            pwm_fade_rgb(&color, step, delay);
         }
 
         process->pos += FADER_FLASH_ENTRYSIZE;
@@ -98,9 +99,29 @@ PT_THREAD(script_handler_fader_flash(struct process_t *process))
             process->pos = 0;
 
         /* wait until target reached */
-        for (uint8_t c = 0; c < PWM_CHANNELS; c++)
-            PT_WAIT_UNTIL(&process->pt,
-                    global_pwm.current.rgb[c] == global_pwm.target.rgb[c]);
+        PT_WAIT_UNTIL(&process->pt, pwm_target_reached());
+    }
+
+    PT_END(&process->pt);
+}
+
+PT_THREAD(script_handler_wheel(struct process_t *process))
+{
+    PT_BEGIN(&process->pt);
+
+    static struct hsv_color_t c;
+
+    c.hue = 0;
+    c.value = 255;
+    c.saturation = 255;
+
+    while (1) {
+        /* set new color */
+        pwm_fade_hsv(&c, 1, 2);
+        c.hue += 45;
+
+        /* wait until target reached */
+        PT_WAIT_UNTIL(&process->pt, pwm_target_reached());
     }
 
     PT_END(&process->pt);

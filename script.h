@@ -57,6 +57,7 @@ void script_poll(void);
 
 /* prototypes for handler */
 PT_THREAD(script_handler_fader_flash(struct process_t *process));
+PT_THREAD(script_handler_wheel(struct process_t *process));
 
 #endif
 #endif
