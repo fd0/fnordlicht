@@ -50,7 +50,7 @@ int main(void)
     script_init();
 
     /* default color */
-    global_pwm.channels[0].target_brightness = 50;
+    global_pwm.target.red = 50;
 
     /* enable interrupts globally */
     sei();

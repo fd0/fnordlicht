@@ -33,54 +33,28 @@
 #error "PWM_CHANNELS is not 3, this is unsupported!"
 #endif
 
-/* contains all the data for one color channel */
-struct channel_t
-{
+struct rgb_color_t {
     union {
-        /* for adding fade-speed to brightness, and save the remainder */
-        uint16_t brightness_and_remainder;
-
-        /* for accessing brightness directly */
         struct {
-            uint8_t remainder;
-            uint8_t brightness;
+            uint8_t red;
+            uint8_t green;
+            uint8_t blue;
         };
+        uint8_t rgb[3];
     };
-
-    /* desired brightness for this channel */
-    uint8_t target_brightness;
-
-    /* fade speed, the msb is added directly to brightness,
-     * the lsb is added to the remainder until an overflow happens */
-    union {
-        /* for accessing speed as an uint16_t */
-        uint16_t speed;
-
-        /* for accessing lsb und msb directly */
-        struct {
-            uint8_t speed_l;
-            uint8_t speed_h;
-        };
-    };
-
-    /* output mask for switching on the leds for this channel */
-    uint8_t mask;
-
-    /* flags for this channel, implemented as a bitvector field */
-    struct {
-        /* this channel reached has recently reached it's desired target brightness */
-        uint8_t target_reached:1;
-    } flags;
-
 };
 
 struct global_pwm_t
 {
-    /* current channel records */
-    struct channel_t channels[PWM_CHANNELS];
+    /* current color */
+    struct rgb_color_t current;
 
-    /* timer for fading engine */
-    timer_t timer;
+    /* target for fading engine */
+    struct rgb_color_t target;
+
+    /* delay and step for fading engine */
+    uint8_t fade_delay[PWM_CHANNELS];
+    uint8_t fade_step[PWM_CHANNELS];
 };
 
 extern volatile struct global_pwm_t global_pwm;

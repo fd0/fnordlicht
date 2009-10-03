@@ -48,7 +48,8 @@ struct remote_msg_fade
 {
     uint8_t address;
     uint8_t cmd;
-    uint16_t speed;
+    uint8_t step;
+    uint8_t delay;
     uint8_t target[PWM_CHANNELS];
 };
 
@@ -94,8 +95,8 @@ static void remote_parse_msg(struct remote_msg_t *msg)
 
     if (msg->cmd == REMOTE_CMD_SET) {
         for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
-            global_pwm.channels[i].brightness = msg->data[i];
-            global_pwm.channels[i].target_brightness = msg->data[i];
+            global_pwm.current.rgb[i] = msg->data[i];
+            global_pwm.target.rgb[i] = msg->data[i];
         }
 
         return;
@@ -104,10 +105,11 @@ static void remote_parse_msg(struct remote_msg_t *msg)
     if (msg->cmd == REMOTE_CMD_FADE) {
         struct remote_msg_fade *m = (struct remote_msg_fade *)msg;
 
-        /* set new color, without fading */
+        /* fade to new color */
         for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
-            global_pwm.channels[i].speed = m->speed;
-            global_pwm.channels[i].target_brightness = m->target[i];
+            global_pwm.fade_step[i] = m->step;
+            global_pwm.fade_delay[i] = m->delay;
+            global_pwm.target.rgb[i] = m->target[i];
         }
 
         return;

@@ -50,9 +50,21 @@ struct timeslots_t
     uint8_t new_cycle; /* set for the first or middle interrupt in a pwm cycle */
 };
 
+/* internal data for the fading engine */
+struct fading_engine_t
+{
+    /* a timer for each channel */
+    timer_t timer[PWM_CHANNELS];
+
+    /* and a bitmask, which stands for 'timer is running' */
+    uint8_t running;
+};
+
 static inline void prepare_next_timeslot(void);
 
 /* GLOBAL VARIABLES */
+
+struct fading_engine_t fading;
 
 /* timer top values for 256 brightness levels (stored in flash) */
 static const uint16_t timeslot_table[] PROGMEM =
@@ -97,7 +109,7 @@ volatile struct global_pwm_t global_pwm;
 /* FUNCTIONS AND INTERRUPTS */
 /* prototypes */
 void update_pwm_timeslots(void);
-void update_brightness(void);
+void update_channel(uint8_t c);
 
 /* initialize pwm hardware and structures */
 void pwm_init(void)
@@ -132,19 +144,17 @@ void pwm_init(void)
 
     /* reset structures */
     for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
-        global_pwm.channels[i].brightness = 0;
-        global_pwm.channels[i].target_brightness = 0;
-        global_pwm.channels[i].speed = 0x0100;
-        global_pwm.channels[i].flags.target_reached = 0;
-        global_pwm.channels[i].remainder = 0;
-        global_pwm.channels[i].mask = _BV(i);
+        global_pwm.current.rgb[i] = 0;
+        global_pwm.target.rgb[i] = 0;
+        global_pwm.fade_delay[i] = 1;
+        global_pwm.fade_step[i] = 1;
     }
 
     /* calculate initial timeslots */
     update_pwm_timeslots();
 
-    /* start timer for fading engine */
-    timer_set(&global_pwm.timer, 1);
+    /* disable fading */
+    fading.running = 0;
 }
 
 /* prepare new timeslots */
@@ -161,11 +171,31 @@ void pwm_poll(void)
 /* update color values for current fading */
 void pwm_poll_fading(void)
 {
-    /* update brightness every 10ms */
-    if (timer_expired(&global_pwm.timer)) {
-        timer_set(&global_pwm.timer, 1);
+    /* check running timers */
+    uint8_t mask = 1;
+    for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
+        if ( (fading.running & mask) && timer_expired(&fading.timer[i])) {
+            update_channel(i);
+            fading.running &= ~mask;
+        }
 
-        update_brightness();
+        /* shift mask */
+        mask <<= 1;
+    }
+
+    /* (re)start timers, if target changed */
+    mask = 1;
+    for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
+        /* if timer is not running and current != target, start timer */
+        if (!(fading.running & mask)
+                && global_pwm.current.rgb[i] != global_pwm.target.rgb[i]
+                && global_pwm.fade_delay[i] > 0) {
+            timer_set(&fading.timer[i], global_pwm.fade_delay[i]);
+            fading.running |= mask;
+        }
+
+        /* shift mask */
+        mask <<= 1;
     }
 }
 
@@ -177,7 +207,7 @@ void update_pwm_timeslots(void)
     /* sort channels according to the current brightness */
     for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
         for (uint8_t j = i+1; j < PWM_CHANNELS; j++) {
-            if (global_pwm.channels[sorted[j]].brightness < global_pwm.channels[sorted[i]].brightness) {
+            if (global_pwm.current.rgb[sorted[j]] < global_pwm.current.rgb[sorted[i]]) {
                 uint8_t temp;
 
                 temp = sorted[i];
@@ -193,13 +223,19 @@ void update_pwm_timeslots(void)
 #else
     pwm.next_bitmask = 0;
 #endif
-    for (uint8_t i = 0; i < PWM_CHANNELS; i++)
-        if (global_pwm.channels[i].brightness > 0)
+
+    uint8_t chanmask = 1;
+    for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
+        if (global_pwm.current.rgb[i] > 0) {
 #ifdef PWM_INVERTED
-            pwm.next_bitmask &= ~global_pwm.channels[i].mask;
+            pwm.next_bitmask &= ~chanmask;
 #else
-            pwm.next_bitmask |= global_pwm.channels[i].mask;
+            pwm.next_bitmask |= chanmask;
 #endif
+        }
+
+        chanmask <<= 1;
+    }
 
     /* timeslot index */
     uint8_t j = 0;
@@ -210,35 +246,35 @@ void update_pwm_timeslots(void)
     for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
 
         /* check if a timeslot is needed */
-        if (global_pwm.channels[sorted[i]].brightness > 0 && global_pwm.channels[sorted[i]].brightness < 255) {
+        if (global_pwm.current.rgb[sorted[i]] > 0 && global_pwm.current.rgb[sorted[i]] < 255) {
             /* if the next timeslot will be after the middle of the pwm cycle, insert the middle interrupt */
-            if (last_brightness < 181 && global_pwm.channels[sorted[i]].brightness >= 181) {
+            if (last_brightness < 181 && global_pwm.current.rgb[sorted[i]] >= 181) {
                 /* middle interrupt: top 65k and mask 0xff */
                 pwm.slots[j].top = 65000;
                 j++;
             }
 
             /* insert new timeslot if brightness is new */
-            if (global_pwm.channels[sorted[i]].brightness > last_brightness) {
+            if (global_pwm.current.rgb[sorted[i]] > last_brightness) {
 
                 /* remember mask and brightness for next timeslot */
 #ifdef PWM_INVERTED
-                mask |= global_pwm.channels[sorted[i]].mask;
+                mask |= _BV(sorted[i]);
 #else
-                mask &= ~global_pwm.channels[sorted[i]].mask;
+                mask &= ~_BV(sorted[i]);
 #endif
-                last_brightness = global_pwm.channels[sorted[i]].brightness;
+                last_brightness = global_pwm.current.rgb[sorted[i]];
 
                 /* allocate new timeslot */
-                pwm.slots[j].top = pgm_read_word(&timeslot_table[global_pwm.channels[sorted[i]].brightness - 1 ]);
+                pwm.slots[j].top = pgm_read_word(&timeslot_table[global_pwm.current.rgb[sorted[i]] - 1 ]);
                 pwm.slots[j].mask = mask;
                 j++;
             } else {
                 /* change mask of last-inserted timeslot */
 #ifdef PWM_INVERTED
-                mask |= global_pwm.channels[sorted[i]].mask;
+                mask |= _BV(sorted[i]);
 #else
-                mask &= ~global_pwm.channels[sorted[i]].mask;
+                mask &= ~_BV(sorted[i]);
 #endif
                 pwm.slots[j-1].mask = mask;
             }
@@ -261,48 +297,28 @@ void update_pwm_timeslots(void)
 }
 
 /** fade any channels not already at their target brightness */
-void update_brightness(void)
+void update_channel(uint8_t c)
 {
-    uint8_t i;
+    /* return if target reached */
+    if (global_pwm.current.rgb[c] == global_pwm.target.rgb[c])
+        return;
 
-    /* iterate over the channels */
-    for (i=0; i<PWM_CHANNELS; i++) {
-        uint8_t old_brightness;
+    /* check direction */
+    if (global_pwm.current.rgb[c] < global_pwm.target.rgb[c]) {
+        uint8_t diff = global_pwm.target.rgb[c] - global_pwm.current.rgb[c];
 
-        /* fade channel if not already at target brightness, set flag if target reached */
-        if (global_pwm.channels[i].brightness != global_pwm.channels[i].target_brightness) {
-            /* safe brightness, for later compare with calculated value */
-            old_brightness = global_pwm.channels[i].brightness;
+        if (diff >= global_pwm.fade_step[c])
+            global_pwm.current.rgb[c] += global_pwm.fade_step[c];
+        else
+            global_pwm.current.rgb[c] += diff;
 
-            /* increase brightness */
-            if (global_pwm.channels[i].brightness < global_pwm.channels[i].target_brightness) {
-                /* calculate new brightness value, high byte is brightness, low byte is remainder */
-                global_pwm.channels[i].brightness_and_remainder += global_pwm.channels[i].speed;
+    } else {
+        uint8_t diff = global_pwm.current.rgb[c] - global_pwm.target.rgb[c];
 
-                /* if new brightness is lower than before or brightness is higher than the target,
-                 * just set the target brightness and reset the remainder, since we addedd too much */
-                if (global_pwm.channels[i].brightness < old_brightness || global_pwm.channels[i].brightness > global_pwm.channels[i].target_brightness) {
-                    global_pwm.channels[i].brightness = global_pwm.channels[i].target_brightness;
-                    global_pwm.channels[i].remainder = 0;
-                }
-
-            /* or decrease brightness */
-            } else if (global_pwm.channels[i].brightness > global_pwm.channels[i].target_brightness) {
-                /* calculate new brightness value, high byte is brightness, low byte is remainder */
-                global_pwm.channels[i].brightness_and_remainder -= global_pwm.channels[i].speed;
-
-                /* if new brightness is higher than before or brightness is lower than the target, just set the target brightness */
-                if (global_pwm.channels[i].brightness > old_brightness || global_pwm.channels[i].brightness < global_pwm.channels[i].target_brightness) {
-                    global_pwm.channels[i].brightness = global_pwm.channels[i].target_brightness;
-                    global_pwm.channels[i].remainder = 0;
-                }
-            }
-
-            /* if target brightness has been reached, set flag */
-            if (global_pwm.channels[i].brightness == global_pwm.channels[i].target_brightness) {
-                global_pwm.channels[i].flags.target_reached = 1;
-            }
-        }
+        if (diff >= global_pwm.fade_step[c])
+            global_pwm.current.rgb[c] -= global_pwm.fade_step[c];
+        else
+            global_pwm.current.rgb[c] -= diff;
     }
 }
 

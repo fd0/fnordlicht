@@ -68,31 +68,29 @@ void script_poll(void)
 #define FADER_FLASH_ENTRYSIZE (PWM_CHANNELS + 2)
 #define FADER_FLASH_ENTRIES (sizeof(fader_flash)/FADER_FLASH_ENTRYSIZE)
 PROGMEM uint8_t fader_flash[] = {
-/*    R    G    B  speedL, speedH */
-    255,   0,   0,    128,      0,
-    255, 255,   0,    128,      0,
-    0,   255,   0,    128,      0,
-    0,   255, 255,    128,      0,
-    0,     0, 255,    128,      0,
-    255,   0, 255,    128,      0,
+/*    R    G    B    step,  delay */
+    255,   0,   0,      1,      1,
+    255, 255,   0,      1,      1,
+    0,   255,   0,      1,      1,
+    0,   255, 255,      1,      1,
+    0,     0, 255,      1,      1,
+    255,   0, 255,      1,      1,
 };
 
 PT_THREAD(script_handler_fader_flash(struct process_t *process))
 {
-    static timer_t delay;
-
     PT_BEGIN(&process->pt);
 
     while (1) {
-        /* load new speed */
-        uint16_t speed = pgm_read_word_near(&fader_flash[process->pos + PWM_CHANNELS]);
+        /* load new fader values */
+        uint8_t step = pgm_read_byte_near(&fader_flash[process->pos + PWM_CHANNELS]);
+        uint8_t delay = pgm_read_byte_near(&fader_flash[process->pos + PWM_CHANNELS + 1]);
 
         /* load new color */
         for (uint8_t c = 0; c < PWM_CHANNELS; c++) {
-            global_pwm.channels[c].target_brightness = 
-                pgm_read_byte_near(&fader_flash[process->pos + c]);
-            global_pwm.channels[c].flags.target_reached = 0;
-            global_pwm.channels[c].speed = speed;
+            global_pwm.target.rgb[c] = pgm_read_byte_near(&fader_flash[process->pos + c]);
+            global_pwm.fade_step[c] = step;
+            global_pwm.fade_delay[c] = delay;
         }
 
         process->pos += FADER_FLASH_ENTRYSIZE;
@@ -102,7 +100,7 @@ PT_THREAD(script_handler_fader_flash(struct process_t *process))
         /* wait until target reached */
         for (uint8_t c = 0; c < PWM_CHANNELS; c++)
             PT_WAIT_UNTIL(&process->pt,
-                    global_pwm.channels[c].brightness == global_pwm.channels[c].target_brightness);
+                    global_pwm.current.rgb[c] == global_pwm.target.rgb[c]);
     }
 
     PT_END(&process->pt);
