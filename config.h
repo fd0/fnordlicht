@@ -99,7 +99,7 @@
 #define CONFIG_DEBUG 0
 #endif
 
-/* include the script intpreter per default */
+/* include the script interpreter per default */
 #ifndef CONFIG_SCRIPT
 #define CONFIG_SCRIPT 1
 #endif
