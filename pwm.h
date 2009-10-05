@@ -47,11 +47,11 @@ struct rgb_color_t {
 struct hsv_color_t {
     union {
         struct {
-            uint8_t hue;
+            uint16_t hue;
             uint8_t value;
             uint8_t saturation;
         };
-        uint8_t hsv[3];
+        uint8_t hsv[4];
     };
 };
 
@@ -66,11 +66,11 @@ struct dual_color_t {
     };
     union {
         struct {
-            uint8_t hue;
+            uint16_t hue;
             uint8_t value;
             uint8_t saturation;
         };
-        uint8_t hsv[3];
+        uint8_t hsv[4];
     };
 };
 
@@ -83,24 +83,23 @@ struct union_color_t {
         };
         uint8_t rgb[3];
         struct {
-            uint8_t hue;
+            uint16_t hue;
             uint8_t value;
             uint8_t saturation;
         };
-        uint8_t hsv[3];
+        uint8_t hsv[4];
     };
 };
+
+#define PWM_HSV_SIZE sizeof(struct hsv_color_t)
 
 struct global_pwm_t
 {
     /* current color */
-    struct dual_color_t current;
+    struct rgb_color_t current;
 
     /* target for fading engine */
-    struct union_color_t target;
-
-    /* set to activate hsv color fading engine */
-    bool use_hsv;
+    struct dual_color_t target;
 
     /* delay and step for fading engine */
     uint8_t fade_delay[PWM_CHANNELS];
@@ -122,8 +121,5 @@ bool pwm_target_reached(void);
 
 /* convert hsv to rgb color */
 void pwm_hsv2rgb(struct dual_color_t *color);
-
-/* copy current hsv to rgb color */
-void pwm_copyhsv2rgb(void);
 
 #endif
