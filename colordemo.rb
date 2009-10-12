@@ -12,6 +12,14 @@ def color(addr, r, g, b)
     $dev.flush
 end
 
+def config(addr, scripting)
+    $dev.write addr.chr
+    $dev.write "\x03"
+    $dev.write scripting.chr
+    $dev.write "\x00\x00\x00\x00\x00\x00\x00"
+    $dev.flush
+end
+
 def fade(addr, speedl, speedh, r, g, b)
     $dev.write addr.chr
     $dev.write "\x02"
@@ -25,6 +33,8 @@ def fade(addr, speedl, speedh, r, g, b)
 end
 
 $dev = SerialPort.new("/dev/ttyUSB0", 19200)
+
+config(255, 0)
 
 color(255, 0, 0, 0)
 
