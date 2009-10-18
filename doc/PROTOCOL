@@ -36,7 +36,7 @@ withhold the execution of the received command packet until it is clear if a
 sequence of ESC bytes constitutes a sync sequence.
 
 Example:
-  A device received 4 bytes, say A B C D,  of a packet, than a sync sequence.
+  A device received 4 bytes, say A B C D,  of a packet, then a sync sequence.
   It may (or may not) execute the packet
 
     A B C D ESC ESC ... ESC
