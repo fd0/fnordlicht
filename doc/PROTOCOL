@@ -239,8 +239,8 @@ command |   meaning
              8-14 | -           | don't care
 
 
-    Command: pull down INT line
-    ---------------------------
+    Command: pull down INT line (0x0B)
+    ----------------------------------
 
       Instruct the adressed device to pull down the INT line (connected to all
       devices in parallel) for a given amount of time.  This can be efficiently
@@ -253,8 +253,8 @@ command |   meaning
              3-14 | -       | don't care
 
 
-    Command: configure startup
-    --------------------------
+    Command: configure startup (0x0C)
+    ---------------------------------
 
       Configure what a device should perform after power-up.  Mode is an
       unsigned 8 bit integer, selecting the desired startup mode.
@@ -267,8 +267,8 @@ command |   meaning
              3-14 | -       | don't care
 
 
-    Command: start bootloader
-    -------------------------
+    Command: start bootloader (0x0D)
+    --------------------------------
 
       If a bootloader is installed, jump to the bootloader, otherwise just
       restart the device.  A magic byte sequence of 0xfc27566b (little endian)
