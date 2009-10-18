@@ -227,7 +227,7 @@ command |   meaning
       (or 16) bit integers.
 
       byte offset | name        |  meaning
-      ---------------------------------
+      -------------------------------------
                 2 | step        | increment step for fading
                 3 | delay       | delay between step when fading (in 10ms)
                 4 | red         | red offset
@@ -237,3 +237,48 @@ command |   meaning
                 6 | saturation  | saturation offset
                 7 | value       | value offset
              8-14 | -           | don't care
+
+
+    Command: pull down INT line
+    ---------------------------
+
+      Instruct the adressed device to pull down the INT line (connected to all
+      devices in parallel) for a given amount of time.  This can be efficiently
+      used to determine the number of devices listening to the bus (eg. by
+      binary search).
+
+      byte offset | name    |  meaning
+      ---------------------------------
+                2 | delay   | time to wait before releasing the INT line
+             3-14 | -       | don't care
+
+
+    Command: configure startup
+    --------------------------
+
+      Configure what a device should perform after power-up.  Mode is an
+      unsigned 8 bit integer, selecting the desired startup mode.
+
+      TODO: add configuration description
+
+      byte offset | name    |  meaning
+      ---------------------------------
+                2 | mode    | desired startup mode
+             3-14 | -       | don't care
+
+
+    Command: start bootloader
+    -------------------------
+
+      If a bootloader is installed, jump to the bootloader, otherwise just
+      restart the device.  A magic byte sequence of 0xfc27566b (little endian)
+      must follow the command byte (little endian).
+
+
+      byte offset | name    |  meaning
+      ---------------------------------
+                2 | byte1   | magic byte 1 (0x6b)
+                3 | byte2   | magic byte 2 (0x56)
+                4 | byte3   | magic byte 3 (0x27)
+                5 | byte4   | magic byte 4 (0xfc)
+             6-14 | -       | don't care
