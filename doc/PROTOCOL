@@ -290,7 +290,7 @@ command |   meaning
 
       If a bootloader is installed, jump to the bootloader, otherwise just
       restart the device.  A magic byte sequence of 0xfc27566b (little endian)
-      must follow the command byte (little endian).
+      must follow the command byte.
 
 
       byte offset | name    |  meaning
