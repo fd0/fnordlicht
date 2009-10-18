@@ -170,7 +170,9 @@ command |   meaning
 
     Set global values which influence how fast and what colors are shown by
     a script (program).  All bytes are unsigned 8 bit integers, except hue,
-    which is a little endian signed 16 bit integer.
+    which is a little endian signed 16 bit integer.  Saturation and value are
+    scales.  This means, the final saturation and value will be scaled with
+    saturation/255 and value/255, respectively.
 
         byte offset | name          |  meaning
         ---------------------------------
