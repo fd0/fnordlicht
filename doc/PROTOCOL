@@ -26,11 +26,29 @@ Initial sync sequence
 ---------------------
 
 For the purpose of (automatic) address discovery and resetting the bus, a
-sync sequence consisting of 14x ESC (0x27) followed by an address byte is used.
-The controller sends 14x ESC, followed by a null byte.
+sync sequence consisting of 15x ESC (0x27) followed by an address byte is used.
+The controller sends 15x ESC, followed by a null byte. Please note that this
+differs from the command packets, which are always 15 byte in length.
+
+A device MUST be able to detect this sequence asynchronously, i.e. even it is
+in the middle of receiving a command packet. The device does not need to
+withhold the execution of the received command packet until it is clear if a
+sequence of ESC bytes constitutes a sync sequence.
+
+Example:
+  A device received 4 bytes, say A B C D,  of a packet, than a sync sequence.
+  It may (or may not) execute the packet
+
+    A B C D ESC ESC ... ESC
+
+  but the sync sequence must be detected, too.
+
+Asynchronous detection of the sync sequence can be done by just counting the
+number of consecutive ESC bytes, as 15 consecutive ESC bytes can only occur
+in a sync sequence, never in a command packet.
 
 Flow:
-* controller sends 14x ESC, followed by the address of the first device
+* controller sends 15x ESC, followed by the address of the first device
   (usually a null)
 * first device on the bus receives and retransmits 14x ESC, receives address
   byte, stores own address in ram, increments address byte and transmit new
