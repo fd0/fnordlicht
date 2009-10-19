@@ -397,6 +397,62 @@ void pwm_hsv2rgb(struct dual_color_t *color)
     }
 }
 
+/* convert rgb to hsv color
+ * (see http://en.wikipedia.org/wiki/HSL_and_HSV#Conversion_from_RGB_to_HSL_or_HSV )
+ * and
+ * http://www.enide.net/webcms/uploads/file/projects/powerpicrgb-irda/hsvspace.pdf
+ */
+void pwm_rgb2hsv(struct dual_color_t *color)
+{
+    /* search min and max */
+    uint8_t max = color->red;
+    uint8_t min = max;
+
+    if (color->green > max)
+        max = color->green;
+    if (color->blue > max)
+        max = color->blue;
+
+    if (color->green < min)
+        min = color->green;
+    if (color->blue < min)
+        min = color->blue;
+
+    uint16_t hue = 0;
+    uint8_t diff = max - min;
+    uint8_t diffh = diff/2;
+
+    /* compute value and saturation */
+    color->value = max;
+    color->saturation = 0;
+
+    if (max > 0)
+        color->saturation = ((255 * diff)+max/2)/max;
+    else {
+        color->saturation = 0;
+        color->hue = 0; /* undefined */
+        return;
+    }
+
+    if (max == min) {
+        hue = 0;
+    } else if (max == color->red) {
+        hue = (60 * (color->green - color->blue) + diffh)/diff + 360;
+    } else if (max == color->green) {
+        hue = (60 * (color->blue - color->red) + diffh)/diff + 120;
+    } else if (max == color->blue) {
+        hue = (60 * (color->red - color->green) + diffh)/diff + 240;
+    }
+
+    if (hue > (uint16_t)-1)
+        errx(23, "hue < 0!");
+
+    hue = hue % 360;
+
+    color->hue = hue;
+}
+
+
 void pwm_fade_rgb(struct rgb_color_t *color, uint8_t step, uint8_t delay)
 {
     for (uint8_t i = 0; i < PWM_CHANNELS; i++) {

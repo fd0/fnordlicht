@@ -121,5 +121,7 @@ bool pwm_target_reached(void);
 
 /* convert hsv to rgb color */
 void pwm_hsv2rgb(struct dual_color_t *color);
+/* convert rgb to hsv color */
+void pwm_rgb2hsv(struct dual_color_t *color);
 
 #endif
