@@ -5,11 +5,11 @@ Physical bus description
 ------------------------
 
 The serial bus consists of up to 254 devices, each device having the uart rx
-pin connected to the uart tx pin of the predecessor, the uart tx pin
-connected to the tx successor.  A device will retransmit each received byte
-immediately and unaltered, the only exception is the address byte in the
-sync sequence (which is incremented by one before retransmission).
-An interrupt line is connected to each device.
+pin connected to the uart tx pin of the predecessor, the uart tx pin connected
+to the tx successor.  The uart is used with a baud rate of 19200.  A device
+will retransmit each received byte immediately and unaltered, the only
+exception is the address byte in the sync sequence (which is incremented by one
+before retransmission).  An interrupt line is connected to each device.
 
 Diagram:
 
@@ -27,8 +27,9 @@ Initial sync sequence
 
 For the purpose of (automatic) address discovery and resetting the bus, a
 sync sequence consisting of 15x ESC (0x27) followed by an address byte is used.
-The controller sends 15x ESC, followed by a null byte. Please note that this
-differs from the command packets, which are always 15 byte in length.
+The controller sends 15x ESC, followed by a null byte. Please note that the
+length of the sync sequence (16 byte) is is different from the length of a
+command packet, which is 15 byte!
 
 A device MUST be able to detect this sequence asynchronously, i.e. even it is
 in the middle of receiving a command packet. The device does not need to
@@ -45,12 +46,13 @@ Example:
 
 Asynchronous detection of the sync sequence can be done by just counting the
 number of consecutive ESC bytes, as 15 consecutive ESC bytes can only occur
-in a sync sequence, never in a command packet.
+in a sync sequence, never in a command packet (ESC cannot occur as a command in
+the second byte of a command packet).
 
 Flow:
 * controller sends 15x ESC, followed by the address of the first device
   (usually a null)
-* first device on the bus receives and retransmits 14x ESC, receives address
+* first device on the bus receives and retransmits 15x ESC, receives address
   byte, stores own address in ram, increments address byte and transmit new
   address to next device on the bus
 
@@ -73,26 +75,29 @@ List of commands:
 
 command |   meaning
 ----------------------------------------------------
-   0x02 |   fade to color (RGB)
-   0x03 |   fade to color (HSV)
+   0x02 |   set color/fade to color (RGB)
+   0x03 |   set color/fade to color (HSV)
    0x04 |   save color to EEPROM (RGB)
    0x05 |   save color to EEPROM (HSV)
-   0x06 |   set global offset values
-   0x07 |   replay EEPROM color sequence
-   0x08 |   start program
-   0x09 |   stop
-   0x0A |   modify current color
-   0x0B |   pull down INT line
-   0x0C |   configure startup
-   0x0D |   start bootloader
+   0x06 |   save current color to EEPROM
+   0x07 |   set global offset values
+   0x08 |   replay EEPROM color sequence
+   0x09 |   start program
+   0x0A |   stop
+   0x0B |   modify current color
+   0x0C |   pull down INT line
+   0x0D |   configure startup
+   0x80 |   start bootloader
    0x27 |   RESERVED (sync-sequence)
 
 
-    Command: fade to color (RGB) (0x02)
-    -----------------------------------
+    Command: set color/fade to color (RGB) (0x02)
+    ---------------------------------------------
 
       Instruct the device to fade to a specified color, given as a RGB value,
-      with a specific speed.  All values are unsigned 8 bit integers.
+      with a specific speed.  All values are unsigned 8 bit integers.  If step
+      is set to 255, the target color is set without fading.  If delay is 0, the
+      target color is set directly after receiving the command packet.
 
       byte offset | name  |  meaning
       ---------------------------------
@@ -104,12 +109,14 @@ command |   meaning
              7-14 | -     | don't care
 
 
-    Command: fade to color (HSV) (0x03)
-    -----------------------------------
+    Command: set color/fade to color (HSV) (0x03)
+    ---------------------------------------------
 
       Instruct the device to fade to a specified color, given as a HSV value,
       with a specific speed.  All values are unsigned 8 bit integers, except
-      hue, which is a 16 bit little endian integer.
+      hue, which is a 16 bit little endian integer.  If step is set to 255, the
+      target color is set without fading.  If delay is 0, the target color is
+      set directly after receiving the command packet.
 
       byte offset | name        |  meaning
       ------------------------------------
@@ -165,7 +172,25 @@ command |   meaning
             11-14 | -          | don't care
 
 
-    Command: set global offset values (0x06)
+    Command: save current color to EEPROM (0x06)
+    --------------------------------------------
+
+      Save the current color to EEPROM (RGB), together with a fade speed and a
+      pause length.
+
+      All values are unsigned 8 bit integers, except pause, which is a little
+      endian 16 bit integers.
+
+      byte offset | name       |  meaning
+      ---------------------------------
+                2 | slot       | slot in the EEPROM (0-59)
+                3 | step       | increment step for fading
+                4 | delay      | delay between steps when fading (in 10ms)
+              5-6 | pause      | time to wait before fading to next color
+             7-14 | -          | don't care
+
+
+    Command: set global offset values (0x07)
     ----------------------------------------
 
     Set global values which influence how fast and what colors are shown by
@@ -184,7 +209,7 @@ command |   meaning
                   7 | value         | value scale, unsigned, 0-255
 
 
-    Command: replay EEPROM color sequence (0x07)
+    Command: replay EEPROM color sequence (0x08)
     --------------------------------------------
 
       Start replaying a color sequence stored in EEPROM, given the begin and
@@ -209,7 +234,7 @@ command |   meaning
              5-14 | -      | don't care
 
 
-    Command: start program (0x08)
+    Command: start program (0x09)
     -----------------------------
 
       Start a program (a function compiled into the firmware) with given
@@ -222,7 +247,7 @@ command |   meaning
              3-14 | -      | parameters passed to script function
 
 
-    Command: stop (0x09)
+    Command: stop (0x0A)
     --------------------
 
       Stop all processes modifying the current color.  Optionally, also stop
@@ -234,7 +259,7 @@ command |   meaning
              3-14 | -      | don't care
 
 
-    Command: modify current color (0x0A)
+    Command: modify current color (0x0B)
     ------------------------------------
 
       Change the current color.  This works only if no program (or EEPROM fade
@@ -259,7 +284,7 @@ command |   meaning
              8-14 | -           | don't care
 
 
-    Command: pull down INT line (0x0B)
+    Command: pull down INT line (0x0C)
     ----------------------------------
 
       Instruct the adressed device to pull down the INT line (connected to all
@@ -270,10 +295,11 @@ command |   meaning
       byte offset | name    |  meaning
       ---------------------------------
                 2 | delay   | time to wait before releasing the INT line
+                            | (in 10ms)
              3-14 | -       | don't care
 
 
-    Command: configure startup (0x0C)
+    Command: configure startup (0x0D)
     ---------------------------------
 
       Configure what a device should perform after power-up.  Mode is an
@@ -287,7 +313,7 @@ command |   meaning
              3-14 | -       | don't care
 
 
-    Command: start bootloader (0x0D)
+    Command: start bootloader (0x80)
     --------------------------------
 
       If a bootloader is installed, jump to the bootloader, otherwise just
