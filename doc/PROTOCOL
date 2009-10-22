@@ -67,7 +67,8 @@ to device unmodified.  The first byte is the destination address (0-254, 255
 is broadcast), the second byte contains the command.  The meaning of the
 following 13 bytes depends on the value of the second byte (command).  A
 device ignores non-broadcast packets for which the address byte does not
-match it's own address.
+match it's own address.  Bytes which are declared as "don't care" bytes SHOULD
+be set to zero, this makes future extensions easier.
 
 
 List of commands:
