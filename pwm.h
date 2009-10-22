@@ -25,6 +25,7 @@
 #define PWM_H
 
 #include "timer.h"
+#include "color.h"
 
 /* possible pwm interrupts in a pwm cycle */
 #define PWM_MAX_TIMESLOTS (PWM_CHANNELS+1)
@@ -32,64 +33,6 @@
 #if PWM_CHANNELS != 3
 #error "PWM_CHANNELS is not 3, this is unsupported!"
 #endif
-
-struct rgb_color_t {
-    union {
-        struct {
-            uint8_t red;
-            uint8_t green;
-            uint8_t blue;
-        };
-        uint8_t rgb[3];
-    };
-};
-
-struct hsv_color_t {
-    union {
-        struct {
-            uint16_t hue;
-            uint8_t value;
-            uint8_t saturation;
-        };
-        uint8_t hsv[4];
-    };
-};
-
-struct dual_color_t {
-    union {
-        struct {
-            uint8_t red;
-            uint8_t green;
-            uint8_t blue;
-        };
-        uint8_t rgb[3];
-    };
-    union {
-        struct {
-            uint16_t hue;
-            uint8_t value;
-            uint8_t saturation;
-        };
-        uint8_t hsv[4];
-    };
-};
-
-struct union_color_t {
-    union {
-        struct {
-            uint8_t red;
-            uint8_t green;
-            uint8_t blue;
-        };
-        uint8_t rgb[3];
-        struct {
-            uint16_t hue;
-            uint8_t value;
-            uint8_t saturation;
-        };
-        uint8_t hsv[4];
-    };
-};
 
 #define PWM_HSV_SIZE sizeof(struct hsv_color_t)
 
@@ -123,5 +66,8 @@ bool pwm_target_reached(void);
 void pwm_hsv2rgb(struct dual_color_t *color);
 /* convert rgb to hsv color */
 void pwm_rgb2hsv(struct dual_color_t *color);
+
+/* stop fading, hold current color */
+void pwm_stop_fading(void);
 
 #endif

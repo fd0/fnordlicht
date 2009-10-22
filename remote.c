@@ -33,7 +33,7 @@ struct remote_state_t
 {
     union {
         struct remote_msg_t msg;
-        uint8_t buf[REMOTE_MSGLEN];
+        uint8_t buf[REMOTE_MSG_LEN];
     };
     uint8_t buflen;
 
@@ -46,6 +46,20 @@ struct remote_state_t
 struct remote_state_t remote;
 
 #if CONFIG_SERIAL && CONFIG_REMOTE
+
+/* static parsing routines */
+static void parse_fade_rgb(struct remote_msg_fade_rgb_t *msg);
+static void parse_fade_hsv(struct remote_msg_fade_hsv_t *msg);
+static void parse_save_rgb(struct remote_msg_save_rgb_t *msg);
+static void parse_save_hsv(struct remote_msg_save_hsv_t *msg);
+static void parse_save_current(struct remote_msg_save_current_t *msg);
+static void parse_config_offsets(struct remote_msg_config_offsets_t *msg);
+static void parse_replay(struct remote_msg_replay_t *msg);
+static void parse_start_program(struct remote_msg_start_program_t *msg);
+static void parse_stop(struct remote_msg_stop_t *msg);
+static void parse_modify_current(struct remote_msg_modify_current_t *msg);
+static void parse_pull_int(struct remote_msg_pull_int_t *msg);
+static void parse_config_startup(struct remote_msg_config_startup_t *msg);
 
 void remote_init(void)
 {
@@ -62,37 +76,44 @@ static void remote_parse_msg(struct remote_msg_t *msg)
     if (msg->address != remote.address && msg->address != REMOTE_ADDR_BROADCAST)
         return;
 
-    if (msg->cmd == REMOTE_CMD_SET) {
-        for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
-            global_pwm.current.rgb[i] = msg->data[i];
-            global_pwm.target.rgb[i] = msg->data[i];
-        }
-
-        return;
-    }
-
-    if (msg->cmd == REMOTE_CMD_FADE) {
-        struct remote_msg_fade *m = (struct remote_msg_fade *)msg;
-
-        /* fade to new color */
-        for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
-            global_pwm.fade_step[i] = m->step;
-            global_pwm.fade_delay[i] = m->delay;
-            global_pwm.target.rgb[i] = m->target[i];
-        }
-
-        return;
-    }
-
-    if (msg->cmd == REMOTE_CMD_CONFIG) {
-        struct remote_msg_config *m = (struct remote_msg_config *)msg;
-
-        /* enable or disable scripting */
-        if (m->scripting)
-            script_global.enable = 1;
-        else
-            script_global.enable = 0;
-        return;
+    /* parse command */
+    switch (msg->cmd) {
+        case REMOTE_CMD_FADE_RGB:
+            parse_fade_rgb((struct remote_msg_fade_rgb_t *)msg);
+            break;
+        case REMOTE_CMD_FADE_HSV:
+            parse_fade_hsv((struct remote_msg_fade_hsv_t *)msg);
+            break;
+        case REMOTE_CMD_SAVE_RGB:
+            parse_save_rgb((struct remote_msg_save_rgb_t *)msg);
+            break;
+        case REMOTE_CMD_SAVE_HSV:
+            parse_save_hsv((struct remote_msg_save_hsv_t *)msg);
+            break;
+        case REMOTE_CMD_SAVE_CURRENT:
+            parse_save_current((struct remote_msg_save_current_t *)msg);
+            break;
+        case REMOTE_CMD_CONFIG_OFFSETS:
+            parse_config_offsets((struct remote_msg_config_offsets_t *)msg);
+            break;
+        case REMOTE_CMD_REPLAY:
+            parse_replay((struct remote_msg_replay_t *)msg);
+            break;
+        case REMOTE_CMD_START_PROGRAM:
+            parse_start_program((struct remote_msg_start_program_t *)msg);
+            break;
+        case REMOTE_CMD_STOP:
+            parse_stop((struct remote_msg_stop_t *)msg);
+            break;
+        case REMOTE_CMD_MODIFY_CURRENT:
+            parse_modify_current((struct remote_msg_modify_current_t *)msg);
+            break;
+        case REMOTE_CMD_PULL_INT:
+            parse_pull_int((struct remote_msg_pull_int_t *)msg);
+            break;
+        case REMOTE_CMD_CONFIG_STARTUP:
+            parse_config_startup((struct remote_msg_config_startup_t *)msg);
+            break;
     }
 }
 
@@ -101,7 +122,7 @@ static PT_THREAD(remote_thread(struct pt *thread))
     PT_BEGIN(thread);
 
     while (1) {
-        PT_WAIT_UNTIL(thread, remote.buflen == REMOTE_MSGLEN);
+        PT_WAIT_UNTIL(thread, remote.buflen == REMOTE_MSG_LEN);
 
         remote_parse_msg(&remote.msg);
         remote.buflen = 0;
@@ -116,7 +137,7 @@ void remote_poll(void)
         uint8_t data = fifo_dequeue(&global_uart.rx);
 
         /* check if sync sequence has been received before */
-        if (remote.sync == REMOTE_MSGLEN-1) {
+        if (remote.sync == REMOTE_SYNC_LEN) {
             /* synced, safe address and send next address to following device */
             remote.address = data;
             uart_putc(data+1);
@@ -146,6 +167,68 @@ void remote_poll(void)
 
     if (remote.synced)
         PT_SCHEDULE(remote_thread(&remote.thread));
+}
+
+void parse_fade_rgb(struct remote_msg_fade_rgb_t *msg)
+{
+    pwm_fade_rgb(&msg->color, msg->step, msg->delay);
+}
+
+void parse_fade_hsv(struct remote_msg_fade_hsv_t *msg)
+{
+    pwm_fade_hsv(&msg->color, msg->step, msg->delay);
+}
+
+void parse_save_rgb(struct remote_msg_save_rgb_t *msg)
+{
+
+}
+
+void parse_save_hsv(struct remote_msg_save_hsv_t *msg)
+{
+
+}
+
+void parse_save_current(struct remote_msg_save_current_t *msg)
+{
+
+}
+
+void parse_config_offsets(struct remote_msg_config_offsets_t *msg)
+{
+
+}
+
+void parse_replay(struct remote_msg_replay_t *msg)
+{
+
+}
+
+void parse_start_program(struct remote_msg_start_program_t *msg)
+{
+
+}
+
+void parse_stop(struct remote_msg_stop_t *msg)
+{
+    /* disable scripting */
+    script_global.enable = 0;
+    pwm_stop_fading();
+}
+
+void parse_modify_current(struct remote_msg_modify_current_t *msg)
+{
+
+}
+
+void parse_pull_int(struct remote_msg_pull_int_t *msg)
+{
+
+}
+
+void parse_config_startup(struct remote_msg_config_startup_t *msg)
+{
+
 }
 
 #endif

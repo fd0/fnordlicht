@@ -449,18 +449,18 @@ void pwm_rgb2hsv(struct dual_color_t *color)
     color->hue = hue;
 }
 
-
-void pwm_fade_rgb(struct rgb_color_t *color, uint8_t step, uint8_t delay)
+/* stop fading, hold current color */
+void pwm_stop_fading(void)
 {
     for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
-        global_pwm.fade_step[i] = step;
-        global_pwm.fade_delay[i] = delay;
-        global_pwm.target.rgb[i] = color->rgb[i];
+        /* set current value as target */
+        global_pwm.target.rgb[i] = global_pwm.current.rgb[i];
     }
 
-    /* disable timer */
+    /* ignore all timers */
     fading.running = 0;
 }
+
 
 static uint8_t diff_abs(uint8_t a, uint8_t b)
 {
@@ -470,15 +470,8 @@ static uint8_t diff_abs(uint8_t a, uint8_t b)
         return b-a;
 }
 
-void pwm_fade_hsv(struct hsv_color_t *color, uint8_t step, uint8_t delay)
+static void compute_speed(uint8_t step, uint8_t delay)
 {
-    /* convert color */
-    for (uint8_t i = 0; i < PWM_HSV_SIZE; i++)
-        global_pwm.target.hsv[i] = color->hsv[i];
-
-    /* update rgb color in target */
-    pwm_hsv2rgb(&global_pwm.target);
-
     /* search for max distance */
     uint8_t max = 0;
     uint8_t dist = 0;
@@ -509,6 +502,34 @@ void pwm_fade_hsv(struct hsv_color_t *color, uint8_t step, uint8_t delay)
         global_pwm.fade_delay[i] = ratio * delay;
         global_pwm.fade_step[i] = step;
     }
+}
+
+void pwm_fade_rgb(struct rgb_color_t *color, uint8_t step, uint8_t delay)
+{
+    for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
+        global_pwm.fade_step[i] = step;
+        global_pwm.fade_delay[i] = delay;
+        global_pwm.target.rgb[i] = color->rgb[i];
+    }
+
+    /* compute correct speed for all channels */
+    compute_speed(step, delay);
+
+    /* disable timer */
+    fading.running = 0;
+}
+
+void pwm_fade_hsv(struct hsv_color_t *color, uint8_t step, uint8_t delay)
+{
+    /* convert color */
+    for (uint8_t i = 0; i < PWM_HSV_SIZE; i++)
+        global_pwm.target.hsv[i] = color->hsv[i];
+
+    /* update rgb color in target */
+    pwm_hsv2rgb(&global_pwm.target);
+
+    /* compute correct speed for all channels */
+    compute_speed(step, delay);
 
     /* disable timer */
     fading.running = 0;
