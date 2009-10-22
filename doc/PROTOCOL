@@ -307,14 +307,36 @@ command |   function      | description
     --------------------------------------------------
 
       Configure what a device should perform after power-up.  Mode is an
-      unsigned 8 bit integer, selecting the desired startup mode.
+      unsigned 8 bit integer, selecting the desired startup mode.  Values which
+      are not necessary for the selected mode should be treated as don't care
+      values (ie set to zero).
 
-      TODO: add configuration description
+      Four different modes can be configured:
+       * PROGRAM:       Start static program, which is compiled
+                        into the firmware (default)
+       * STATIC_COLOR:  Fade to a specified (rgb) color,
+                        using step and delay for fading
+       * RANDOM:        Fade to random (HSV-)colors, using the specified saturation
+                        and value, and using step and delay for fading.  Pseudo
+                        random generator is initialized using seed and device
+                        address.
+       * REPLAY_EEPROM: Fade a color sequence stored in EEPROM, repeat if
+                        configured
 
-      byte offset | name    |  description
-      ---------------------------------
-                2 | mode    | desired startup mode
-             3-14 | -       | don't care
+      byte offset | name       |  description
+      ------------------------------------
+                2 | mode       | desired startup mode
+                3 | step       | step for fading (STATIC_COLOR, RANDOM)
+                4 | delay      | delay for fading (STATIC_COLOR, RANDOM)
+                5 | red        | red (for STATIC_COLOR)
+                6 | green      | green (for STATIC_COLOR)
+                7 | blue       | blue (for STATIC_COLOR)
+                8 | start      | start at this EEPROM offset (for REPLAY_EEPROM)
+                9 | end        | start at this EEPROM offset (for REPLAY_EEPROM)
+               10 | seed       | seed for pseudo random generator (for RANDOM)
+               11 | saturation | saturation for random color (for RANDOM)
+               12 | value      | value for random color (for RANDOM)
+            13-14 | -          | don't care
 
 
     Command: BOOTLOADER - start bootloader (0x80)
