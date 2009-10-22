@@ -444,9 +444,6 @@ void pwm_rgb2hsv(struct dual_color_t *color)
         hue = (60 * (color->red - color->green) + diffh)/diff + 240;
     }
 
-    if (hue > (uint16_t)-1)
-        errx(23, "hue < 0!");
-
     hue = hue % 360;
 
     color->hue = hue;
