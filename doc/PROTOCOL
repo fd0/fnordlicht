@@ -74,33 +74,33 @@ be set to zero, this makes future extensions easier.
 List of commands:
 -----------------
 
-command |   meaning
-----------------------------------------------------
-   0x02 |   set color/fade to color (RGB)
-   0x03 |   set color/fade to color (HSV)
-   0x04 |   save color to EEPROM (RGB)
-   0x05 |   save color to EEPROM (HSV)
-   0x06 |   save current color to EEPROM
-   0x07 |   set global offset values
-   0x08 |   replay EEPROM color sequence
-   0x09 |   start program
-   0x0A |   stop
-   0x0B |   modify current color
-   0x0C |   pull down INT line
-   0x0D |   configure startup
-   0x80 |   start bootloader
-   0x27 |   RESERVED (sync-sequence)
+command |   function      | description
+------------------------------------------------------
+   0x02 | FADE_RGB        | set color/fade to color (RGB)
+   0x03 | FADE_HSV        | set color/fade to color (HSV)
+   0x04 | SAVE_RGB        | save color to EEPROM (RGB)
+   0x05 | SAVE_HSV        | save color to EEPROM (HSV)
+   0x06 | SAVE_CURRENT    | save current color to EEPROM
+   0x07 | CONFIG_OFFSETS  | set global offset values
+   0x08 | REPLAY          | replay EEPROM color sequence
+   0x09 | START_PROGRAM   | start program
+   0x0A | STOP            | stop color changing
+   0x0B | MODIFY_CURRENT  | modify current color
+   0x0C | PULL_INT        | pull down INT line
+   0x0D | CONFIG_STARTUP  | configure startup
+   0x27 |                 | RESERVED (sync-sequence)
+   0x80 | BOOTLOADER      | start bootloader
 
 
-    Command: set color/fade to color (RGB) (0x02)
-    ---------------------------------------------
+    Command: FADE_RGB - set color/fade to color (RGB) (0x02)
+    --------------------------------------------------------
 
       Instruct the device to fade to a specified color, given as a RGB value,
       with a specific speed.  All values are unsigned 8 bit integers.  If step
       is set to 255, the target color is set without fading.  If delay is 0, the
       target color is set directly after receiving the command packet.
 
-      byte offset | name  |  meaning
+      byte offset | name  |  description
       ---------------------------------
                 2 | step  | increment step for fading
                 3 | delay | delay between steps when fading (in 10ms)
@@ -110,8 +110,8 @@ command |   meaning
              7-14 | -     | don't care
 
 
-    Command: set color/fade to color (HSV) (0x03)
-    ---------------------------------------------
+    Command: FADE_HSV - set color/fade to color (HSV) (0x03)
+    --------------------------------------------------------
 
       Instruct the device to fade to a specified color, given as a HSV value,
       with a specific speed.  All values are unsigned 8 bit integers, except
@@ -119,7 +119,7 @@ command |   meaning
       target color is set without fading.  If delay is 0, the target color is
       set directly after receiving the command packet.
 
-      byte offset | name        |  meaning
+      byte offset | name        |  description
       ------------------------------------
                 2 | step        | increment step for fading
                 3 | delay       | delay between steps when fading (in 10ms)
@@ -129,8 +129,8 @@ command |   meaning
              8-14 | -           | don't care
 
 
-    Command: save color to EEPROM (RGB) (0x04)
-    ------------------------------------------
+    Command: SAVE_RGB - save color to EEPROM (RGB) (0x04)
+    -----------------------------------------------------
 
       Save a color in RGB format, a fade speed (step and delay) and a pause
       length to the EEPROM.  The EEPROM can store 60 color and speed/delay
@@ -139,7 +139,7 @@ command |   meaning
       All values are unsigned 8 bit integers, except pause, which is a little
       endian 16 bit integer.
 
-      byte offset | name  |  meaning
+      byte offset | name  |  description
       ------------------------------
                 2 | slot  | slot in the EEPROM (0-59)
                 3 | step  | increment step for fading
@@ -151,8 +151,8 @@ command |   meaning
             10-14 | -     | don't care
 
 
-    Command: save color to EEPROM (HSV) (0x05)
-    ------------------------------------------
+    Command: SAVE_HSV - save color to EEPROM (HSV) (0x05)
+    -----------------------------------------------------
 
       Save a color in HSV format, a fade speed (step and delay) and a pause
       length to the EEPROM.  The EEPROM can store 60 color and speed/delay
@@ -161,7 +161,7 @@ command |   meaning
       All values are unsigned 8 bit integers, except pause and hue, which are
       little endian 16 bit integers.
 
-      byte offset | name       |  meaning
+      byte offset | name       |  description
       -----------------------------------
                 2 | slot       | slot in the EEPROM (0-59)
                 3 | step       | increment step for fading
@@ -174,8 +174,8 @@ command |   meaning
             11-14 | -          | don't care
 
 
-    Command: save current color to EEPROM (0x06)
-    --------------------------------------------
+    Command: SAVE_CURRENT - save current color to EEPROM (0x06)
+    -----------------------------------------------------------
 
       Save the current color to EEPROM (RGB), together with a fade speed and a
       pause length.
@@ -183,8 +183,8 @@ command |   meaning
       All values are unsigned 8 bit integers, except pause, which is a little
       endian 16 bit integers.
 
-      byte offset | name       |  meaning
-      ---------------------------------
+      byte offset | name       |  description
+      ----------------------------------------
                 2 | slot       | slot in the EEPROM (0-59)
                 3 | step       | increment step for fading
                 4 | delay      | delay between steps when fading (in 10ms)
@@ -193,8 +193,8 @@ command |   meaning
              7-14 | -          | don't care
 
 
-    Command: set global offset values (0x07)
-    ----------------------------------------
+    Command: CONFIG_OFFSETS - set global offset values (0x07)
+    ---------------------------------------------------------
 
     Set global values which influence how fast and what colors are shown by
     a script (program).  All bytes are unsigned 8 bit integers, except hue,
@@ -202,18 +202,19 @@ command |   meaning
     scales.  This means, the final saturation and value will be scaled with
     saturation/255 and value/255, respectively.
 
-        byte offset | name          |  meaning
-        ---------------------------------
+        byte offset | name          |  description
+        -------------------------------------------
                   2 | step          | increment step for fading (offset)
                   3 | delay         | delay between steps when fading
                     |               | (in 10ms, offset)
                 4-5 | hue           | hue offset, signed, little endian
                   6 | saturation    | saturation scale, unsigned, 0-255
                   7 | value         | value scale, unsigned, 0-255
+               8-14 | -             | don't care
 
 
-    Command: replay EEPROM color sequence (0x08)
-    --------------------------------------------
+    Command: REPLAY - replay EEPROM color sequence (0x08)
+    -----------------------------------------------------
 
       Start replaying a color sequence stored in EEPROM, given the begin and
       end positions (end color is included).  The repeat mode specifies, what
@@ -229,7 +230,7 @@ command |   meaning
 
       All values are unsigned 8 bit integers.
 
-      byte offset | name   |  meaning
+      byte offset | name   |  description
       ---------------------------------
                 2 | start  | start offset, 0-59
                 3 | stop   | stop offset, 0-59
@@ -237,33 +238,33 @@ command |   meaning
              5-14 | -      | don't care
 
 
-    Command: start program (0x09)
-    -----------------------------
+    Command: START_PROGRAM - start program (0x09)
+    ---------------------------------------------
 
       Start a program (a function compiled into the firmware) with given
       parameters.  This command stops all other programs (and EEPROM fade
       sequences).
 
-      byte offset | name   |  meaning
+      byte offset | name   |  description
       ---------------------------------
                 2 | script | script id, 0-255
              3-14 | -      | parameters passed to script function
 
 
-    Command: stop (0x0A)
-    --------------------
+    Command: STOP - stop color changing (0x0A)
+    ------------------------------------------
 
       Stop all processes modifying the current color.  Optionally, also stop
       the current fading process.
 
-      byte offset | name   |  meaning
+      byte offset | name   |  description
       ---------------------------------
                 2 | fade   | stop fading if set (1)
              3-14 | -      | don't care
 
 
-    Command: modify current color (0x0B)
-    ------------------------------------
+    Command: MODIFY_CURRENT - modify current color (0x0B)
+    -----------------------------------------------------
 
       Change the current color.  This works only if no program (or EEPROM fade
       sequence) is running.  The current color is faded to the target color with
@@ -274,7 +275,7 @@ command |   meaning
       Step and delay are unsigned 8 bit integers, all other values are signed 8
       (or 16) bit integers.
 
-      byte offset | name        |  meaning
+      byte offset | name        |  description
       -------------------------------------
                 2 | step        | increment step for fading
                 3 | delay       | delay between steps when fading (in 10ms)
@@ -287,44 +288,44 @@ command |   meaning
              8-14 | -           | don't care
 
 
-    Command: pull down INT line (0x0C)
-    ----------------------------------
+    Command: PULL_INT - pull down INT line (0x0C)
+    ---------------------------------------------
 
       Instruct the adressed device to pull down the INT line (connected to all
       devices in parallel) for a given amount of time.  This can be efficiently
       used to determine the number of devices listening to the bus (eg. by
       binary search).
 
-      byte offset | name    |  meaning
+      byte offset | name    |  description
       ---------------------------------
                 2 | delay   | time to wait before releasing the INT line
                             | (in 10ms)
              3-14 | -       | don't care
 
 
-    Command: configure startup (0x0D)
-    ---------------------------------
+    Command: CONFIG_STARTUP - configure startup (0x0D)
+    --------------------------------------------------
 
       Configure what a device should perform after power-up.  Mode is an
       unsigned 8 bit integer, selecting the desired startup mode.
 
       TODO: add configuration description
 
-      byte offset | name    |  meaning
+      byte offset | name    |  description
       ---------------------------------
                 2 | mode    | desired startup mode
              3-14 | -       | don't care
 
 
-    Command: start bootloader (0x80)
-    --------------------------------
+    Command: BOOTLOADER - start bootloader (0x80)
+    ---------------------------------------------
 
       If a bootloader is installed, jump to the bootloader, otherwise just
       restart the device.  A magic byte sequence of 0xfc27566b (little endian)
       must follow the command byte.
 
 
-      byte offset | name    |  meaning
+      byte offset | name    |  description
       ---------------------------------
                 2 | byte1   | magic byte 1 (0x6b)
                 3 | byte2   | magic byte 2 (0x56)
