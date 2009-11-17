@@ -497,7 +497,10 @@ static void compute_speed(uint8_t step, uint8_t delay)
 
         uint8_t ratio = 1;
         if (d > 0)
-            ratio = dist/d+1;
+            ratio = (dist+d/2)/d;
+
+        if (ratio == 0)
+            ratio = 1;
 
         global_pwm.fade_delay[i] = ratio * delay;
         global_pwm.fade_step[i] = step;
@@ -506,11 +509,9 @@ static void compute_speed(uint8_t step, uint8_t delay)
 
 void pwm_fade_rgb(struct rgb_color_t *color, uint8_t step, uint8_t delay)
 {
-    for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
-        global_pwm.fade_step[i] = step;
-        global_pwm.fade_delay[i] = delay;
+    /* set target color */
+    for (uint8_t i = 0; i < PWM_CHANNELS; i++)
         global_pwm.target.rgb[i] = color->rgb[i];
-    }
 
     /* compute correct speed for all channels */
     compute_speed(step, delay);
