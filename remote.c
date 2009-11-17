@@ -211,8 +211,10 @@ void parse_start_program(struct remote_msg_start_program_t *msg)
 
 void parse_stop(struct remote_msg_stop_t *msg)
 {
+#if CONFIG_SCRIPT
     /* disable scripting */
     script_global.enable = 0;
+#endif
     pwm_stop_fading();
 }
 
