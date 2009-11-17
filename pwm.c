@@ -546,6 +546,69 @@ bool pwm_target_reached(void)
     return true;
 }
 
+/* modify current color */
+void pwm_modify_rgb(struct rgb_color_offset_t *color, uint8_t step, uint8_t delay)
+{
+    for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
+        int16_t current = global_pwm.target.rgb[i];
+        current += color->rgb[i];
+
+        if (current > 255)
+            current = 255;
+        if (current < 0)
+            current = 0;
+
+        global_pwm.target.rgb[i] = LO8(current);
+    }
+
+    compute_speed(step, delay);
+
+    /* disable timer */
+    fading.running = 0;
+}
+
+void pwm_modify_hsv(struct hsv_color_offset_t *color, uint8_t step, uint8_t delay)
+{
+    uart_putc('H');
+    uart_putc(HI8(color->hue));
+    uart_putc(LO8(color->hue));
+    uart_putc(color->saturation);
+    uart_putc(color->value);
+
+    /* convert current target color from rgb to hsv */
+    pwm_rgb2hsv(&global_pwm.target);
+
+    /* apply changes, hue */
+    global_pwm.target.hue += color->hue;
+
+    /* saturation */
+    int16_t sat = global_pwm.target.saturation;
+    sat += color->saturation;
+    if (sat > 255)
+        sat = 255;
+    if (sat < 0)
+        sat = 0;
+    global_pwm.target.saturation = LO8(sat);
+
+    /* value */
+    int16_t val = global_pwm.target.value;
+    val += color->value;
+    if (val > 255)
+        val = 255;
+    if (val < 0)
+        val = 0;
+    global_pwm.target.value = LO8(val);
+
+    /* re-convert to rgb */
+    pwm_hsv2rgb(&global_pwm.target);
+
+    /* compute correct speed for all channels */
+    compute_speed(step, delay);
+
+    /* disable timer */
+    fading.running = 0;
+}
+
 
 /** interrupts*/
 

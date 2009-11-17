@@ -70,4 +70,8 @@ void pwm_rgb2hsv(struct dual_color_t *color);
 /* stop fading, hold current color */
 void pwm_stop_fading(void);
 
+/* modify color */
+void pwm_modify_rgb(struct rgb_color_offset_t *color, uint8_t step, uint8_t delay);
+void pwm_modify_hsv(struct hsv_color_offset_t *color, uint8_t step, uint8_t delay);
+
 #endif

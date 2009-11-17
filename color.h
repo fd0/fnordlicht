@@ -40,6 +40,17 @@ struct rgb_color_t
     };
 };
 
+struct rgb_color_offset_t {
+    union {
+        struct {
+            int8_t red;
+            int8_t green;
+            int8_t blue;
+        };
+        int8_t rgb[3];
+    };
+};
+
 struct hsv_color_t
 {
     union {
@@ -50,6 +61,12 @@ struct hsv_color_t
         };
         uint8_t hsv[4];
     };
+};
+
+struct hsv_color_offset_t {
+    int16_t hue;
+    int8_t saturation;
+    int8_t value;
 };
 
 struct dual_color_t
