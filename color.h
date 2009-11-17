@@ -45,8 +45,8 @@ struct hsv_color_t
     union {
         struct {
             uint16_t hue;
-            uint8_t value;
             uint8_t saturation;
+            uint8_t value;
         };
         uint8_t hsv[4];
     };
@@ -65,8 +65,8 @@ struct dual_color_t
     union {
         struct {
             uint16_t hue;
-            uint8_t value;
             uint8_t saturation;
+            uint8_t value;
         };
         uint8_t hsv[4];
     };
@@ -83,8 +83,8 @@ struct union_color_t
         uint8_t rgb[3];
         struct {
             uint16_t hue;
-            uint8_t value;
             uint8_t saturation;
+            uint8_t value;
         };
         uint8_t hsv[4];
     };
