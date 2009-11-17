@@ -28,6 +28,7 @@
 #include "pt/pt.h"
 #include "script.h"
 #include "remote-proto.h"
+#include "common.h"
 
 struct remote_state_t
 {
@@ -220,7 +221,18 @@ void parse_stop(struct remote_msg_stop_t *msg)
 
 void parse_modify_current(struct remote_msg_modify_current_t *msg)
 {
+    /* return if a color change is in progress */
+#if CONFIG_SCRIPT
+    if (script_global.enable || !pwm_target_reached())
+        return;
+#else
+    if (!pwm_target_reached())
+        return;
+#endif
 
+    /* apply rgb and hsv offsets */
+    pwm_modify_rgb(&msg->rgb, msg->step, msg->delay);
+    pwm_modify_hsv(&msg->hsv, msg->step, msg->delay);
 }
 
 void parse_pull_int(struct remote_msg_pull_int_t *msg)

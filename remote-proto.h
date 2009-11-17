@@ -147,17 +147,8 @@ struct remote_msg_modify_current_t
     uint8_t cmd;
     uint8_t step;
     uint8_t delay;
-    union {
-        struct {
-            int8_t red;
-            int8_t green;
-            int8_t blue;
-        };
-        int8_t rgb[3];
-    };
-    int16_t hue;
-    int8_t saturation;
-    int8_t value;
+    struct rgb_color_offset_t rgb;
+    struct hsv_color_offset_t hsv;
 };
 
 struct remote_msg_pull_int_t
