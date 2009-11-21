@@ -21,6 +21,8 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdint.h>
+
 #ifndef COLOR_H
 #define COLOR_H
 
