@@ -1,4 +1,6 @@
 #!/usr/bin/python
+#
+#  compute pwm reference table
 
 clock = 16000000
 basefreq = 125
