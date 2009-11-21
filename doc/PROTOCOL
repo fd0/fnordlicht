@@ -291,7 +291,7 @@ command |   function      | description
     Command: PULL_INT - pull down INT line (0x0C)
     ---------------------------------------------
 
-      Instruct the adressed device to pull down the INT line (connected to all
+      Instruct the addressed device to pull down the INT line (connected to all
       devices in parallel) for a given amount of time.  This can be efficiently
       used to determine the number of devices listening to the bus (eg. by
       binary search).
