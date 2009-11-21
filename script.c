@@ -40,7 +40,6 @@ void script_init(void)
     }
 
     /* enable static fading script */
-    //script_global.tasks[0].execute = script_handler_fader_flash;
     script_global.tasks[0].execute = script_handler_wheel;
     script_global.tasks[0].enable = 1;
 
@@ -63,46 +62,6 @@ void script_poll(void)
         /* recall after 100ms */
         timer_set(&script_global.timer, 10);
     }
-}
-
-
-#define FADER_FLASH_ENTRYSIZE (PWM_CHANNELS + 2)
-#define FADER_FLASH_ENTRIES (sizeof(fader_flash)/FADER_FLASH_ENTRYSIZE)
-PROGMEM uint8_t fader_flash[] = {
-/*    R    G    B    step,  delay */
-    255,   0,   0,      1,      1,
-    255, 255,   0,      1,      1,
-    0,   255,   0,      1,      1,
-    0,   255, 255,      1,      1,
-    0,     0, 255,      1,      1,
-    255,   0, 255,      1,      1,
-};
-
-PT_THREAD(script_handler_fader_flash(struct process_t *process))
-{
-    PT_BEGIN(&process->pt);
-
-    while (1) {
-        /* load new fader values */
-        uint8_t step = pgm_read_byte_near(&fader_flash[process->pos + PWM_CHANNELS]);
-        uint8_t delay = pgm_read_byte_near(&fader_flash[process->pos + PWM_CHANNELS + 1]);
-
-        /* load new color */
-        struct rgb_color_t color;
-        for (uint8_t c = 0; c < PWM_CHANNELS; c++) {
-            color.rgb[c] = pgm_read_byte_near(&fader_flash[process->pos + c]);
-            pwm_fade_rgb(&color, step, delay);
-        }
-
-        process->pos += FADER_FLASH_ENTRYSIZE;
-        if (process->pos == sizeof(fader_flash))
-            process->pos = 0;
-
-        /* wait until target reached */
-        PT_WAIT_UNTIL(&process->pt, pwm_target_reached());
-    }
-
-    PT_END(&process->pt);
 }
 
 PT_THREAD(script_handler_wheel(struct process_t *process))
