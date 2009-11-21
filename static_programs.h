@@ -20,39 +20,16 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __SCRIPT_H
-#define __SCRIPT_H
+#ifndef __STATIC_PROGRAMS_H
+#define __STATIC_PROGRAMS_H
 
-#include <stdint.h>
 #include "config.h"
+#include "script.h"
 #include "pt/pt.h"
-#include "timer.h"
 
-#if !CONFIG_SCRIPT
-#define script_init(...)
-#define script_poll(...)
+#if CONFIG_SCRIPT
 
-#else
-
-/* structs */
-struct process_t {
-    PT_THREAD((*execute)(struct process_t *current));
-    struct pt pt;
-    uint8_t enable:1;
-};
-
-struct script_global_t {
-    uint8_t enable:1;
-    struct process_t tasks[CONFIG_SCRIPT_TASKS];
-    timer_t timer;
-};
-
-/* global variables */
-extern struct script_global_t script_global;
-
-/* prototypes for scripting engine */
-void script_init(void);
-void script_poll(void);
+PT_THREAD(script_handler_wheel(struct process_t *process));
 
 #endif
 #endif

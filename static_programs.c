@@ -20,39 +20,32 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __SCRIPT_H
-#define __SCRIPT_H
+#include "static_programs.h"
+#include "color.h"
+#include "pwm.h"
 
-#include <stdint.h>
-#include "config.h"
-#include "pt/pt.h"
-#include "timer.h"
+#if CONFIG_SCRIPT
 
-#if !CONFIG_SCRIPT
-#define script_init(...)
-#define script_poll(...)
+PT_THREAD(script_handler_wheel(struct process_t *process))
+{
+    PT_BEGIN(&process->pt);
 
-#else
+    static struct hsv_color_t c;
 
-/* structs */
-struct process_t {
-    PT_THREAD((*execute)(struct process_t *current));
-    struct pt pt;
-    uint8_t enable:1;
-};
+    c.hue = 0;
+    c.value = 255;
+    c.saturation = 255;
 
-struct script_global_t {
-    uint8_t enable:1;
-    struct process_t tasks[CONFIG_SCRIPT_TASKS];
-    timer_t timer;
-};
+    while (1) {
+        /* set new color */
+        pwm_fade_hsv(&c, 1, 2);
+        c.hue += 45;
 
-/* global variables */
-extern struct script_global_t script_global;
+        /* wait until target reached */
+        PT_WAIT_UNTIL(&process->pt, pwm_target_reached());
+    }
 
-/* prototypes for scripting engine */
-void script_init(void);
-void script_poll(void);
+    PT_END(&process->pt);
+}
 
-#endif
 #endif

@@ -24,6 +24,7 @@
 #include "config.h"
 #include "script.h"
 #include "pwm.h"
+#include "static_programs.h"
 
 #if CONFIG_SCRIPT
 
@@ -62,28 +63,6 @@ void script_poll(void)
         /* recall after 100ms */
         timer_set(&script_global.timer, 10);
     }
-}
-
-PT_THREAD(script_handler_wheel(struct process_t *process))
-{
-    PT_BEGIN(&process->pt);
-
-    static struct hsv_color_t c;
-
-    c.hue = 0;
-    c.value = 255;
-    c.saturation = 255;
-
-    while (1) {
-        /* set new color */
-        pwm_fade_hsv(&c, 1, 2);
-        c.hue += 45;
-
-        /* wait until target reached */
-        PT_WAIT_UNTIL(&process->pt, pwm_target_reached());
-    }
-
-    PT_END(&process->pt);
 }
 
 #endif
