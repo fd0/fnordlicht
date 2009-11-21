@@ -49,8 +49,10 @@ int main(void)
     uart_init();
     script_init();
 
+#if !CONFIG_SCRIPT
     /* default color */
     global_pwm.target.red = 50;
+#endif
 
     /* enable interrupts globally */
     sei();
