@@ -22,6 +22,21 @@ UART: ... --> >-|RX            TX|-> --> >-|RX            TX|-> ...
 INT: -------------------+--------------------------+----------> ...
 
 
+Bootloader startup procedure
+----------------------------
+
+On boot the device enters the bootloader section first.  It then waits to
+receive 16 successive 0x88 bytes on the UART link.  If these are received
+the bootloader does NOT start the application code.  In case the sequence is
+not received within 100ms it calculates an 8-bit CRC checksum over the whole
+application code section and compares it to the expected checksum stored as
+the last byte in EEPROM memory.  If both checksums match the application
+code is launched automatically.  Otherwise the bootloader will not time out
+and wait for further instructions.
+
+The aforementioned 0x88 byte sequence is emitted by the master node if the
+user keeps the reflash-button pressed on startup.
+
 Initial sync sequence
 ---------------------
 
@@ -74,22 +89,31 @@ be set to zero, this makes future extensions easier.
 List of commands:
 -----------------
 
-command |   function      | description
-------------------------------------------------------
-   0x02 | FADE_RGB        | set color/fade to color (RGB)
-   0x03 | FADE_HSV        | set color/fade to color (HSV)
-   0x04 | SAVE_RGB        | save color to EEPROM (RGB)
-   0x05 | SAVE_HSV        | save color to EEPROM (HSV)
-   0x06 | SAVE_CURRENT    | save current color to EEPROM
-   0x07 | CONFIG_OFFSETS  | set global offset values
-   0x08 | REPLAY          | replay EEPROM color sequence
-   0x09 | START_PROGRAM   | start program
-   0x0A | STOP            | stop color changing
-   0x0B | MODIFY_CURRENT  | modify current color
-   0x0C | PULL_INT        | pull down INT line
-   0x0D | CONFIG_STARTUP  | configure startup
-   0x27 |                 | RESERVED (sync-sequence)
-   0x80 | BOOTLOADER      | start bootloader
+command |   function        | description
+--------------------------------------------------------
+   0x02 | FADE_RGB          | set color/fade to color (RGB)
+   0x03 | FADE_HSV          | set color/fade to color (HSV)
+   0x04 | SAVE_RGB          | save color to EEPROM (RGB)
+   0x05 | SAVE_HSV          | save color to EEPROM (HSV)
+   0x06 | SAVE_CURRENT      | save current color to EEPROM
+   0x07 | CONFIG_OFFSETS    | set global offset values
+   0x08 | REPLAY            | replay EEPROM color sequence
+   0x09 | START_PROGRAM     | start program
+   0x0A | STOP              | stop color changing
+   0x0B | MODIFY_CURRENT    | modify current color
+   0x0C | PULL_INT          | pull down INT line
+   0x0D | CONFIG_STARTUP    | configure startup
+   0x27 |                   | RESERVED (sync-sequence)
+
+   0x80 | BOOTLOADER        | start bootloader
+   0x81 | BOOT CONF         | configure bootloader options
+   0x82 | BOOT DATA INITIAL | initial data packet to bootloader
+   0x83 | BOOT DATA CONT.   | continuation data packet to bootloader
+   0x84 | BOOT CRC CHECK    | compare check-sum
+   0x85 | BOOT FLASH        | write provided data to flash
+   0x86 | BOOT ENTER APP    | start application
+   0x87 | BOOT UPDATE CRC   | update application code checksum
+   0x88 |                   | RESERVED (bootload-sequence)
 
 
     Command: FADE_RGB - set color/fade to color (RGB) (0x02)
@@ -348,6 +372,9 @@ command |   function      | description
       restart the device.  A magic byte sequence of 0xfc27566b (little endian)
       must follow the command byte.
 
+      Before entering the bootloader area the application code pulls the
+      interrupt line low.  The bootloader code releases it again to indicate
+      successful entry.
 
       byte offset | name    |  description
       ---------------------------------
@@ -356,3 +383,107 @@ command |   function      | description
                 4 | byte3   | magic byte 3 (0x27)
                 5 | byte4   | magic byte 4 (0xfc)
              6-14 | -       | don't care
+
+
+    Command: BOOT CONF - configure bootloader options (0x81)
+    --------------------------------------------------------
+
+      Set configuration options of the bootloader.  Currently solely the
+      address where to write the data to and size of data chunks written
+      each round.
+
+      Start address is an unsigned 16-bit integer automatically incremented
+      by the configured packet size upon each flash command.
+
+      Packet size is an unsigned 8-bit integer resembling a power of 2.
+      This is the packet size actually configured is 2^pktsz.  The packet
+      size always has to be a multiple of the maximum page size considering
+      all devices that ought to be flashed.
+
+      byte offset | name    |  description
+      ---------------------------------
+              2-3 | start   | address to flash to
+                4 | pktsz   | packet size (as power of 2)
+             5-14 | -       | don't care
+
+
+    Command: BOOT DATA INITIAL - initial data packet to bootloader (0x82)
+    ---------------------------------------------------------------------
+
+      Store (initial) data packet (13 data bytes) to the beginning of the
+      flash data buffer.  Further data can be provided using the BOOT DATA
+      CONT. command.
+
+      byte offset | name    |  description
+      ---------------------------------
+             2-14 | data    | payload
+
+
+    Command: BOOT DATA CONT. - continuation data packet to bootloader (0x83)
+    ------------------------------------------------------------------------
+
+      Store continuation data packet (further 13 data bytes) to the end of
+      the flash data buffer.
+
+      byte offset | name    |  description
+      ---------------------------------
+             2-14 | data    | payload
+
+
+    Command: BOOT CRC CHECK - compare check-sum (0x84)
+    --------------------------------------------------
+
+      Compare provided crc-8 checksum against calculated checksum over
+      previously received data.  On checksum mismatch the device immediately
+      pulls down the interrupt line.
+
+      byte offset | name    |  description
+      ---------------------------------
+                2 | chksum  | crc-8 checksum over the data chunk
+             3-14 | -       | don't care
+
+
+    Command: BOOT FLASH - write provided data to flash (0x85)
+    ---------------------------------------------------------
+
+      Write the data provided earlier to the flash memory of the device.
+
+      The device pulls the interrupt line down upon reception of the command
+      and releases it on successful completion of the command.  This way the
+      master node is capable of detecting when the successing initial data
+      packet may be provided by continuously sensing the interrupt line.
+
+      After completion of this command the address where to flash to is
+      incremented by the configured chunk data size.
+
+
+      byte offset | name    |  description
+      ---------------------------------
+             2-14 | -       | don't care
+
+
+    Command: BOOT ENTER APP - start application (0x86)
+    ---------------------------------------------
+
+      Launch application code.
+
+
+      byte offset | name    |  description
+      ------------------------------------
+             2-14 | -       | don't care
+
+
+    Command: BOOT UPDATE CRC - update application code checksum (0x87)
+    ------------------------------------------------------------------
+
+      Write provided application code checksum to EEPROM.  The checksum is
+      calculated over the whole application section, i.e. considering the
+      nop operation of the AVR (0xFF).
+
+
+      byte offset | name    |  description
+      ---------------------------------
+                2 | chksum  | Application checksum (CRC-8)
+                3 | ~chksum | two's complement of the checksum
+             4-14 | -       | don't care
+
