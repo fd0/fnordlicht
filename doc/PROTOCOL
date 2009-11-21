@@ -106,13 +106,13 @@ command |   function        | description
    0x27 |                   | RESERVED (sync-sequence)
 
    0x80 | BOOTLOADER        | start bootloader
-   0x81 | BOOT CONF         | configure bootloader options
-   0x82 | BOOT DATA INITIAL | initial data packet to bootloader
-   0x83 | BOOT DATA CONT.   | continuation data packet to bootloader
-   0x84 | BOOT CRC CHECK    | compare check-sum
-   0x85 | BOOT FLASH        | write provided data to flash
-   0x86 | BOOT ENTER APP    | start application
-   0x87 | BOOT UPDATE CRC   | update application code checksum
+   0x81 | BOOT_CONF         | configure bootloader options
+   0x82 | BOOT_DATA_INITIAL | initial data packet to bootloader
+   0x83 | BOOT_DATA_CONT    | continuation data packet to bootloader
+   0x84 | BOOT_CRC_CHECK    | compare check-sum
+   0x85 | BOOT_FLASH        | write provided data to flash
+   0x86 | BOOT_ENTER_APP    | start application
+   0x87 | BOOT_UPDATE_CRC   | update application code checksum
    0x88 |                   | RESERVED (bootload-sequence)
 
 
@@ -385,7 +385,7 @@ command |   function        | description
              6-14 | -       | don't care
 
 
-    Command: BOOT CONF - configure bootloader options (0x81)
+    Command: BOOT_CONF - configure bootloader options (0x81)
     --------------------------------------------------------
 
       Set configuration options of the bootloader.  Currently solely the
@@ -407,19 +407,19 @@ command |   function        | description
              5-14 | -       | don't care
 
 
-    Command: BOOT DATA INITIAL - initial data packet to bootloader (0x82)
+    Command: BOOT_DATA_INITIAL - initial data packet to bootloader (0x82)
     ---------------------------------------------------------------------
 
       Store (initial) data packet (13 data bytes) to the beginning of the
-      flash data buffer.  Further data can be provided using the BOOT DATA
-      CONT. command.
+      flash data buffer.  Further data can be provided using the
+      BOOT_DATA_CONT. command.
 
       byte offset | name    |  description
       ---------------------------------
              2-14 | data    | payload
 
 
-    Command: BOOT DATA CONT. - continuation data packet to bootloader (0x83)
+    Command: BOOT_DATA_CONT - continuation data packet to bootloader (0x83)
     ------------------------------------------------------------------------
 
       Store continuation data packet (further 13 data bytes) to the end of
@@ -430,7 +430,7 @@ command |   function        | description
              2-14 | data    | payload
 
 
-    Command: BOOT CRC CHECK - compare check-sum (0x84)
+    Command: BOOT_CRC_CHECK - compare check-sum (0x84)
     --------------------------------------------------
 
       Compare provided crc-8 checksum against calculated checksum over
@@ -443,7 +443,7 @@ command |   function        | description
              3-14 | -       | don't care
 
 
-    Command: BOOT FLASH - write provided data to flash (0x85)
+    Command: BOOT_FLASH - write provided data to flash (0x85)
     ---------------------------------------------------------
 
       Write the data provided earlier to the flash memory of the device.
@@ -462,8 +462,8 @@ command |   function        | description
              2-14 | -       | don't care
 
 
-    Command: BOOT ENTER APP - start application (0x86)
-    ---------------------------------------------
+    Command: BOOT_ENTER_APP - start application (0x86)
+    --------------------------------------------------
 
       Launch application code.
 
@@ -473,7 +473,7 @@ command |   function        | description
              2-14 | -       | don't care
 
 
-    Command: BOOT UPDATE CRC - update application code checksum (0x87)
+    Command: BOOT_UPDATE_CRC - update application code checksum (0x87)
     ------------------------------------------------------------------
 
       Write provided application code checksum to EEPROM.  The checksum is
