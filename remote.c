@@ -20,6 +20,7 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdlib.h>
 #include "config.h"
 #include "remote.h"
 #include "fifo.h"
@@ -211,7 +212,8 @@ void parse_replay(struct remote_msg_replay_t *msg)
 
 void parse_start_program(struct remote_msg_start_program_t *msg)
 {
-
+    parse_stop(NULL);
+    script_start(0, msg->script, &msg->parameters);
 }
 
 void parse_stop(struct remote_msg_stop_t *msg)

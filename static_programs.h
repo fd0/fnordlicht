@@ -27,8 +27,6 @@
 #include "config.h"
 #include "pt/pt.h"
 
-#define PROGRAM_PARAMETER_SIZE 10
-
 struct process_t;
 /* return value is char, see definition of PT_THREAD() */
 typedef char (*program_handler)(struct process_t *current);

@@ -141,4 +141,7 @@
 #define PWM_INVERTED
 #endif
 
+/* configure maximal static program parameter size */
+#define PROGRAM_PARAMETER_SIZE 10
+
 #endif /* _FNORDLICHT_CONFIG_H */

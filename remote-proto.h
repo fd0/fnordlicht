@@ -132,6 +132,7 @@ struct remote_msg_start_program_t
     uint8_t address;
     uint8_t cmd;
     uint8_t script;
+    uint8_t parameters[PROGRAM_PARAMETER_SIZE];
 };
 
 struct remote_msg_stop_t
