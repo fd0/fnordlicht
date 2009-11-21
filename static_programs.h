@@ -27,6 +27,8 @@
 #include "config.h"
 #include "pt/pt.h"
 
+#define PROGRAM_PARAMETER_SIZE 10
+
 struct process_t;
 /* return value is char, see definition of PT_THREAD() */
 typedef char (*program_handler)(struct process_t *current);
@@ -41,22 +43,24 @@ struct colorwheel_params_t {
     uint8_t value;
 };
 
+union program_params_t {
+    /* parameters for static programs */
+    uint8_t raw[PROGRAM_PARAMETER_SIZE];
+    struct colorwheel_params_t colorwheel;
+};
+
 /* global process struct */
 struct process_t {
     program_handler execute;
     struct pt pt;
     uint8_t enable:1;
-    union {
-        /* parameters for static programs */
-        uint8_t parameters[10];
-        struct colorwheel_params_t colorwheel;
-    };
+    union program_params_t params;
 };
 
 #if CONFIG_SCRIPT
 
 /* global list of programs */
-#define STATIC_PROGRAM_LEN (sizeof(static_program_list)/sizeof(program_handler))
+#define STATIC_PROGRAMS_LEN 1
 extern program_handler static_programs[];
 
 PT_THREAD(program_colorwheel(struct process_t *process));

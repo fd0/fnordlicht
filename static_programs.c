@@ -28,7 +28,7 @@
 #if CONFIG_SCRIPT
 
 /* global list of programs */
-PROGMEM program_handler static_program_list[] = {
+PROGMEM program_handler static_programs[] = {
     program_colorwheel,
 };
 
@@ -38,14 +38,14 @@ PT_THREAD(program_colorwheel(struct process_t *process))
 
     static struct hsv_color_t c;
 
-    c.hue = process->colorwheel.hue_start;
-    c.value = process->colorwheel.value;
-    c.saturation = process->colorwheel.saturation;
+    c.hue = process->params.colorwheel.hue_start;
+    c.value = process->params.colorwheel.value;
+    c.saturation = process->params.colorwheel.saturation;
 
     while (1) {
         /* set new color */
-        pwm_fade_hsv(&c, process->colorwheel.fade_step, process->colorwheel.fade_delay);
-        c.hue += process->colorwheel.hue_step;
+        pwm_fade_hsv(&c, process->params.colorwheel.fade_step, process->params.colorwheel.fade_delay);
+        c.hue += process->params.colorwheel.hue_step;
 
         /* wait until target reached */
         PT_WAIT_UNTIL(&process->pt, pwm_target_reached());

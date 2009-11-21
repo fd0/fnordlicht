@@ -32,6 +32,8 @@
 #if !CONFIG_SCRIPT
 #define script_init(...)
 #define script_poll(...)
+#define script_stop(...)
+#define script_start(...)
 
 #else
 
@@ -56,6 +58,9 @@ extern struct script_global_t script_global;
 /* prototypes for scripting engine */
 void script_init(void);
 void script_poll(void);
+void script_stop(void);
+void script_start(uint8_t task, uint8_t index, union program_params_t *params);
+
 
 #endif
 #endif

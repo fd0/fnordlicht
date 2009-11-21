@@ -21,8 +21,10 @@
  */
 
 #include <avr/pgmspace.h>
+#include <string.h>
 #include "config.h"
 #include "script.h"
+#include "static_programs.h"
 #include "pwm.h"
 
 #if CONFIG_SCRIPT
@@ -40,17 +42,16 @@ void script_init(void)
     }
 
     /* enable colorwheel program */
-    struct colorwheel_params_t *params = &script_global.tasks[0].colorwheel;
-    params->hue_start = 0;
-    params->hue_step = 45;
-    params->saturation = 255;
-    params->value = 255;
+    union program_params_t params;
+    params.colorwheel.hue_start = 0;
+    params.colorwheel.hue_step = 45;
+    params.colorwheel.saturation = 255;
+    params.colorwheel.value = 255;
 
-    params->fade_step = 1;
-    params->fade_delay = 2;
+    params.colorwheel.fade_step = 1;
+    params.colorwheel.fade_delay = 2;
 
-    script_global.tasks[0].execute = program_colorwheel;
-    script_global.tasks[0].enable = 1;
+    script_start(0, 0, &params);
 
     /* initialize timer, delay before start is 200ms */
     timer_set(&script_global.timer, 20);
@@ -71,6 +72,31 @@ void script_poll(void)
         /* recall after 100ms */
         timer_set(&script_global.timer, 10);
     }
+}
+
+void script_stop(void)
+{
+    /* stop all tasks */
+    for (uint8_t i = 0; i < CONFIG_SCRIPT_TASKS; i++) {
+        script_global.tasks[i].enable = 0;
+        PT_INIT(&script_global.tasks[i].pt);
+    }
+}
+
+void script_start(uint8_t task, uint8_t index, union program_params_t *params)
+{
+    /* check for valid index */
+    if (index >= STATIC_PROGRAMS_LEN)
+        return;
+
+    /* copy params from pointer to task structure */
+    memcpy(&script_global.tasks[task].params, params, sizeof(struct process_t));
+
+    /* load program handler */
+    script_global.tasks[task].execute = (program_handler)pgm_read_word(&static_programs[index]);
+
+    /* enable script */
+    script_global.tasks[task].enable = 1;
 }
 
 #endif
