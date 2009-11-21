@@ -20,11 +20,17 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <avr/pgmspace.h>
 #include "static_programs.h"
 #include "color.h"
 #include "pwm.h"
 
 #if CONFIG_SCRIPT
+
+/* global list of programs */
+PROGMEM program_handler static_program_list[] = {
+    program_colorwheel,
+};
 
 PT_THREAD(program_colorwheel(struct process_t *process))
 {

@@ -27,6 +27,10 @@
 #include "config.h"
 #include "pt/pt.h"
 
+struct process_t;
+/* return value is char, see definition of PT_THREAD() */
+typedef char (*program_handler)(struct process_t *current);
+
 /* parameter structures (10 bytes) */
 struct colorwheel_params_t {
     uint8_t fade_step;
@@ -39,7 +43,7 @@ struct colorwheel_params_t {
 
 /* global process struct */
 struct process_t {
-    PT_THREAD((*execute)(struct process_t *current));
+    program_handler execute;
     struct pt pt;
     uint8_t enable:1;
     union {
@@ -50,6 +54,10 @@ struct process_t {
 };
 
 #if CONFIG_SCRIPT
+
+/* global list of programs */
+#define STATIC_PROGRAM_LEN (sizeof(static_program_list)/sizeof(program_handler))
+extern program_handler static_programs[];
 
 PT_THREAD(program_colorwheel(struct process_t *process));
 
