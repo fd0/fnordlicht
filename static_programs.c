@@ -26,7 +26,7 @@
 
 #if CONFIG_SCRIPT
 
-PT_THREAD(script_handler_wheel(struct process_t *process))
+PT_THREAD(program_colorwheel(struct process_t *process))
 {
     PT_BEGIN(&process->pt);
 

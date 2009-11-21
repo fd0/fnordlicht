@@ -41,7 +41,7 @@ void script_init(void)
     }
 
     /* enable static fading script */
-    script_global.tasks[0].execute = script_handler_wheel;
+    script_global.tasks[0].execute = program_colorwheel;
     script_global.tasks[0].enable = 1;
 
     /* initialize timer, delay before start is 200ms */
