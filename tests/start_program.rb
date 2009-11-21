@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-$:.unshift "lib"
+$:.unshift(File.dirname(__FILE__)+"/lib")
 
 require 'fnordlicht'
 require 'serialport'
