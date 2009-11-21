@@ -44,12 +44,13 @@ void script_init(void)
     /* enable colorwheel program */
     union program_params_t params;
     params.colorwheel.hue_start = 0;
-    params.colorwheel.hue_step = 45;
+    params.colorwheel.hue_step = 60;
     params.colorwheel.saturation = 255;
     params.colorwheel.value = 255;
 
     params.colorwheel.fade_step = 1;
     params.colorwheel.fade_delay = 2;
+    params.colorwheel.fade_sleep = 0;
 
     script_start(0, 0, &params);
 

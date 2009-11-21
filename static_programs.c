@@ -24,6 +24,7 @@
 #include "static_programs.h"
 #include "color.h"
 #include "pwm.h"
+#include "timer.h"
 
 #if CONFIG_SCRIPT
 
@@ -34,6 +35,8 @@ PROGMEM program_handler static_programs[] = {
 
 PT_THREAD(program_colorwheel(struct process_t *process))
 {
+    static uint8_t sleep;
+
     PT_BEGIN(&process->pt);
 
     static struct hsv_color_t c;
@@ -49,6 +52,14 @@ PT_THREAD(program_colorwheel(struct process_t *process))
 
         /* wait until target reached */
         PT_WAIT_UNTIL(&process->pt, pwm_target_reached());
+
+        /* sleep (remember: we are called every 100ms) */
+        if (process->params.colorwheel.fade_sleep > 0) {
+            sleep = process->params.colorwheel.fade_sleep;
+
+            while (sleep--)
+                PT_YIELD(&process->pt);
+        }
     }
 
     PT_END(&process->pt);
