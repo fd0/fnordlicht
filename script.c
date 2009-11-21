@@ -24,7 +24,6 @@
 #include "config.h"
 #include "script.h"
 #include "pwm.h"
-#include "static_programs.h"
 
 #if CONFIG_SCRIPT
 
@@ -40,7 +39,16 @@ void script_init(void)
         PT_INIT(&script_global.tasks[i].pt);
     }
 
-    /* enable static fading script */
+    /* enable colorwheel program */
+    struct colorwheel_params_t *params = &script_global.tasks[0].colorwheel;
+    params->hue_start = 0;
+    params->hue_step = 45;
+    params->saturation = 255;
+    params->value = 255;
+
+    params->fade_step = 1;
+    params->fade_delay = 2;
+
     script_global.tasks[0].execute = program_colorwheel;
     script_global.tasks[0].enable = 1;
 

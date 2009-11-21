@@ -23,9 +23,31 @@
 #ifndef __STATIC_PROGRAMS_H
 #define __STATIC_PROGRAMS_H
 
+#include <stdint.h>
 #include "config.h"
-#include "script.h"
 #include "pt/pt.h"
+
+/* parameter structures (10 bytes) */
+struct colorwheel_params_t {
+    uint8_t fade_step;
+    uint8_t fade_delay;
+    uint16_t hue_start;
+    int16_t hue_step;
+    uint8_t saturation;
+    uint8_t value;
+};
+
+/* global process struct */
+struct process_t {
+    PT_THREAD((*execute)(struct process_t *current));
+    struct pt pt;
+    uint8_t enable:1;
+    union {
+        /* parameters for static programs */
+        uint8_t parameters[10];
+        struct colorwheel_params_t colorwheel;
+    };
+};
 
 #if CONFIG_SCRIPT
 

@@ -32,14 +32,14 @@ PT_THREAD(program_colorwheel(struct process_t *process))
 
     static struct hsv_color_t c;
 
-    c.hue = 0;
-    c.value = 255;
-    c.saturation = 255;
+    c.hue = process->colorwheel.hue_start;
+    c.value = process->colorwheel.value;
+    c.saturation = process->colorwheel.saturation;
 
     while (1) {
         /* set new color */
-        pwm_fade_hsv(&c, 1, 2);
-        c.hue += 45;
+        pwm_fade_hsv(&c, process->colorwheel.fade_step, process->colorwheel.fade_delay);
+        c.hue += process->colorwheel.hue_step;
 
         /* wait until target reached */
         PT_WAIT_UNTIL(&process->pt, pwm_target_reached());

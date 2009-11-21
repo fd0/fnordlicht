@@ -27,19 +27,13 @@
 #include "config.h"
 #include "pt/pt.h"
 #include "timer.h"
+#include "static_programs.h"
 
 #if !CONFIG_SCRIPT
 #define script_init(...)
 #define script_poll(...)
 
 #else
-
-/* structs */
-struct process_t {
-    PT_THREAD((*execute)(struct process_t *current));
-    struct pt pt;
-    uint8_t enable:1;
-};
 
 struct script_global_t {
     uint8_t enable:1;
