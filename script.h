@@ -35,10 +35,19 @@
 
 #else
 
+struct script_offsets_t {
+    int8_t step;
+    int8_t delay;
+    int16_t hue;
+    uint8_t saturation;
+    uint8_t value;
+};
+
 struct script_global_t {
     uint8_t enable:1;
     struct process_t tasks[CONFIG_SCRIPT_TASKS];
     timer_t timer;
+    struct script_offsets_t offsets;
 };
 
 /* global variables */

@@ -197,7 +197,11 @@ void parse_save_current(struct remote_msg_save_current_t *msg)
 
 void parse_config_offsets(struct remote_msg_config_offsets_t *msg)
 {
-
+    script_global.offsets.step = msg->step;
+    script_global.offsets.delay = msg->delay;
+    script_global.offsets.hue = msg->hue;
+    script_global.offsets.saturation = msg->saturation;
+    script_global.offsets.value = msg->value;
 }
 
 void parse_replay(struct remote_msg_replay_t *msg)
