@@ -28,16 +28,16 @@ Initial sync sequence
 For the purpose of (automatic) address discovery and resetting the bus, a
 sync sequence consisting of 15x ESC (0x27) followed by an address byte is used.
 The controller sends 15x ESC, followed by a null byte. Please note that the
-length of the sync sequence (16 byte) is is different from the length of a
+length of the sync sequence (16 byte) is different from the length of a
 command packet, which is 15 byte!
 
-A device MUST be able to detect this sequence asynchronously, i.e. even it is
+A device MUST be able to detect this sequence asynchronously, i.e. even if it is
 in the middle of receiving a command packet. The device does not need to
 withhold the execution of the received command packet until it is clear if a
 sequence of ESC bytes constitutes a sync sequence.
 
 Example:
-  A device received 4 bytes, say A B C D,  of a packet, then a sync sequence.
+  A device received 4 bytes, say A B C D, of a packet, then a sync sequence.
   It may (or may not) execute the packet
 
     A B C D ESC ESC ... ESC
@@ -53,7 +53,7 @@ Flow:
 * controller sends 15x ESC, followed by the address of the first device
   (usually a null)
 * first device on the bus receives and retransmits 15x ESC, receives address
-  byte, stores own address in ram, increments address byte and transmit new
+  byte, stores own address in ram, increments address byte and transmits new
   address to next device on the bus
 
 Result: Each device on the bus knows it's own address (=position).
@@ -95,10 +95,11 @@ command |   function      | description
     Command: FADE_RGB - set color/fade to color (RGB) (0x02)
     --------------------------------------------------------
 
-      Instruct the device to fade to a specified color, given as a RGB value,
-      with a specific speed.  All values are unsigned 8 bit integers.  If step
-      is set to 255, the target color is set without fading.  If delay is 0, the
-      target color is set directly after receiving the command packet.
+      Instruct the device to fade to the specified absolute color, given as a
+      RGB value, with a specific speed.  All values are unsigned 8 bit
+      integers.  If step is set to 255, the target color is set without fading.
+      If delay is 0, the target color is set directly after receiving the
+      command packet.
 
       byte offset | name  |  description
       ---------------------------------
@@ -113,11 +114,11 @@ command |   function      | description
     Command: FADE_HSV - set color/fade to color (HSV) (0x03)
     --------------------------------------------------------
 
-      Instruct the device to fade to a specified color, given as a HSV value,
-      with a specific speed.  All values are unsigned 8 bit integers, except
-      hue, which is a 16 bit little endian integer.  If step is set to 255, the
-      target color is set without fading.  If delay is 0, the target color is
-      set directly after receiving the command packet.
+      Instruct the device to fade to the specified absolute color, given as a
+      HSV value, with a specific speed.  All values are unsigned 8 bit
+      integers, except hue, which is a 16 bit little endian integer.  If step
+      is set to 255, the target color is set without fading.  If delay is 0,
+      the target color is set directly after receiving the command packet.
 
       byte offset | name        |  description
       ------------------------------------
@@ -266,11 +267,12 @@ command |   function      | description
     Command: MODIFY_CURRENT - modify current color (0x0B)
     -----------------------------------------------------
 
-      Change the current color.  This works only if no program (or EEPROM fade
-      sequence) is running.  The current color is faded to the target color with
-      the given step and delay values.  The RGB offsets are applied before the
-      HSV offsets.  Setting either one to zero will not modify the color in that
-      color space.
+      Instruct the device to fade to a new target color, which is determined
+      relatively to the one currently visible.  This works only if no
+      program (or EEPROM fade sequence) is running.  The current color is
+      faded to the target color with the given step and delay values.  The
+      RGB offsets are applied before the HSV offsets.  Setting either one to
+      zero will not modify the color in that color space.
 
       Step and delay are unsigned 8 bit integers, all other values are signed 8
       (or 16) bit integers.
@@ -291,7 +293,7 @@ command |   function      | description
     Command: PULL_INT - pull down INT line (0x0C)
     ---------------------------------------------
 
-      Instruct the addressed device to pull down the INT line (connected to all
+      Instruct the adressed device to pull down the INT line (connected to all
       devices in parallel) for a given amount of time.  This can be efficiently
       used to determine the number of devices listening to the bus (eg. by
       binary search).
