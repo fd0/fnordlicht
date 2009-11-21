@@ -82,6 +82,9 @@ void script_stop(void)
         script_global.tasks[i].enable = 0;
         PT_INIT(&script_global.tasks[i].pt);
     }
+
+    /* disable global */
+    script_global.enable = 0;
 }
 
 void script_start(uint8_t task, uint8_t index, union program_params_t *params)
@@ -89,6 +92,9 @@ void script_start(uint8_t task, uint8_t index, union program_params_t *params)
     /* check for valid index */
     if (index >= STATIC_PROGRAMS_LEN)
         return;
+
+    /* enable global */
+    script_global.enable = 1;
 
     /* copy params from pointer to task structure */
     memcpy(&script_global.tasks[task].params, params, sizeof(struct process_t));
