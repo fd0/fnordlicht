@@ -60,7 +60,7 @@ void script_init(void);
 void script_poll(void);
 void script_stop(void);
 void script_start(uint8_t task, uint8_t index, union program_params_t *params);
-
+void script_start_default(void);
 
 #endif
 #endif

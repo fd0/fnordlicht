@@ -41,6 +41,12 @@ void script_init(void)
         PT_INIT(&script_global.tasks[i].pt);
     }
 
+    /* initialize timer, delay before start is 200ms */
+    timer_set(&script_global.timer, 20);
+}
+
+void script_start_default(void)
+{
 #ifdef CONFIG_SCRIPT_DEFAULT
 #if CONFIG_SCRIPT_DEFAULT == 0
     /* enable colorwheel program */
@@ -72,9 +78,6 @@ void script_init(void)
     script_start(0, 1, &params);
 #endif
 #endif
-
-    /* initialize timer, delay before start is 200ms */
-    timer_set(&script_global.timer, 20);
 }
 
 void script_poll(void)

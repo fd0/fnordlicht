@@ -48,6 +48,7 @@ int main(void)
     timer_init();
     uart_init();
     script_init();
+    script_start_default();
 
 #if !CONFIG_SCRIPT
     /* default color */
