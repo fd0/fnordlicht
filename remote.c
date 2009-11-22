@@ -72,6 +72,14 @@ void remote_init(void)
     remote.address = 0;
 }
 
+uint8_t remote_address(void)
+{
+    if (remote.synced)
+        return remote.address;
+    else
+        return 0;
+}
+
 static void remote_parse_msg(struct remote_msg_t *msg)
 {
     /* verify address */

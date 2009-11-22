@@ -23,16 +23,20 @@
 #ifndef __REMOTE_H
 #define __REMOTE_H
 
+#include <stdint.h>
+
 /* we depend on serial uart */
 #if !CONFIG_SERIAL || !CONFIG_REMOTE
 
 #define remote_init(...)
 #define remote_poll(...)
+#define remote_address(...) 0
 
 #else
 
 void remote_init(void);
 void remote_poll(void);
+uint8_t remote_address(void);
 
 #endif
 #endif
