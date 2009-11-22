@@ -57,6 +57,18 @@ module Fnordlicht
         $dev.flush
     end
 
+    def config_offsets(addr, step, delay, h, s, v)
+        $dev.write addr.chr
+        $dev.write "\x07"
+        $dev.write [step].pack('c')
+        $dev.write [delay].pack('c')
+        $dev.write [h].pack('v')
+        $dev.write [s].pack('C')
+        $dev.write [v].pack('C')
+        $dev.write "\x00\x00\x00\x00\x00\x00\x00"
+        $dev.flush
+    end
+
     def config(addr, scripting)
         $dev.write addr.chr
         $dev.write "\x03"
@@ -90,5 +102,20 @@ module Fnordlicht
             $dev.write("\x00")
         end
         $dev.flush
+    end
+
+    # secondary functions
+    def fade_updown_rgb(addr, r, g, b, step, delay, sleep_time)
+        fade_rgb(addr, r, g, b, step, delay)
+        sleep(sleep_time)
+        fade_rgb(addr, 0, 0, 0, step, delay)
+        sleep(sleep_time)
+    end
+
+    def fade_updown_hsv(addr, h, s, v, step, delay, sleep_time)
+        fade_hsv(addr, h, s, v, step, delay)
+        sleep(sleep_time)
+        fade_hsv(addr, h, s, 0, step, delay)
+        sleep(sleep_time)
     end
 end
