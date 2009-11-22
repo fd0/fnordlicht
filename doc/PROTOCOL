@@ -25,17 +25,20 @@ INT: -------------------+--------------------------+----------> ...
 Bootloader startup procedure
 ----------------------------
 
-On boot the device enters the bootloader section first.  It then waits to
-receive 16 successive 0x88 bytes on the UART link.  If these are received
-the bootloader does NOT start the application code.  In case the sequence is
-not received within 100ms it calculates an 8-bit CRC checksum over the whole
-application code section and compares it to the expected checksum stored as
-the last byte in EEPROM memory.  If both checksums match the application
-code is launched automatically.  Otherwise the bootloader will not time out
-and wait for further instructions.
+For updating the firmware installed on the devices of a bus, each device should
+be equipped with a bootloader program.  At power-on, the bootloader should be
+started, sleep for 100ms and check afterwards, if the INT line is pulled down
+(by a bus-master).  If INT is not pulled down, the bootloader is allowed to
+start the main firmware.  Otherwise it should not attempt to start the main
+firmware, but wait for commands received over the bus.  This procedure allows a
+recovery from a broken firmware which does not process commands received over
+the bus (such as the BOOTLOADER command).
 
-The aforementioned 0x88 byte sequence is emitted by the master node if the
-user keeps the reflash-button pressed on startup.
+Before starting the main firmware, a 8 bit CRC checksum should be computed over
+the whole firmware.  If a checksum is stored in the last byte in EEPROM (last
+byte is not 0xff), the bootloader should check if both checksums match.  With a
+positive result, the bootloader is now allowed to start the main firmware.
+Otherwise it should wait for commands over the bus.
 
 Initial sync sequence
 ---------------------
