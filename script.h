@@ -34,6 +34,7 @@
 #define script_poll(...)
 #define script_stop(...)
 #define script_start(...)
+#define script_start_default(...)
 
 #else
 
