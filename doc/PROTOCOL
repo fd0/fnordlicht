@@ -120,10 +120,13 @@ command |   function        | description
     --------------------------------------------------------
 
       Instruct the device to fade to the specified absolute color, given as a
-      RGB value, with a specific speed.  All values are unsigned 8 bit
-      integers.  If step is set to 255, the target color is set without fading.
-      If delay is 0, the target color is set directly after receiving the
-      command packet.
+      RGB value, with a specific speed.  Step and delay might be modified by
+      application of the global offsets (see CONFIG_OFFSETS), color values
+      (red, green, blue) are used unmodified.
+
+      All values are unsigned 8 bit integers.  If step is set to 255, the target
+      color is set without fading.  If delay is 0, the target color is set
+      directly after receiving the command packet.
 
       byte offset | name  |  description
       ---------------------------------
@@ -139,10 +142,14 @@ command |   function        | description
     --------------------------------------------------------
 
       Instruct the device to fade to the specified absolute color, given as a
-      HSV value, with a specific speed.  All values are unsigned 8 bit
-      integers, except hue, which is a 16 bit little endian integer.  If step
-      is set to 255, the target color is set without fading.  If delay is 0,
-      the target color is set directly after receiving the command packet.
+      HSV value, with a specific speed.  Step, delay and hue might be modified
+      by application of the global offsets, saturation and value might be scaled
+      by global scales (see CONFIG_OFFSETS).
+
+      All values are unsigned 8 bit integers, except hue, which is a 16 bit
+      little endian integer.  If step is set to 255, the target color is set
+      without fading.  If delay is 0, the target color is set directly after
+      receiving the command packet.
 
       byte offset | name        |  description
       ------------------------------------
@@ -221,8 +228,8 @@ command |   function        | description
     Command: CONFIG_OFFSETS - set global offset values (0x07)
     ---------------------------------------------------------
 
-    Set global values which influence how fast and what colors are shown by a
-    script (program).  All bytes are signed 8 bit integers, except hue, which
+    Set global values which influence how fast and what colors are when using
+    FADE_RGB or FADE_HSV.  All bytes are signed 8 bit integers, except hue, which
     is a little endian signed 16 bit integer.  Saturation and value are scales.
     This means, the final saturation and value will be scaled with
     saturation/255 and value/255, respectively.
