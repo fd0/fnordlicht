@@ -22,6 +22,8 @@
  */
 
 #include <stdint.h>
+/* for PWM_CHANNELS */
+#include "config.h"
 
 #ifndef COLOR_H
 #define COLOR_H

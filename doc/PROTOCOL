@@ -274,10 +274,11 @@ command |   function        | description
       parameters.  This command stops all other programs (and EEPROM fade
       sequences).
 
-      byte offset | name   |  description
+      byte offset | name    |  description
       ---------------------------------
-                2 | script | script id, 0-255
-             3-14 | -      | parameters passed to script function
+                2 | program | program id, 0-255
+             3-11 | params  | 10 byte parameters passed to program
+            12-13 | -       | don't care
 
 
     Command: STOP - stop color changing (0x0A)
@@ -342,16 +343,20 @@ command |   function        | description
       values (ie set to zero).
 
       Four different modes can be configured:
-       * PROGRAM:       Start static program, which is compiled
-                        into the firmware (default)
-       * STATIC_COLOR:  Fade to a specified (rgb) color,
-                        using step and delay for fading
-       * RANDOM:        Fade to random (HSV-)colors, using the specified saturation
-                        and value, and using step and delay for fading.  Pseudo
-                        random generator is initialized using seed and device
-                        address.
-       * REPLAY_EEPROM: Fade a color sequence stored in EEPROM, repeat if
-                        configured
+
+       * PROGRAM (mode == 0):
+                Start a static program compiled into the firmware, using the
+                following 12 bytes as parameters for the program (for details
+                see START_PROGRAM).
+
+       * STATIC_COLOR (mode == 1):
+                Fade to a specified (rgb) color, using step and delay for fading
+
+       * REPLAY_EEPROM (mode == 2):
+                Fade a color sequence stored in EEPROM, repeat if configured
+
+      If startup mode is STATIC_COLOR or REPLAY_EEPROM, the CONFIGURE_STARTUP
+      packet is constructed as follows:
 
       byte offset | name       |  description
       ------------------------------------
@@ -363,10 +368,17 @@ command |   function        | description
                 7 | blue       | blue (for STATIC_COLOR)
                 8 | start      | start at this EEPROM offset (for REPLAY_EEPROM)
                 9 | end        | start at this EEPROM offset (for REPLAY_EEPROM)
-               10 | seed       | seed for pseudo random generator (for RANDOM)
-               11 | saturation | saturation for random color (for RANDOM)
-               12 | value      | value for random color (for RANDOM)
-            13-14 | -          | don't care
+            10-14 | -          | don't care
+
+      If startup mode is PROGRAM, the CONFIGURE_STARTUP packet is constructed in
+      this way (for the program indexes and meaning of the parameters see
+      START_PROGRAM):
+
+      byte offset | name       |  description
+      ------------------------------------
+                2 | mode       | desired startup mode (0 in this case)
+                3 | program    | static program index
+             3-14 | parameters | parameters to configured program
 
 
     Command: BOOTLOADER - start bootloader (0x80)

@@ -31,7 +31,7 @@ struct process_t;
 /* return value is char, see definition of PT_THREAD() */
 typedef char (*program_handler)(struct process_t *current);
 
-/* parameter structures (max 12 bytes) */
+/* parameter structures (max 10 bytes) */
 struct colorwheel_params_t
 {
     uint8_t fade_step;
@@ -45,7 +45,7 @@ struct colorwheel_params_t
 
 struct random_params_t
 {
-    uint32_t seed;
+    uint16_t seed;
     uint8_t use_address;
     uint8_t fade_step;
     uint8_t fade_delay;

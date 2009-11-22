@@ -74,9 +74,9 @@ PT_THREAD(program_random(struct process_t *process))
     PT_BEGIN(&process->pt);
 
     /* initialize random generator */
-    uint32_t seed = process->params.random.seed;
+    uint16_t seed = process->params.random.seed;
     if (process->params.random.use_address) {
-        uint32_t address = remote_address();
+        uint16_t address = remote_address();
         seed ^= address;
     }
     srandom(process->params.random.seed);
