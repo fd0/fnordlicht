@@ -571,12 +571,6 @@ void pwm_modify_rgb(struct rgb_color_offset_t *color, uint8_t step, uint8_t dela
 
 void pwm_modify_hsv(struct hsv_color_offset_t *color, uint8_t step, uint8_t delay)
 {
-    uart_putc('H');
-    uart_putc(HI8(color->hue));
-    uart_putc(LO8(color->hue));
-    uart_putc(color->saturation);
-    uart_putc(color->value);
-
     /* convert current target color from rgb to hsv */
     pwm_rgb2hsv(&global_pwm.target);
 
