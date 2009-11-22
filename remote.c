@@ -180,14 +180,38 @@ void remote_poll(void)
         PT_SCHEDULE(remote_thread(&remote.thread));
 }
 
+/* static helper functions */
+static uint8_t apply_offset(uint8_t value, int8_t offset)
+{
+    if (offset < 0) {
+        if (value > -offset)
+            value += offset;
+        else
+            value = 1;
+    } else if (offset > 0) {
+        uint16_t temp = value;
+        temp += offset;
+        if (temp > 255)
+            value = 255;
+        else
+            value = LO8(temp);
+    }
+
+    return value;
+}
+
 void parse_fade_rgb(struct remote_msg_fade_rgb_t *msg)
 {
-    pwm_fade_rgb(&msg->color, msg->step, msg->delay);
+    uint8_t step = apply_offset(msg->step, global_remote.offsets.step);
+    uint8_t delay = apply_offset(msg->delay, global_remote.offsets.delay);
+    pwm_fade_rgb(&msg->color, step, delay);
 }
 
 void parse_fade_hsv(struct remote_msg_fade_hsv_t *msg)
 {
-    pwm_fade_hsv(&msg->color, msg->step, msg->delay);
+    uint8_t step = apply_offset(msg->step, global_remote.offsets.step);
+    uint8_t delay = apply_offset(msg->delay, global_remote.offsets.delay);
+    pwm_fade_hsv(&msg->color, step, delay);
 }
 
 void parse_save_rgb(struct remote_msg_save_rgb_t *msg)
