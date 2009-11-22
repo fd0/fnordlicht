@@ -63,8 +63,8 @@ module Fnordlicht
         $dev.write [step].pack('c')
         $dev.write [delay].pack('c')
         $dev.write [h].pack('v')
-        $dev.write [s].pack('C')
-        $dev.write [v].pack('C')
+        $dev.write s.chr
+        $dev.write v.chr
         $dev.write "\x00\x00\x00\x00\x00\x00\x00"
         $dev.flush
     end
