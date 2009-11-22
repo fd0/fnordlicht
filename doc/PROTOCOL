@@ -34,12 +34,6 @@ firmware, but wait for commands received over the bus.  This procedure allows a
 recovery from a broken firmware which does not process commands received over
 the bus (such as the BOOTLOADER command).
 
-Before starting the main firmware, a 8 bit CRC checksum should be computed over
-the whole firmware.  If a checksum is stored in the last byte in EEPROM (last
-byte is not 0xff), the bootloader should check if both checksums match.  With a
-positive result, the bootloader is now allowed to start the main firmware.
-Otherwise it should wait for commands over the bus.
-
 Initial sync sequence
 ---------------------
 
@@ -443,14 +437,14 @@ command |   function        | description
     Command: BOOT_CRC_CHECK - compare check-sum (0x84)
     --------------------------------------------------
 
-      Compare provided crc-8 checksum against calculated checksum over
-      previously received data.  On checksum mismatch the device immediately
-      pulls down the interrupt line.
+      Compare provided CRC-16 checksum against calculated checksum over
+      previously received data.  If both checksums do not match, immediately
+      pull down the INT line.
 
       byte offset | name    |  description
       ---------------------------------
-                2 | chksum  | crc-8 checksum over the data chunk
-             3-14 | -       | don't care
+              2-3 | chksum  | CRC-16 checksum over the data chunk
+             4-14 | -       | don't care
 
 
     Command: BOOT_FLASH - write provided data to flash (0x85)
