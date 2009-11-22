@@ -28,4 +28,10 @@
 #define LO8(x) (uint8_t)(0x00ff & (x))
 #define HI8(x) (uint8_t)((0xff00 & (x)) >> 8)
 
+union uint32_t_access {
+    uint8_t bytes[4];
+    uint16_t words[2];
+    uint32_t raw;
+};
+
 #endif

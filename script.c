@@ -41,6 +41,8 @@ void script_init(void)
         PT_INIT(&script_global.tasks[i].pt);
     }
 
+#ifdef CONFIG_SCRIPT_DEFAULT
+#if CONFIG_SCRIPT_DEFAULT == 0
     /* enable colorwheel program */
     union program_params_t params;
     params.colorwheel.hue_start = 0;
@@ -53,6 +55,23 @@ void script_init(void)
     params.colorwheel.fade_sleep = 0;
 
     script_start(0, 0, &params);
+#else if CONFIG_SCRIPT_DEFAULT == 1
+    /* enable colorwheel program */
+    union program_params_t params;
+    params.random.seed = 23;
+    params.random.use_address = 0;
+    params.random.min_distance = 60;
+
+    params.random.saturation = 255;
+    params.random.value = 255;
+
+    params.random.fade_step = 1;
+    params.random.fade_delay = 2;
+    params.random.fade_sleep = 10;
+
+    script_start(0, 1, &params);
+#endif
+#endif
 
     /* initialize timer, delay before start is 200ms */
     timer_set(&script_global.timer, 20);

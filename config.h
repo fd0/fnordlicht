@@ -109,6 +109,9 @@
 #define CONFIG_SCRIPT_TASKS 1
 #endif
 
+/* define default startup script (0 is colorwheel, 1 is random) */
+#define CONFIG_SCRIPT_DEFAULT 0
+
 /* include uart support per default */
 #ifndef CONFIG_SERIAL
 #define CONFIG_SERIAL 1
@@ -142,6 +145,6 @@
 #endif
 
 /* configure maximal static program parameter size */
-#define PROGRAM_PARAMETER_SIZE 10
+#define PROGRAM_PARAMETER_SIZE 12
 
 #endif /* _FNORDLICHT_CONFIG_H */

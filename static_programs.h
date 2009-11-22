@@ -31,8 +31,9 @@ struct process_t;
 /* return value is char, see definition of PT_THREAD() */
 typedef char (*program_handler)(struct process_t *current);
 
-/* parameter structures (max 10 bytes) */
-struct colorwheel_params_t {
+/* parameter structures (max 12 bytes) */
+struct colorwheel_params_t
+{
     uint8_t fade_step;
     uint8_t fade_delay;
     uint8_t fade_sleep;
@@ -42,10 +43,24 @@ struct colorwheel_params_t {
     uint8_t value;
 };
 
-union program_params_t {
+struct random_params_t
+{
+    uint32_t seed;
+    uint8_t use_address;
+    uint8_t fade_step;
+    uint8_t fade_delay;
+    uint8_t fade_sleep;
+    uint8_t saturation;
+    uint8_t value;
+    uint8_t min_distance;
+};
+
+union program_params_t
+{
     /* parameters for static programs */
     uint8_t raw[PROGRAM_PARAMETER_SIZE];
     struct colorwheel_params_t colorwheel;
+    struct random_params_t random;
 };
 
 /* global process struct */
@@ -59,10 +74,11 @@ struct process_t {
 #if CONFIG_SCRIPT
 
 /* global list of programs */
-#define STATIC_PROGRAMS_LEN 1
+#define STATIC_PROGRAMS_LEN 2
 extern program_handler static_programs[];
 
 PT_THREAD(program_colorwheel(struct process_t *process));
+PT_THREAD(program_random(struct process_t *process));
 
 #endif
 #endif
