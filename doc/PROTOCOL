@@ -355,21 +355,6 @@ command |   function        | description
        * REPLAY_EEPROM (mode == 2):
                 Fade a color sequence stored in EEPROM, repeat if configured
 
-      If startup mode is STATIC_COLOR or REPLAY_EEPROM, the CONFIGURE_STARTUP
-      packet is constructed as follows:
-
-      byte offset | name       |  description
-      ------------------------------------
-                2 | mode       | desired startup mode
-                3 | step       | step for fading (STATIC_COLOR, RANDOM)
-                4 | delay      | delay for fading (STATIC_COLOR, RANDOM)
-                5 | red        | red (for STATIC_COLOR)
-                6 | green      | green (for STATIC_COLOR)
-                7 | blue       | blue (for STATIC_COLOR)
-                8 | start      | start at this EEPROM offset (for REPLAY_EEPROM)
-                9 | end        | start at this EEPROM offset (for REPLAY_EEPROM)
-            10-14 | -          | don't care
-
       If startup mode is PROGRAM, the CONFIGURE_STARTUP packet is constructed in
       this way (for the program indexes and meaning of the parameters see
       START_PROGRAM):
@@ -379,6 +364,22 @@ command |   function        | description
                 2 | mode       | desired startup mode (0 in this case)
                 3 | program    | static program index
              3-14 | parameters | parameters to configured program
+
+      If startup mode is STATIC_COLOR or REPLAY_EEPROM, the CONFIGURE_STARTUP
+      packet is constructed as follows:
+
+      byte offset | name       |  description
+      ------------------------------------
+                2 | mode       | desired startup mode (1 or 2 in this case)
+                3 | step       | step for fading (STATIC_COLOR, RANDOM)
+                4 | delay      | delay for fading (STATIC_COLOR, RANDOM)
+                5 | red        | red (for STATIC_COLOR)
+                6 | green      | green (for STATIC_COLOR)
+                7 | blue       | blue (for STATIC_COLOR)
+                8 | start      | start at this EEPROM offset (for REPLAY_EEPROM)
+                9 | end        | start at this EEPROM offset (for REPLAY_EEPROM)
+            10-14 | -          | don't care
+
 
 
     Command: BOOTLOADER - start bootloader (0x80)
