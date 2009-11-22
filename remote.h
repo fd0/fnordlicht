@@ -25,6 +25,21 @@
 
 #include <stdint.h>
 
+struct remote_offsets_t
+{
+    int8_t step;
+    int8_t delay;
+    int16_t hue;
+    uint8_t saturation;
+    uint8_t value;
+};
+
+struct global_remote_t {
+    struct remote_offsets_t offsets;
+};
+
+extern struct global_remote_t global_remote;
+
 /* we depend on serial uart */
 #if !CONFIG_SERIAL || !CONFIG_REMOTE
 
