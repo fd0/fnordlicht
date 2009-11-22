@@ -119,7 +119,7 @@ void script_start(uint8_t task, uint8_t index, union program_params_t *params)
     global_script.enable = 1;
 
     /* copy params from pointer to task structure */
-    memcpy(&global_script.tasks[task].params, params, sizeof(struct process_t));
+    memcpy(&global_script.tasks[task].params, params, sizeof(union program_params_t));
 
     /* load program handler */
     global_script.tasks[task].execute = (program_handler)pgm_read_word(&static_programs[index]);
