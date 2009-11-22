@@ -71,6 +71,13 @@ void remote_init(void)
     remote.sync = 0;
     remote.synced = 0;
     remote.address = 0;
+
+    /* initialize offsets */
+    global_remote.offsets.step = 0;
+    global_remote.offsets.delay = 0;
+    global_remote.offsets.hue = 0;
+    global_remote.offsets.saturation = 255;
+    global_remote.offsets.value = 255;
 }
 
 uint8_t remote_address(void)
