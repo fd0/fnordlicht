@@ -47,6 +47,7 @@ int main(void)
     pwm_init();
     timer_init();
     uart_init();
+    remote_init();
     script_init();
     script_start_default();
 
