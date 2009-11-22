@@ -514,6 +514,8 @@ void pwm_fade_rgb(struct rgb_color_t *color, uint8_t step, uint8_t delay)
         global_pwm.target.rgb[i] = color->rgb[i];
 
     /* compute correct speed for all channels */
+    if (delay == 0)
+        delay = 1;
     compute_speed(step, delay);
 
     /* disable timer */
