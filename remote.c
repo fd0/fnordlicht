@@ -207,6 +207,22 @@ static uint8_t apply_offset(uint8_t value, int8_t offset)
     return value;
 }
 
+static uint8_t apply_scale(uint8_t value, uint8_t scale)
+{
+    uint16_t temp = value * scale;
+    temp /= 255;
+    return LO8(temp);
+}
+
+static void apply_hsv_offset(struct hsv_color_t *color)
+{
+    color->hue += global_remote.offsets.hue;
+    color->saturation = apply_scale(color->saturation, global_remote.offsets.saturation);
+    color->value = apply_scale(color->value, global_remote.offsets.value);
+}
+
+/* parser functions */
+
 void parse_fade_rgb(struct remote_msg_fade_rgb_t *msg)
 {
     uint8_t step = apply_offset(msg->step, global_remote.offsets.step);
@@ -218,6 +234,7 @@ void parse_fade_hsv(struct remote_msg_fade_hsv_t *msg)
 {
     uint8_t step = apply_offset(msg->step, global_remote.offsets.step);
     uint8_t delay = apply_offset(msg->delay, global_remote.offsets.delay);
+    apply_hsv_offset(&msg->color);
     pwm_fade_hsv(&msg->color, step, delay);
 }
 
