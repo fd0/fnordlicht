@@ -235,7 +235,7 @@ void parse_modify_current(struct remote_msg_modify_current_t *msg)
 {
     /* return if a color change is in progress */
 #if CONFIG_SCRIPT
-    if (script_global.enable || !pwm_target_reached())
+    if (global_script.enable || !pwm_target_reached())
         return;
 #else
     if (!pwm_target_reached())

@@ -37,14 +37,14 @@
 
 #else
 
-struct script_global_t {
+struct global_script_t {
     uint8_t enable:1;
     struct process_t tasks[CONFIG_SCRIPT_TASKS];
     timer_t timer;
 };
 
 /* global variables */
-extern struct script_global_t script_global;
+extern struct global_script_t global_script;
 
 /* prototypes for scripting engine */
 void script_init(void);

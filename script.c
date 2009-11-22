@@ -30,19 +30,19 @@
 #if CONFIG_SCRIPT
 
 /* global variables */
-struct script_global_t script_global;
+struct global_script_t global_script;
 
 void script_init(void)
 {
     /* initialize global structures */
-    script_global.enable = 1;
+    global_script.enable = 1;
     for (uint8_t i = 0; i < CONFIG_SCRIPT_TASKS; i++) {
-        script_global.tasks[i].enable = 0;
-        PT_INIT(&script_global.tasks[i].pt);
+        global_script.tasks[i].enable = 0;
+        PT_INIT(&global_script.tasks[i].pt);
     }
 
     /* initialize timer, delay before start is 200ms */
-    timer_set(&script_global.timer, 20);
+    timer_set(&global_script.timer, 20);
 }
 
 void script_start_default(void)
@@ -82,18 +82,18 @@ void script_start_default(void)
 
 void script_poll(void)
 {
-    if (!script_global.enable)
+    if (!global_script.enable)
         return;
 
-    if (timer_expired(&script_global.timer)) {
+    if (timer_expired(&global_script.timer)) {
         for (uint8_t i = 0; i < CONFIG_SCRIPT_TASKS; i++) {
-            struct process_t *task = &script_global.tasks[i];
+            struct process_t *task = &global_script.tasks[i];
             if (task->enable)
                 task->execute(task);
         }
 
         /* recall after 100ms */
-        timer_set(&script_global.timer, 10);
+        timer_set(&global_script.timer, 10);
     }
 }
 
@@ -101,12 +101,12 @@ void script_stop(void)
 {
     /* stop all tasks */
     for (uint8_t i = 0; i < CONFIG_SCRIPT_TASKS; i++) {
-        script_global.tasks[i].enable = 0;
-        PT_INIT(&script_global.tasks[i].pt);
+        global_script.tasks[i].enable = 0;
+        PT_INIT(&global_script.tasks[i].pt);
     }
 
     /* disable global */
-    script_global.enable = 0;
+    global_script.enable = 0;
 }
 
 void script_start(uint8_t task, uint8_t index, union program_params_t *params)
@@ -116,16 +116,16 @@ void script_start(uint8_t task, uint8_t index, union program_params_t *params)
         return;
 
     /* enable global */
-    script_global.enable = 1;
+    global_script.enable = 1;
 
     /* copy params from pointer to task structure */
-    memcpy(&script_global.tasks[task].params, params, sizeof(struct process_t));
+    memcpy(&global_script.tasks[task].params, params, sizeof(struct process_t));
 
     /* load program handler */
-    script_global.tasks[task].execute = (program_handler)pgm_read_word(&static_programs[index]);
+    global_script.tasks[task].execute = (program_handler)pgm_read_word(&static_programs[index]);
 
     /* enable script */
-    script_global.tasks[task].enable = 1;
+    global_script.tasks[task].enable = 1;
 }
 
 #endif
