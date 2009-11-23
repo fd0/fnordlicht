@@ -159,17 +159,23 @@ struct remote_msg_pull_int_t
     uint8_t delay;
 };
 
+enum startup_mode_t
+{
+    STARTUP_PROGRAM = 0,
+    STARTUP_STATIC = 1,
+    STARTUP_REPLAY = 2,
+};
+
 struct remote_msg_config_startup_t
 {
     uint8_t address;
     uint8_t cmd;
-    uint8_t mode;
+    enum startup_mode_t mode;
     uint8_t step;
     uint8_t delay;
     struct rgb_color_t color;
-    uint8_t seed;
-    uint8_t saturation;
-    uint8_t value;
+    uint8_t start;
+    uint8_t end;
 };
 
 /* bootloader commands */
