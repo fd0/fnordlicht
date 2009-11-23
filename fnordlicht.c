@@ -30,15 +30,11 @@
 #include <avr/pgmspace.h>
 
 #include "common.h"
-#include "fnordlicht.h"
 #include "pwm.h"
 #include "uart.h"
 #include "remote.h"
 #include "timer.h"
 #include "script.h"
-
-/* structs */
-volatile struct global_t global = {{0}};
 
 /** main function
  */

@@ -30,7 +30,6 @@
 #include <avr/pgmspace.h>
 
 #include "common.h"
-#include "fnordlicht.h"
 #include "pwm.h"
 #include "timer.h"
 
@@ -53,6 +52,10 @@ struct timeslots_t
 /* internal data for the fading engine */
 struct fading_engine_t
 {
+    /* set by pwm interrupt after last interrupt in the current cycle, signals
+     * the main loop to rebuild the pwm timslot table */
+    uint8_t pwm_last_pulse;
+
     /* a timer for each channel */
     timer_t timer[PWM_CHANNELS];
 
@@ -159,8 +162,8 @@ void pwm_init(void)
 void pwm_poll(void)
 {
     /* after the last pwm timeslot, rebuild the timeslot table */
-    if (global.flags.pwm_last_pulse) {
-        global.flags.pwm_last_pulse = 0;
+    if (fading.pwm_last_pulse) {
+        fading.pwm_last_pulse = 0;
 
         update_pwm_timeslots();
     }
@@ -327,7 +330,7 @@ static inline void prepare_next_timeslot(void)
     if (pwm.index >= pwm.count) {
         /* select first timeslot and trigger timeslot rebuild */
         pwm.index = 0;
-        global.flags.pwm_last_pulse = 1;
+        fading.pwm_last_pulse = 1;
         OCR1B = 65000;
     } else {
         /* load new top and bitmask */
