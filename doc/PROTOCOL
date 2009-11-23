@@ -342,11 +342,11 @@ command |   function        | description
       are not necessary for the selected mode should be treated as don't care
       values (ie set to zero).
 
-      Four different modes can be configured:
+      Three different modes can be configured:
 
        * PROGRAM (mode == 0):
                 Start a static program compiled into the firmware, using the
-                following 12 bytes as parameters for the program (for details
+                following 10 bytes as parameters for the program (for details
                 see START_PROGRAM).
 
        * STATIC_COLOR (mode == 1):
@@ -371,8 +371,8 @@ command |   function        | description
       byte offset | name       |  description
       ------------------------------------
                 2 | mode       | desired startup mode (1 or 2 in this case)
-                3 | step       | step for fading (STATIC_COLOR, RANDOM)
-                4 | delay      | delay for fading (STATIC_COLOR, RANDOM)
+                3 | step       | step for fading (STATIC_COLOR)
+                4 | delay      | delay for fading (STATIC_COLOR)
                 5 | red        | red (for STATIC_COLOR)
                 6 | green      | green (for STATIC_COLOR)
                 7 | blue       | blue (for STATIC_COLOR)
