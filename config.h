@@ -110,7 +110,9 @@
 #endif
 
 /* define default startup script (0 is colorwheel, 1 is random) */
+#ifndef CONFIG_SCRIPT_DEFAULT
 #define CONFIG_SCRIPT_DEFAULT 0
+#endif
 
 /* include uart support per default */
 #ifndef CONFIG_SERIAL

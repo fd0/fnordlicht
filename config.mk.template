@@ -12,6 +12,12 @@
 # - fnordlichtmini -- fnordlichtmini hardware
 #HARDWARE = fnordlicht
 
+# default program
+#
+# possible values:
+# - 0   -- colorwheel   (default)
+# - 1   -- random colors
+#SCRIPT_DEFAULT = 0
 
 ###################################################################
 # PROGRAMMER

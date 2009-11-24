@@ -43,6 +43,8 @@ INCLUDES =
 # use more debug-flags when compiling
 DEBUG = 0
 
+# default static color program
+SCRIPT_DEFAULT = 0
 
 # avrdude programmer protocol
 PROG = usbasp
@@ -51,7 +53,7 @@ DEV = usb
 # further flags for avrdude
 AVRDUDE_FLAGS =
 
-CFLAGS += -DHARDWARE_$(HARDWARE)=1
+CFLAGS += -DHARDWARE_$(HARDWARE)=1 -DCONFIG_SCRIPT_DEFAULT=$(SCRIPT_DEFAULT)
 
 ####################################################
 # 'make' configuration

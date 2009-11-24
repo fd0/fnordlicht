@@ -76,6 +76,8 @@ void script_start_default(void)
     params.random.fade_sleep = 100;
 
     script_start(0, 1, &params);
+#else
+#warning "CONFIG_SCRIPT_DEFAULT has unknown value!  No default program is started."
 #endif
 #endif
 }
