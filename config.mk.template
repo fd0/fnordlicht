@@ -1,0 +1,37 @@
+# Put your own config here!
+#
+# This file is not under version control, and your settings
+# will not be modified when upgrading the repository
+
+
+###################################################################
+# HARDWARE PLATFORM TYPE
+#
+# possible values:
+# - fnordlicht -- original fnordlicht hardware     (default)
+# - fnordlichtmini -- fnordlichtmini hardware
+#HARDWARE = fnordlicht
+
+
+###################################################################
+# PROGRAMMER
+#
+# avrdude programmer protocol
+#PROG = usbasp
+
+# avrdude programmer device
+#DEV = usb
+
+# further flags for avrdude
+#AVRDUDE_FLAGS =
+
+
+###################################################################
+# controller
+#MCU = atmega8
+
+# frequency
+#F_CPU = 16000000UL
+
+# use more debug-flags when compiling
+#DEBUG = 1

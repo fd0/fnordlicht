@@ -2,7 +2,13 @@
 # fnordlicht-ng Makefile
 ####################################################
 
-# hardware type, possible values
+# ATTENTION:
+# Any of these variables are overridden with the values from the file
+# "config.mk", you can tune your settings there.  The file "config.mk" is not
+# under version control.
+# Just run 'make' to create a "config.mk" with the default settings
+
+# hardware type, possible values:
 # - fnordlicht -- original fnordlicht hardware
 # - fnordlichtmini -- fnordlichtmini hardware
 HARDWARE = fnordlicht
@@ -35,7 +41,7 @@ INCLUDES =
 
 
 # use more debug-flags when compiling
-DEBUG = 1
+DEBUG = 0
 
 
 # avrdude programmer protocol
@@ -77,6 +83,19 @@ LDFLAGS += -mmcu=$(MCU)
 OBJECTS += $(SRC:.c=.o)
 OBJECTS += $(ASRC:.S=.o)
 
+.PHONY: all
+
+# main make target (moved up here because of the config.mk target)
+all: $(TARGET).hex
+
+# create config.mk (if it does not exist yet)
+$(CURDIR)/config.mk:
+	@cp config.mk.template config.mk
+	@echo "===================================================="
+	@echo "created file $@"
+	@echo "please tune your settings there!"
+	@echo "===================================================="
+
 # include config file
 -include $(CURDIR)/config.mk
 
@@ -114,10 +133,7 @@ AVRDUDE_FLAGS += -p $(AVRDUDE_MCU)
 # make targets
 ####################################################
 
-.PHONY: all clean distclean avrdude-terminal
-
-# main rule
-all: $(TARGET).hex
+.PHONY: clean distclean avrdude-terminal
 
 $(TARGET).elf: $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
