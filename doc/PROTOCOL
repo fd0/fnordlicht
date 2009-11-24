@@ -1,0 +1,506 @@
+SERIAL PROTOCOL FOR FNORDLICHT-NG FIRMWARE
+==========================================
+
+Physical bus description
+------------------------
+
+The serial bus consists of up to 254 devices, each device having the uart rx
+pin connected to the uart tx pin of the predecessor, the uart tx pin connected
+to the tx successor.  The uart is used with a baud rate of 19200.  A device
+will retransmit each received byte immediately and unaltered, the only
+exception is the address byte in the sync sequence (which is incremented by one
+before retransmission).  An interrupt line is connected to each device.
+
+Diagram:
+
+                +----------------+         +----------------+
+                |    device N    |         |   device N+1   |
+UART: ... --> >-|RX            TX|-> --> >-|RX            TX|-> ...
+                |      INT       |         |      INT       |
+                +-------+--------+         +-------+--------+
+                        |                          |
+INT: -------------------+--------------------------+----------> ...
+
+
+Bootloader startup procedure
+----------------------------
+
+For updating the firmware installed on the devices of a bus, each device should
+be equipped with a bootloader program.  At power-on, the bootloader should be
+started, sleep for 100ms and check afterwards, if the INT line is pulled down
+(by a bus-master).  If INT is not pulled down, the bootloader is allowed to
+start the main firmware.  Otherwise it should not attempt to start the main
+firmware, but wait for commands received over the bus.  This procedure allows a
+recovery from a broken firmware which does not process commands received over
+the bus (such as the BOOTLOADER command).
+
+Initial sync sequence
+---------------------
+
+For the purpose of (automatic) address discovery and resetting the bus, a
+sync sequence consisting of 15x ESC (0x27) followed by an address byte is used.
+The controller sends 15x ESC, followed by a null byte. Please note that the
+length of the sync sequence (16 byte) is different from the length of a
+command packet, which is 15 byte!
+
+A device MUST be able to detect this sequence asynchronously, i.e. even if it is
+in the middle of receiving a command packet. The device does not need to
+withhold the execution of the received command packet until it is clear if a
+sequence of ESC bytes constitutes a sync sequence.
+
+Example:
+  A device received 4 bytes, say A B C D, of a packet, then a sync sequence.
+  It may (or may not) execute the packet
+
+    A B C D ESC ESC ... ESC
+
+  but the sync sequence must be detected, too.
+
+Asynchronous detection of the sync sequence can be done by just counting the
+number of consecutive ESC bytes, as 15 consecutive ESC bytes can only occur
+in a sync sequence, never in a command packet (ESC cannot occur as a command in
+the second byte of a command packet).
+
+Flow:
+* controller sends 15x ESC, followed by the address of the first device
+  (usually a null)
+* first device on the bus receives and retransmits 15x ESC, receives address
+  byte, stores own address in ram, increments address byte and transmits new
+  address to next device on the bus
+
+Result: Each device on the bus knows it's own address (=position).
+
+
+Commands
+--------
+
+Commands are sent in packets, 15 bytes in length, and are passed from device
+to device unmodified.  The first byte is the destination address (0-254, 255
+is broadcast), the second byte contains the command.  The meaning of the
+following 13 bytes depends on the value of the second byte (command).  A
+device ignores non-broadcast packets for which the address byte does not
+match it's own address.  Bytes which are declared as "don't care" bytes SHOULD
+be set to zero, this makes future extensions easier.
+
+
+List of commands:
+-----------------
+
+command |   function        | description
+--------------------------------------------------------
+   0x02 | FADE_RGB          | set color/fade to color (RGB)
+   0x03 | FADE_HSV          | set color/fade to color (HSV)
+   0x04 | SAVE_RGB          | save color to EEPROM (RGB)
+   0x05 | SAVE_HSV          | save color to EEPROM (HSV)
+   0x06 | SAVE_CURRENT      | save current color to EEPROM
+   0x07 | CONFIG_OFFSETS    | set global offset values
+   0x08 | REPLAY            | replay EEPROM color sequence
+   0x09 | START_PROGRAM     | start program
+   0x0A | STOP              | stop color changing
+   0x0B | MODIFY_CURRENT    | modify current color
+   0x0C | PULL_INT          | pull down INT line
+   0x0D | CONFIG_STARTUP    | configure startup
+   0x27 |                   | RESERVED (sync-sequence)
+
+   0x80 | BOOTLOADER        | start bootloader
+   0x81 | BOOT_CONF         | configure bootloader options
+   0x82 | BOOT_DATA_INITIAL | initial data packet to bootloader
+   0x83 | BOOT_DATA_CONT    | continuation data packet to bootloader
+   0x84 | BOOT_CRC_CHECK    | compare check-sum
+   0x85 | BOOT_FLASH        | write provided data to flash
+   0x86 | BOOT_ENTER_APP    | start application
+   0x87 | BOOT_UPDATE_CRC   | update application code checksum
+   0x88 |                   | RESERVED (bootload-sequence)
+
+
+    Command: FADE_RGB - set color/fade to color (RGB) (0x02)
+    --------------------------------------------------------
+
+      Instruct the device to fade to the specified absolute color, given as a
+      RGB value, with a specific speed.  Step and delay might be modified by
+      application of the global offsets (see CONFIG_OFFSETS), color values
+      (red, green, blue) are used unmodified.
+
+      All values are unsigned 8 bit integers.  If step is set to 255, the target
+      color is set without fading.  If delay is 0, the target color is set
+      directly after receiving the command packet.
+
+      byte offset | name  |  description
+      ---------------------------------
+                2 | step  | increment step for fading
+                3 | delay | delay between steps when fading (in 10ms)
+                4 | red   | red value
+                5 | green | green value
+                6 | blue  | blue value
+             7-14 | -     | don't care
+
+
+    Command: FADE_HSV - set color/fade to color (HSV) (0x03)
+    --------------------------------------------------------
+
+      Instruct the device to fade to the specified absolute color, given as a
+      HSV value, with a specific speed.  Step, delay and hue might be modified
+      by application of the global offsets, saturation and value might be scaled
+      by global scales (see CONFIG_OFFSETS).
+
+      All values are unsigned 8 bit integers, except hue, which is a 16 bit
+      little endian integer.  If step is set to 255, the target color is set
+      without fading.  If delay is 0, the target color is set directly after
+      receiving the command packet.
+
+      byte offset | name        |  description
+      ------------------------------------
+                2 | step        | increment step for fading
+                3 | delay       | delay between steps when fading (in 10ms)
+              4-5 | hue         | hue, 0-360, little endian
+                6 | saturation  | saturation
+                7 | value       | value (brightness)
+             8-14 | -           | don't care
+
+
+    Command: SAVE_RGB - save color to EEPROM (RGB) (0x04)
+    -----------------------------------------------------
+
+      Save a color in RGB format, a fade speed (step and delay) and a pause
+      length to the EEPROM.  The EEPROM can store 60 color and speed/delay
+      values (see section "EEPROM color storage" below).
+
+      All values are unsigned 8 bit integers, except pause, which is a little
+      endian 16 bit integer.
+
+      byte offset | name  |  description
+      ------------------------------
+                2 | slot  | slot in the EEPROM (0-59)
+                3 | step  | increment step for fading
+                4 | delay | delay between steps when fading (in 10ms)
+              5-6 | pause | time to wait before fading to next color (in 10ms)
+                7 | red   | red value
+                8 | green | green value
+                9 | blue  | blue value
+            10-14 | -     | don't care
+
+
+    Command: SAVE_HSV - save color to EEPROM (HSV) (0x05)
+    -----------------------------------------------------
+
+      Save a color in HSV format, a fade speed (step and delay) and a pause
+      length to the EEPROM.  The EEPROM can store 60 color and speed/delay
+      values (see section "EEPROM color storage" below).
+
+      All values are unsigned 8 bit integers, except pause and hue, which are
+      little endian 16 bit integers.
+
+      byte offset | name       |  description
+      -----------------------------------
+                2 | slot       | slot in the EEPROM (0-59)
+                3 | step       | increment step for fading
+                4 | delay      | delay between steps when fading (in 10ms)
+              5-6 | pause      | time to wait before fading to next color
+                  |            | (in 10ms)
+              7-8 | hue        | hue, 0-360, little endian
+                9 | saturation | saturation
+               10 | value      | value (brightness)
+            11-14 | -          | don't care
+
+
+    Command: SAVE_CURRENT - save current color to EEPROM (0x06)
+    -----------------------------------------------------------
+
+      Save the current color to EEPROM (RGB), together with a fade speed and a
+      pause length.
+
+      All values are unsigned 8 bit integers, except pause, which is a little
+      endian 16 bit integers.
+
+      byte offset | name       |  description
+      ----------------------------------------
+                2 | slot       | slot in the EEPROM (0-59)
+                3 | step       | increment step for fading
+                4 | delay      | delay between steps when fading (in 10ms)
+              5-6 | pause      | time to wait before fading to next color
+                  |            | (in 10ms)
+             7-14 | -          | don't care
+
+
+    Command: CONFIG_OFFSETS - set global offset values (0x07)
+    ---------------------------------------------------------
+
+    Set global values which influence how fast and what colors are when using
+    FADE_RGB or FADE_HSV.  All bytes are signed 8 bit integers, except hue, which
+    is a little endian signed 16 bit integer.  Saturation and value are scales.
+    This means, the final saturation and value will be scaled with
+    saturation/255 and value/255, respectively.
+
+        byte offset | name          |  description
+        -------------------------------------------
+                  2 | step          | increment step for fading (offset)
+                  3 | delay         | delay between steps when fading
+                    |               | (in 10ms, offset)
+                4-5 | hue           | hue offset, signed, little endian
+                  6 | saturation    | saturation scale, unsigned, 0-255
+                  7 | value         | value scale, unsigned, 0-255
+               8-14 | -             | don't care
+
+
+    Command: REPLAY - replay EEPROM color sequence (0x08)
+    -----------------------------------------------------
+
+      Start replaying a color sequence stored in EEPROM, given the begin and
+      end positions (end color is included).  The repeat mode specifies, what
+      should be done after the end color is reached.  When repeat is set to
+      zero, the fade sequence stops.  If repeat is 1, the sequence is restarted
+      (from begin to end), else if repeat is 2, the sequence is replayed in
+      reverse (from end to begin).  This command stops all other programs and
+      EEPROM fade sequences.
+
+      The colors stored in the EEPROM are displayed after adding the global hue
+      offset.  Saturation and value are scaled with the global saturation and
+      value settings (see "set global offset values" command).
+
+      All values are unsigned 8 bit integers.
+
+      byte offset | name   |  description
+      ---------------------------------
+                2 | start  | start offset, 0-59
+                3 | stop   | stop offset, 0-59
+                4 | repeat | repeat mode, 0-2
+             5-14 | -      | don't care
+
+
+    Command: START_PROGRAM - start program (0x09)
+    ---------------------------------------------
+
+      Start a program (a function compiled into the firmware) with given
+      parameters.  This command stops all other programs (and EEPROM fade
+      sequences).
+
+      byte offset | name    |  description
+      ---------------------------------
+                2 | program | program id, 0-255
+             3-11 | params  | 10 byte parameters passed to program
+            12-13 | -       | don't care
+
+
+    Command: STOP - stop color changing (0x0A)
+    ------------------------------------------
+
+      Stop all processes modifying the current color.  Optionally, also stop
+      the current fading process.
+
+      byte offset | name   |  description
+      ---------------------------------
+                2 | fade   | stop fading if set (1)
+             3-14 | -      | don't care
+
+
+    Command: MODIFY_CURRENT - modify current color (0x0B)
+    -----------------------------------------------------
+
+      Instruct the device to fade to a new target color, which is determined
+      relatively to the one currently visible.  This works only if no
+      program (or EEPROM fade sequence) is running.  The current color is
+      faded to the target color with the given step and delay values.  The
+      RGB offsets are applied before the HSV offsets.  Setting either one to
+      zero will not modify the color in that color space.
+
+      Step and delay are unsigned 8 bit integers, all other values are signed 8
+      (or 16) bit integers.
+
+      byte offset | name        |  description
+      -------------------------------------
+                2 | step        | increment step for fading
+                3 | delay       | delay between steps when fading (in 10ms)
+                4 | red         | red offset
+                5 | green       | green offset
+                6 | blue        | blue offset
+              4-5 | hue         | hue offset
+                6 | saturation  | saturation offset
+                7 | value       | value offset
+             8-14 | -           | don't care
+
+
+    Command: PULL_INT - pull down INT line (0x0C)
+    ---------------------------------------------
+
+      Instruct the adressed device to pull down the INT line (connected to all
+      devices in parallel) for a given amount of time.  This can be efficiently
+      used to determine the number of devices listening to the bus (eg. by
+      binary search).
+
+      byte offset | name    |  description
+      ---------------------------------
+                2 | delay   | time to wait before releasing the INT line
+                            | (in 10ms)
+             3-14 | -       | don't care
+
+
+    Command: CONFIG_STARTUP - configure startup (0x0D)
+    --------------------------------------------------
+
+      Configure what a device should perform after power-up.  Mode is an
+      unsigned 8 bit integer, selecting the desired startup mode.  Values which
+      are not necessary for the selected mode should be treated as don't care
+      values (ie set to zero).
+
+      Three different modes can be configured:
+
+       * PROGRAM (mode == 0):
+                Start a static program compiled into the firmware, using the
+                following 10 bytes as parameters for the program (for details
+                see START_PROGRAM).
+
+       * STATIC_COLOR (mode == 1):
+                Fade to a specified (rgb) color, using step and delay for fading
+
+       * REPLAY_EEPROM (mode == 2):
+                Fade a color sequence stored in EEPROM, repeat if configured
+
+      If startup mode is PROGRAM, the CONFIGURE_STARTUP packet is constructed in
+      this way (for the program indexes and meaning of the parameters see
+      START_PROGRAM):
+
+      byte offset | name       |  description
+      ------------------------------------
+                2 | mode       | desired startup mode (0 in this case)
+                3 | program    | static program index
+             3-14 | parameters | parameters to configured program
+
+      If startup mode is STATIC_COLOR or REPLAY_EEPROM, the CONFIGURE_STARTUP
+      packet is constructed as follows:
+
+      byte offset | name       |  description
+      ------------------------------------
+                2 | mode       | desired startup mode (1 or 2 in this case)
+                3 | step       | step for fading (STATIC_COLOR)
+                4 | delay      | delay for fading (STATIC_COLOR)
+                5 | red        | red (for STATIC_COLOR)
+                6 | green      | green (for STATIC_COLOR)
+                7 | blue       | blue (for STATIC_COLOR)
+                8 | start      | start at this EEPROM offset (for REPLAY_EEPROM)
+                9 | end        | start at this EEPROM offset (for REPLAY_EEPROM)
+            10-14 | -          | don't care
+
+
+
+    Command: BOOTLOADER - start bootloader (0x80)
+    ---------------------------------------------
+
+      If a bootloader is installed, jump to the bootloader, otherwise just
+      restart the device.  A magic byte sequence of 0xfc27566b (little endian)
+      must follow the command byte.
+
+      Before entering the bootloader area the application code pulls the
+      interrupt line low.  The bootloader code releases it again to indicate
+      successful entry.
+
+      byte offset | name    |  description
+      ---------------------------------
+                2 | byte1   | magic byte 1 (0x6b)
+                3 | byte2   | magic byte 2 (0x56)
+                4 | byte3   | magic byte 3 (0x27)
+                5 | byte4   | magic byte 4 (0xfc)
+             6-14 | -       | don't care
+
+
+    Command: BOOT_CONF - configure bootloader options (0x81)
+    --------------------------------------------------------
+
+      Set configuration options of the bootloader.  Currently solely the
+      address where to write the data to and size of data chunks written
+      each round.
+
+      Start address is an unsigned 16-bit integer automatically incremented
+      by the configured packet size upon each flash command.
+
+      Packet size is an unsigned 8-bit integer resembling a power of 2.
+      This is the packet size actually configured is 2^pktsz.  The packet
+      size always has to be a multiple of the maximum page size considering
+      all devices that ought to be flashed.
+
+      byte offset | name    |  description
+      ---------------------------------
+              2-3 | start   | address to flash to
+                4 | pktsz   | packet size (as power of 2)
+             5-14 | -       | don't care
+
+
+    Command: BOOT_DATA_INITIAL - initial data packet to bootloader (0x82)
+    ---------------------------------------------------------------------
+
+      Store (initial) data packet (13 data bytes) to the beginning of the
+      flash data buffer.  Further data can be provided using the
+      BOOT_DATA_CONT. command.
+
+      byte offset | name    |  description
+      ---------------------------------
+             2-14 | data    | payload
+
+
+    Command: BOOT_DATA_CONT - continuation data packet to bootloader (0x83)
+    ------------------------------------------------------------------------
+
+      Store continuation data packet (further 13 data bytes) to the end of
+      the flash data buffer.
+
+      byte offset | name    |  description
+      ---------------------------------
+             2-14 | data    | payload
+
+
+    Command: BOOT_CRC_CHECK - compare check-sum (0x84)
+    --------------------------------------------------
+
+      Compare provided CRC-16 checksum against calculated checksum over
+      previously received data.  If both checksums do not match, immediately
+      pull down the INT line.
+
+      byte offset | name    |  description
+      ---------------------------------
+              2-3 | chksum  | CRC-16 checksum over the data chunk
+             4-14 | -       | don't care
+
+
+    Command: BOOT_FLASH - write provided data to flash (0x85)
+    ---------------------------------------------------------
+
+      Write the data provided earlier to the flash memory of the device.
+
+      The device pulls the interrupt line down upon reception of the command
+      and releases it on successful completion of the command.  This way the
+      master node is capable of detecting when the successing initial data
+      packet may be provided by continuously sensing the interrupt line.
+
+      After completion of this command the address where to flash to is
+      incremented by the configured chunk data size.
+
+
+      byte offset | name    |  description
+      ---------------------------------
+             2-14 | -       | don't care
+
+
+    Command: BOOT_ENTER_APP - start application (0x86)
+    --------------------------------------------------
+
+      Launch application code.
+
+
+      byte offset | name    |  description
+      ------------------------------------
+             2-14 | -       | don't care
+
+
+    Command: BOOT_UPDATE_CRC - update application code checksum (0x87)
+    ------------------------------------------------------------------
+
+      Write provided application code checksum to EEPROM.  The checksum is
+      calculated over the whole application section, i.e. considering the
+      nop operation of the AVR (0xFF).
+
+
+      byte offset | name    |  description
+      ---------------------------------
+                2 | chksum  | Application checksum (CRC-8)
+                3 | ~chksum | two's complement of the checksum
+             4-14 | -       | don't care
+

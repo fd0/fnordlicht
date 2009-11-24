@@ -1,89 +1,77 @@
-/* vim:fdm=marker ts=4 et ai
- * {{{
+/* vim:ts=4 sts=4 et tw=80
+ *
  *         fnordlicht firmware next generation
  *
  *    for additional information please
- *    see http://koeln.ccc.de/prozesse/running/fnordlicht
+ *    see http://lochraster.org/fnordlicht
  *
  * (c) by Alexander Neumann <alexander@bumpern.de>
  *     Lars Noschinski <lars@public.noschinski.de>
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- * For more information on the GPL, please go to:
- * http://www.gnu.org/copyleft/gpl.html
- }}} */
-
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef PWM_H
 #define PWM_H
 
+#include "timer.h"
+#include "color.h"
+
 /* possible pwm interrupts in a pwm cycle */
 #define PWM_MAX_TIMESLOTS (PWM_CHANNELS+1)
 
-/* contains all the data for one color channel */
-struct channel_t
-/*{{{*/ {
-    union {
-        /* for adding fade-speed to brightness, and save the remainder */
-        uint16_t brightness_and_remainder;
+#if PWM_CHANNELS != 3
+#error "PWM_CHANNELS is not 3, this is unsupported!"
+#endif
 
-        /* for accessing brightness directly */
-        struct {
-            uint8_t remainder;
-            uint8_t brightness;
-        };
-    };
+#define PWM_HSV_SIZE sizeof(struct hsv_color_t)
 
-    /* desired brightness for this channel */
-    uint8_t target_brightness;
+struct global_pwm_t
+{
+    /* current color */
+    struct rgb_color_t current;
 
-    /* fade speed, the msb is added directly to brightness,
-     * the lsb is added to the remainder until an overflow happens */
-    union {
-        /* for accessing speed as an uint16_t */
-        uint16_t speed;
+    /* target for fading engine */
+    struct dual_color_t target;
 
-        /* for accessing lsb und msb directly */
-        struct {
-            uint8_t speed_l;
-            uint8_t speed_h;
-        };
-    };
-
-    /* output mask for switching on the leds for this channel */
-    uint8_t mask;
-
-    /* flags for this channel, implemented as a bitvector field */
-    struct {
-        /* this channel reached has recently reached it's desired target brightness */
-        uint8_t target_reached:1;
-    } flags;
-
-}; /*}}}*/
-
-struct global_pwm_t {
-    /* current channel records */
-    struct channel_t channels[3];
+    /* delay and step for fading engine */
+    uint8_t fade_delay[PWM_CHANNELS];
+    uint8_t fade_step[PWM_CHANNELS];
 };
 
 extern volatile struct global_pwm_t global_pwm;
 
 /* prototypes */
-void init_timer1(void);
-void init_pwm(void);
-void update_pwm_timeslots(void);
-void update_brightness(void);
+void pwm_init(void);
+void pwm_poll(void);
+void pwm_poll_fading(void);
+
+void pwm_fade_rgb(struct rgb_color_t *color, uint8_t step, uint8_t delay);
+void pwm_fade_hsv(struct hsv_color_t *color, uint8_t step, uint8_t delay);
+
+/* return true if fading process is complete */
+bool pwm_target_reached(void);
+
+/* convert hsv to rgb color */
+void pwm_hsv2rgb(struct dual_color_t *color);
+/* convert rgb to hsv color */
+void pwm_rgb2hsv(struct dual_color_t *color);
+
+/* stop fading, hold current color */
+void pwm_stop_fading(void);
+
+/* modify color */
+void pwm_modify_rgb(struct rgb_color_offset_t *color, uint8_t step, uint8_t delay);
+void pwm_modify_hsv(struct hsv_color_offset_t *color, uint8_t step, uint8_t delay);
 
 #endif

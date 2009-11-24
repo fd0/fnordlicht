@@ -6,7 +6,6 @@
  *    see http://lochraster.org/fnordlicht
  *
  * (c) by Alexander Neumann <alexander@bumpern.de>
- *     Lars Noschinski <lars@public.noschinski.de>
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3 as published by
@@ -21,32 +20,38 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UART_H
-#define UART_H
+#ifndef __REMOTE_H
+#define __REMOTE_H
 
-#include "config.h"
-#include "fifo.h"
+#include <stdint.h>
 
-#if !CONFIG_SERIAL
+struct remote_offsets_t
+{
+    int8_t step;
+    int8_t delay;
+    int16_t hue;
+    uint8_t saturation;
+    uint8_t value;
+};
 
-#define uart_init(...)
-#define uart_putc(...)
+struct global_remote_t {
+    struct remote_offsets_t offsets;
+};
+
+extern struct global_remote_t global_remote;
+
+/* we depend on serial uart */
+#if !CONFIG_SERIAL || !CONFIG_REMOTE
+
+#define remote_init(...)
+#define remote_poll(...)
+#define remote_address(...) 0
 
 #else
 
-/* structs */
-struct global_uart_t {
-    fifo_t rx;
-    fifo_t tx;
-};
-
-/* global variables */
-extern volatile struct global_uart_t global_uart;
-
-/* prototypes */
-void uart_init(void);
-void uart_putc(uint8_t data);
+void remote_init(void);
+void remote_poll(void);
+uint8_t remote_address(void);
 
 #endif
-
 #endif

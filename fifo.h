@@ -1,62 +1,48 @@
-/* vim:fdm=marker ts=4 et ai
- * {{{
+/* vim:ts=4 sts=4 et tw=80
+ *
  *         fnordlicht firmware next generation
  *
  *    for additional information please
- *    see http://koeln.ccc.de/prozesse/running/fnordlicht
+ *    see http://lochraster.org/fnordlicht
  *
  * (c) by Alexander Neumann <alexander@bumpern.de>
+ *     Lars Noschinski <lars@public.noschinski.de>
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- * For more information on the GPL, please go to:
- * http://www.gnu.org/copyleft/gpl.html
- }}} */
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-
-#ifndef FIFO_H
-#define FIFO_H
-
-#include "config.h"
+#ifndef __FIFO_H
+#define __FIFO_H
 
 #include <stdint.h>
-#include <avr/interrupt.h>
+#include <stdbool.h>
+#include "config.h"
 
-#ifndef UART_FIFO_SIZE
-#error UART_FIFO_SIZE is not defined
-#endif
+typedef uint8_t fifo_content_t;
+typedef uint8_t fifo_size_t;
 
-#if (UART_FIFO_SIZE & (UART_FIFO_SIZE-1))
-#error UART_FIFO_SIZE is not a power of 2!
-#endif
+typedef struct
+{
+    fifo_size_t read;
+    fifo_size_t write;
+    fifo_content_t buffer[CONFIG_FIFO_SIZE];
+} fifo_t;
 
-/* structures */
-
-/* capacity is UART_FIFO_SIZE-1 */
-struct fifo_t {
-    uint8_t buffer[UART_FIFO_SIZE];
-    uint8_t front;
-    uint8_t back;
-    uint8_t size;
-};
-
-/* prototypes */
-void fifo_init(volatile struct fifo_t *fifo, uint8_t fifo_size);
-void fifo_store(volatile struct fifo_t *fifo, uint8_t data);
-void fifo_store_buffer(volatile struct fifo_t *fifo, uint8_t data[]);
-uint8_t fifo_load(volatile struct fifo_t *fifo);
-uint8_t fifo_fill(volatile struct fifo_t *fifo);
-uint8_t fifo_capacity(volatile struct fifo_t *fifo);
+void fifo_init(fifo_t *f);
+void fifo_enqueue(fifo_t *f, fifo_content_t data);
+fifo_content_t fifo_dequeue(fifo_t *f);
+fifo_size_t fifo_fill(fifo_t *f);
+bool fifo_empty(fifo_t *f);
+bool fifo_full(fifo_t *f);
 
 #endif

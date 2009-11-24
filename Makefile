@@ -89,7 +89,7 @@ ifeq ($(DEBUG),1)
 	CFLAGS += -Wunreachable-code -Wdisabled-optimization
 	CFLAGS += -Wcast-align -Wwrite-strings -Wnested-externs -Wundef
 	CFLAGS += -Wa,-adhlns=$(basename $@).lst
-	CFLAGS += -DDEBUG
+	CFLAGS += -DCONFIG_DEBUG=1
 endif
 
 ####################################################
@@ -161,5 +161,10 @@ program-eeprom-%: %.eep.hex
 
 %.lss: %.elf
 	$(OBJDUMP) -h -S $< > $@
+
+.PHONY: fuses-atmega8-fnordlichtmini
+
+fuses-atmega8-fnordlichtmini:
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U lfuse:w:0xff:m -U hfuse:w:0xd9:m
 
 -include $(shell $(MKDIR) .dep 2>/dev/null) $(wildcard .dep/*)

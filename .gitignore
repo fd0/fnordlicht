@@ -1,8 +1,9 @@
 .*.swp
 /.dep
+**/.dep
 *.o
 *.hex
 *.lst
 *.elf
 config.mk
-tags
+/tags
