@@ -72,8 +72,8 @@ void script_start_default(void)
     params.random.value = 255;
 
     params.random.fade_step = 1;
-    params.random.fade_delay = 2;
-    params.random.fade_sleep = 10;
+    params.random.fade_delay = 3;
+    params.random.fade_sleep = 100;
 
     script_start(0, 1, &params);
 #endif
