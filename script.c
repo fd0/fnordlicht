@@ -61,7 +61,7 @@ void script_start_default(void)
     params.colorwheel.fade_sleep = 0;
 
     script_start(0, 0, &params);
-#else if CONFIG_SCRIPT_DEFAULT == 1
+#elif CONFIG_SCRIPT_DEFAULT == 1
     /* enable colorwheel program */
     union program_params_t params;
     params.random.seed = 23;
