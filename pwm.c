@@ -532,7 +532,7 @@ void pwm_fade_hsv(struct hsv_color_t *color, uint8_t step, uint8_t delay)
         global_pwm.target.hsv[i] = color->hsv[i];
 
     /* update rgb color in target */
-    pwm_hsv2rgb(&global_pwm.target);
+    pwm_hsv2rgb((struct dual_color_t *)&global_pwm.target);
 
     /* compute correct speed for all channels */
     compute_speed(step, delay);
@@ -575,7 +575,7 @@ void pwm_modify_rgb(struct rgb_color_offset_t *color, uint8_t step, uint8_t dela
 void pwm_modify_hsv(struct hsv_color_offset_t *color, uint8_t step, uint8_t delay)
 {
     /* convert current target color from rgb to hsv */
-    pwm_rgb2hsv(&global_pwm.target);
+    pwm_rgb2hsv((struct dual_color_t *)&global_pwm.target);
 
     /* apply changes, hue */
     global_pwm.target.hue += color->hue;
@@ -599,7 +599,7 @@ void pwm_modify_hsv(struct hsv_color_offset_t *color, uint8_t step, uint8_t dela
     global_pwm.target.value = LO8(val);
 
     /* re-convert to rgb */
-    pwm_hsv2rgb(&global_pwm.target);
+    pwm_hsv2rgb((struct dual_color_t *)&global_pwm.target);
 
     /* compute correct speed for all channels */
     compute_speed(step, delay);

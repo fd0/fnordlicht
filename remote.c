@@ -151,8 +151,8 @@ static PT_THREAD(remote_thread(struct pt *thread))
 
 void remote_poll(void)
 {
-    if (fifo_fill(&global_uart.rx) > 0) {
-        uint8_t data = fifo_dequeue(&global_uart.rx);
+    if (fifo_fill((fifo_t *)&global_uart.rx) > 0) {
+        uint8_t data = fifo_dequeue((fifo_t *)&global_uart.rx);
 
         /* check if sync sequence has been received before */
         if (remote.sync == REMOTE_SYNC_LEN) {
@@ -270,7 +270,7 @@ void parse_replay(struct remote_msg_replay_t *msg)
 void parse_start_program(struct remote_msg_start_program_t *msg)
 {
     parse_stop(NULL);
-    script_start(0, msg->script, &msg->parameters);
+    script_start(0, msg->script, (union program_params_t *)&msg->parameters);
 }
 
 void parse_stop(struct remote_msg_stop_t *msg)
