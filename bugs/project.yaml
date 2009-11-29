@@ -1,0 +1,16 @@
+--- !ditz.rubyforge.org,2008-03-06/project 
+name: fnordlicht
+version: "0.5"
+components: 
+- !ditz.rubyforge.org,2008-03-06/component 
+  name: fnordlicht
+releases: 
+- !ditz.rubyforge.org,2008-03-06/release 
+  name: "0.3"
+  status: :unreleased
+  release_time: 
+  log_events: 
+  - - 2009-11-29 15:27:19.181082 Z
+    - Alexander Neumann <alexander@bumpern.de>
+    - created
+    - ""
