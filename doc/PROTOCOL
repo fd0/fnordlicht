@@ -174,7 +174,7 @@ command |   function        | description
                 2 | slot  | slot in the EEPROM (0-59)
                 3 | step  | increment step for fading
                 4 | delay | delay between steps when fading (in 10ms)
-              5-6 | pause | time to wait before fading to next color (in 10ms)
+              5-6 | pause | time to wait before fading to next color (in 100ms)
                 7 | red   | red value
                 8 | green | green value
                 9 | blue  | blue value
@@ -198,7 +198,7 @@ command |   function        | description
                 3 | step       | increment step for fading
                 4 | delay      | delay between steps when fading (in 10ms)
               5-6 | pause      | time to wait before fading to next color
-                  |            | (in 10ms)
+                  |            | (in 100ms)
               7-8 | hue        | hue, 0-360, little endian
                 9 | saturation | saturation
                10 | value      | value (brightness)
@@ -221,7 +221,7 @@ command |   function        | description
                 3 | step       | increment step for fading
                 4 | delay      | delay between steps when fading (in 10ms)
               5-6 | pause      | time to wait before fading to next color
-                  |            | (in 10ms)
+                  |            | (in 100ms)
              7-14 | -          | don't care
 
 
