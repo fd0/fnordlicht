@@ -1,6 +1,6 @@
 /* vim:ts=4 sts=4 et tw=80
  *
- *         fnordlicht firmware next generation
+ *         fnordlicht firmware
  *
  *    for additional information please
  *    see http://lochraster.org/fnordlicht
