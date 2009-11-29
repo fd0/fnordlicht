@@ -149,4 +149,7 @@
 /* configure maximal static program parameter size */
 #define PROGRAM_PARAMETER_SIZE 10
 
+/* number of color-configurations stored in EEPROM */
+#define CONFIG_EEPROM_COLORS 60
+
 #endif /* _FNORDLICHT_CONFIG_H */

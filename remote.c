@@ -21,6 +21,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include "config.h"
 #include "remote.h"
 #include "fifo.h"
@@ -30,6 +31,7 @@
 #include "script.h"
 #include "remote-proto.h"
 #include "common.h"
+#include "storage.h"
 
 struct remote_state_t
 {
@@ -302,7 +304,15 @@ void parse_pull_int(struct remote_msg_pull_int_t *msg)
 
 void parse_config_startup(struct remote_msg_config_startup_t *msg)
 {
+    /* update values in startup_config, if mode is valid */
+    if (msg->mode > REMOTE_STARTUP_MAX_MODE)
+        return;
 
+    /* set mode and copy data */
+    startup_config.startup_mode = msg->mode;
+    memcpy(&startup_config.params, &msg->params, sizeof(union startup_parameters_t));
+    /* save config to eeprom */
+    storage_save_config();
 }
 
 #endif

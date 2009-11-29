@@ -35,6 +35,36 @@
 #include "remote.h"
 #include "timer.h"
 #include "script.h"
+#include "storage.h"
+
+static void startup(void)
+{
+    /* if configuration is valid */
+    if (storage_valid()) {
+
+        /* read default mode from storage */
+        switch (startup_config.startup_mode) {
+
+            case STARTUP_PROGRAM:
+                /* start program */
+                script_start(0, startup_config.params.program, (union program_params_t *)startup_config.params.program_parameters);
+                break;
+
+            case STARTUP_STATIC:
+                /* fade to target color */
+                pwm_fade_rgb(&startup_config.params.color, startup_config.params.step, startup_config.params.delay);
+                break;
+        }
+    } else {
+        /* start default program */
+        script_start_default();
+
+#if !CONFIG_SCRIPT
+        /* or set some default color */
+        global_pwm.target.red = 50;
+#endif
+    }
+}
 
 /** main function
  */
@@ -43,14 +73,12 @@ int main(void)
     pwm_init();
     timer_init();
     uart_init();
+    storage_init();
     remote_init();
     script_init();
-    script_start_default();
 
-#if !CONFIG_SCRIPT
-    /* default color */
-    global_pwm.target.red = 50;
-#endif
+    /* do high-level startup configuration */
+    startup();
 
     /* enable interrupts globally */
     sei();

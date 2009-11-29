@@ -104,6 +104,41 @@ module Fnordlicht
         $dev.flush
     end
 
+    def config_startup_program(addr, program, params)
+        mode = 0 # start program
+
+        $dev.write addr.chr
+        $dev.write "\x0D"
+        $dev.write mode.chr
+        $dev.write program.chr
+
+        rest = 11-params.length
+        puts "rest: %u" % rest if $verbose
+        params.each do |p|
+            $dev.write(p.chr)
+        end
+        1.upto(rest) do
+            $dev.write("\x00")
+        end
+        $dev.flush
+    end
+
+    def config_startup_static(addr, step, delay, r, g, b)
+        mode = 1 # static color
+
+        $dev.write addr.chr
+        $dev.write "\x0D"
+        $dev.write mode.chr
+
+        $dev.write step.chr
+        $dev.write delay.chr
+        $dev.write r.chr
+        $dev.write g.chr
+        $dev.write b.chr
+        $dev.write("\x00\x00\x00\x00\x00\x00\x00")
+        $dev.flush
+    end
+
     # secondary functions
     def fade_updown_rgb(addr, r, g, b, step, delay, sleep_time)
         fade_rgb(addr, r, g, b, step, delay)

@@ -44,6 +44,12 @@
 
 #define REMOTE_CMD_RESYNC           0x1b
 
+/* max mode for startup configuration is 2 */
+#define REMOTE_STARTUP_MAX_MODE     2
+/* maximum parameter size (for copy loop), size of structure storage_config_t,
+ * minus 1 for startup_mode enum */
+#define REMOTE_STARTUP_MAX_PARAMSIZE 11
+
 /* bootloader commands */
 #define REMOTE_CMD_BOOTLOADER       0x80
 
@@ -166,16 +172,35 @@ enum startup_mode_t
     STARTUP_REPLAY = 2,
 };
 
+union startup_parameters_t
+{
+    /* raw access to data, size: 11 byte */
+    uint8_t raw[11];
+
+    /* structure for startup_mode == STARTUP_PROGRAM
+     * size: 11 byte */
+    struct {
+        uint8_t program;
+        uint8_t program_parameters[PROGRAM_PARAMETER_SIZE];
+    };
+
+    /* structure for startup_mode == STARTUP_STATIC or STARTUP_REPLAY
+     * size: 7 byte */
+    struct {
+        uint8_t step;
+        uint8_t delay;
+        struct rgb_color_t color;
+        uint8_t start;
+        uint8_t end;
+    };
+};
+
 struct remote_msg_config_startup_t
 {
     uint8_t address;
     uint8_t cmd;
     enum startup_mode_t mode;
-    uint8_t step;
-    uint8_t delay;
-    struct rgb_color_t color;
-    uint8_t start;
-    uint8_t end;
+    union startup_parameters_t params;
 };
 
 /* bootloader commands */
