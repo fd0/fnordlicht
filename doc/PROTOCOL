@@ -163,7 +163,8 @@ command |   function        | description
 
       Save a color in RGB format, a fade speed (step and delay) and a pause
       length to the EEPROM.  The EEPROM can store 60 color and speed/delay
-      values (see section "EEPROM color storage" below).
+      values (see section "EEPROM color storage" below).  While writing the
+      data to the EEPROM, the INT line is pulled down.
 
       All values are unsigned 8 bit integers, except pause, which is a little
       endian 16 bit integer.
@@ -185,7 +186,8 @@ command |   function        | description
 
       Save a color in HSV format, a fade speed (step and delay) and a pause
       length to the EEPROM.  The EEPROM can store 60 color and speed/delay
-      values (see section "EEPROM color storage" below).
+      values (see section "EEPROM color storage" below).  While writing the
+      data to the EEPROM, the INT line is pulled down.
 
       All values are unsigned 8 bit integers, except pause and hue, which are
       little endian 16 bit integers.
@@ -207,7 +209,8 @@ command |   function        | description
     -----------------------------------------------------------
 
       Save the current color to EEPROM (RGB), together with a fade speed and a
-      pause length.
+      pause length.  While writing the data to the EEPROM, the INT line is
+      pulled down.
 
       All values are unsigned 8 bit integers, except pause, which is a little
       endian 16 bit integers.
