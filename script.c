@@ -90,8 +90,11 @@ void script_poll(void)
     if (timer_expired(&global_script.timer)) {
         for (uint8_t i = 0; i < CONFIG_SCRIPT_TASKS; i++) {
             struct process_t *task = &global_script.tasks[i];
-            if (task->enable)
-                task->execute(task);
+            if (task->enable) {
+                /* run task, disable if exited */
+                if (PT_SCHEDULE(task->execute(task)) == 0)
+                    task->enable = false;
+            }
         }
 
         /* recall after 100ms */
