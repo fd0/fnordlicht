@@ -94,7 +94,6 @@ command |   function        | description
    0x05 | SAVE_HSV          | save color to EEPROM (HSV)
    0x06 | SAVE_CURRENT      | save current color to EEPROM
    0x07 | CONFIG_OFFSETS    | set global offset values
-   0x08 | REPLAY            | replay EEPROM color sequence
    0x09 | START_PROGRAM     | start program
    0x0A | STOP              | stop color changing
    0x0B | MODIFY_CURRENT    | modify current color
@@ -245,31 +244,6 @@ command |   function        | description
                8-14 | -             | don't care
 
 
-    Command: REPLAY - replay EEPROM color sequence (0x08)
-    -----------------------------------------------------
-
-      Start replaying a color sequence stored in EEPROM, given the begin and
-      end positions (end color is included).  The repeat mode specifies, what
-      should be done after the end color is reached.  When repeat is set to
-      zero, the fade sequence stops.  If repeat is 1, the sequence is restarted
-      (from begin to end), else if repeat is 2, the sequence is replayed in
-      reverse (from end to begin).  This command stops all other programs and
-      EEPROM fade sequences.
-
-      The colors stored in the EEPROM are displayed after adding the global hue
-      offset.  Saturation and value are scaled with the global saturation and
-      value settings (see "set global offset values" command).
-
-      All values are unsigned 8 bit integers.
-
-      byte offset | name   |  description
-      ---------------------------------
-                2 | start  | start offset, 0-59
-                3 | stop   | stop offset, 0-59
-                4 | repeat | repeat mode, 0-2
-             5-14 | -      | don't care
-
-
     Command: START_PROGRAM - start program (0x09)
     ---------------------------------------------
 
@@ -345,7 +319,7 @@ command |   function        | description
       are not necessary for the selected mode should be treated as don't care
       values (ie set to zero).
 
-      Three different modes can be configured:
+      Two different modes can be configured:
 
        * PROGRAM (mode == 0):
                 Start a static program compiled into the firmware, using the
@@ -354,9 +328,6 @@ command |   function        | description
 
        * STATIC_COLOR (mode == 1):
                 Fade to a specified (rgb) color, using step and delay for fading
-
-       * REPLAY_EEPROM (mode == 2):
-                Fade a color sequence stored in EEPROM, repeat if configured
 
       If startup mode is PROGRAM, the CONFIGURE_STARTUP packet is constructed in
       this way (for the program indexes and meaning of the parameters see
@@ -368,8 +339,8 @@ command |   function        | description
                 3 | program    | static program index
              3-14 | parameters | parameters to configured program
 
-      If startup mode is STATIC_COLOR or REPLAY_EEPROM, the CONFIGURE_STARTUP
-      packet is constructed as follows:
+      If startup mode is STATIC_COLOR, the CONFIGURE_STARTUP packet is
+      constructed as follows:
 
       byte offset | name       |  description
       ------------------------------------
@@ -379,9 +350,7 @@ command |   function        | description
                 5 | red        | red (for STATIC_COLOR)
                 6 | green      | green (for STATIC_COLOR)
                 7 | blue       | blue (for STATIC_COLOR)
-                8 | start      | start at this EEPROM offset (for REPLAY_EEPROM)
-                9 | end        | start at this EEPROM offset (for REPLAY_EEPROM)
-            10-14 | -          | don't care
+             8-14 | -          | don't care
 
 
 
