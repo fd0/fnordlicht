@@ -35,7 +35,6 @@
 #define REMOTE_CMD_SAVE_HSV         0x05
 #define REMOTE_CMD_SAVE_CURRENT     0x06
 #define REMOTE_CMD_CONFIG_OFFSETS   0x07
-#define REMOTE_CMD_REPLAY           0x08
 #define REMOTE_CMD_START_PROGRAM    0x09
 #define REMOTE_CMD_STOP             0x0A
 #define REMOTE_CMD_MODIFY_CURRENT   0x0B
@@ -124,15 +123,6 @@ struct remote_msg_config_offsets_t
     uint8_t value;
 };
 
-struct remote_msg_replay_t
-{
-    uint8_t address;
-    uint8_t cmd;
-    uint8_t start;
-    uint8_t stop;
-    uint8_t repeat;
-};
-
 struct remote_msg_start_program_t
 {
     uint8_t address;
@@ -169,7 +159,6 @@ enum startup_mode_t
 {
     STARTUP_PROGRAM = 0,
     STARTUP_STATIC = 1,
-    STARTUP_REPLAY = 2,
 };
 
 union startup_parameters_t
@@ -184,14 +173,12 @@ union startup_parameters_t
         uint8_t program_parameters[PROGRAM_PARAMETER_SIZE];
     };
 
-    /* structure for startup_mode == STARTUP_STATIC or STARTUP_REPLAY
-     * size: 7 byte */
+    /* structure for startup_mode == STARTUP_STATIC
+     * size: 5 byte */
     struct {
         uint8_t step;
         uint8_t delay;
         struct rgb_color_t color;
-        uint8_t start;
-        uint8_t end;
     };
 };
 

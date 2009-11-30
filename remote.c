@@ -59,7 +59,6 @@ static void parse_save_rgb(struct remote_msg_save_rgb_t *msg);
 static void parse_save_hsv(struct remote_msg_save_hsv_t *msg);
 static void parse_save_current(struct remote_msg_save_current_t *msg);
 static void parse_config_offsets(struct remote_msg_config_offsets_t *msg);
-static void parse_replay(struct remote_msg_replay_t *msg);
 static void parse_start_program(struct remote_msg_start_program_t *msg);
 static void parse_stop(struct remote_msg_stop_t *msg);
 static void parse_modify_current(struct remote_msg_modify_current_t *msg);
@@ -115,9 +114,6 @@ static void remote_parse_msg(struct remote_msg_t *msg)
             break;
         case REMOTE_CMD_CONFIG_OFFSETS:
             parse_config_offsets((struct remote_msg_config_offsets_t *)msg);
-            break;
-        case REMOTE_CMD_REPLAY:
-            parse_replay((struct remote_msg_replay_t *)msg);
             break;
         case REMOTE_CMD_START_PROGRAM:
             parse_start_program((struct remote_msg_start_program_t *)msg);
@@ -242,17 +238,57 @@ void parse_fade_hsv(struct remote_msg_fade_hsv_t *msg)
 
 void parse_save_rgb(struct remote_msg_save_rgb_t *msg)
 {
+    if (msg->slot >= CONFIG_EEPROM_COLORS)
+        return;
 
+    struct storage_color_t c;
+    c.step = msg->step;
+    c.delay = msg->delay;
+    c.pause = msg->pause;
+
+    /* mark color as rgb */
+    c.color.rgb_marker = 255;
+
+    c.color.red = msg->color.red;
+    c.color.green = msg->color.green;
+    c.color.blue = msg->color.blue;
+
+    storage_save(msg->slot, &c);
 }
 
 void parse_save_hsv(struct remote_msg_save_hsv_t *msg)
 {
+    if (msg->slot >= CONFIG_EEPROM_COLORS)
+        return;
 
+    struct storage_color_t c;
+    c.step = msg->step;
+    c.delay = msg->delay;
+    c.pause = msg->pause;
+
+    c.color.hue = msg->color.hue;
+    c.color.saturation = msg->color.saturation;
+    c.color.value = msg->color.value;
 }
 
 void parse_save_current(struct remote_msg_save_current_t *msg)
 {
+    if (msg->slot >= CONFIG_EEPROM_COLORS)
+        return;
 
+    struct storage_color_t c;
+    c.step = msg->step;
+    c.delay = msg->delay;
+    c.pause = msg->pause;
+
+    /* mark color as rgb */
+    c.color.rgb_marker = 255;
+
+    c.color.red = global_pwm.current.red;
+    c.color.green = global_pwm.current.green;
+    c.color.blue = global_pwm.current.blue;
+
+    storage_save(msg->slot, &c);
 }
 
 void parse_config_offsets(struct remote_msg_config_offsets_t *msg)
@@ -262,11 +298,6 @@ void parse_config_offsets(struct remote_msg_config_offsets_t *msg)
     global_remote.offsets.hue = msg->hue;
     global_remote.offsets.saturation = msg->saturation;
     global_remote.offsets.value = msg->value;
-}
-
-void parse_replay(struct remote_msg_replay_t *msg)
-{
-
 }
 
 void parse_start_program(struct remote_msg_start_program_t *msg)

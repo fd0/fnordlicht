@@ -55,12 +55,24 @@ struct random_params_t
     uint8_t min_distance;
 };
 
+struct replay_params_t
+{
+    uint8_t start;
+    uint8_t end;
+    enum {
+        REPEAT_NONE = 0,
+        REPEAT_START = 1,
+        REPEAT_REVERSE = 2,
+    } repeat;
+};
+
 union program_params_t
 {
     /* parameters for static programs */
     uint8_t raw[PROGRAM_PARAMETER_SIZE];
     struct colorwheel_params_t colorwheel;
     struct random_params_t random;
+    struct replay_params_t replay;
 };
 
 /* global process struct */
@@ -74,11 +86,12 @@ struct process_t {
 #if CONFIG_SCRIPT
 
 /* global list of programs */
-#define STATIC_PROGRAMS_LEN 2
+#define STATIC_PROGRAMS_LEN 3
 extern program_handler static_programs[];
 
 PT_THREAD(program_colorwheel(struct process_t *process));
 PT_THREAD(program_random(struct process_t *process));
+PT_THREAD(program_replay(struct process_t *process));
 
 #endif
 #endif

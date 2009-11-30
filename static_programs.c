@@ -28,6 +28,7 @@
 #include "timer.h"
 #include "remote.h"
 #include "common.h"
+#include "storage.h"
 
 #if CONFIG_SCRIPT
 
@@ -35,6 +36,7 @@
 PROGMEM program_handler static_programs[] = {
     program_colorwheel,
     program_random,
+    program_replay,
 };
 
 PT_THREAD(program_colorwheel(struct process_t *process))
@@ -119,6 +121,73 @@ PT_THREAD(program_random(struct process_t *process))
             while (sleep--)
                 PT_YIELD(&process->pt);
         }
+    }
+
+    PT_END(&process->pt);
+}
+
+PT_THREAD(program_replay(struct process_t *process))
+{
+    PT_BEGIN(&process->pt);
+
+    static uint8_t pos;
+    static enum {
+        UP = 0,
+        DOWN = 1,
+    } direction;
+    static struct storage_color_t c;
+
+    /* reset variables */
+    pos = process->params.replay.start;
+    direction = UP;
+
+    while (1) {
+        /* load next color value */
+        storage_load(pos, &c);
+
+        if (c.color.rgb_marker == 0xff) {
+            struct rgb_color_t color;
+            color.red = c.color.red;
+            color.green = c.color.green;
+            color.blue = c.color.blue;
+
+            pwm_fade_rgb(&color, c.step, c.delay);
+        } else {
+            struct hsv_color_t color;
+            color.hue = c.color.hue;
+            color.saturation = c.color.saturation;
+            color.value = c.color.value;
+
+            pwm_fade_hsv(&color, c.step, c.delay);
+        }
+
+        /* update pos */
+        if (direction == UP) {
+            /* check for upper end */
+            if (pos == process->params.replay.end) {
+                switch (process->params.replay.repeat) {
+                    case REPEAT_NONE:       PT_EXIT(&process->pt);
+                                            break;
+                    case REPEAT_START:      pos = process->params.replay.start;
+                                            break;
+                    case REPEAT_REVERSE:    direction = DOWN;
+                                            pos--;
+                                            break;
+                }
+            } else
+                pos++;
+        } else {
+            if (pos == process->params.replay.start) {
+                direction = UP;
+                pos++;
+            } else
+                pos--;
+        }
+
+        /* wait */
+        while (c.pause--)
+            PT_YIELD(&process->pt);
+
     }
 
     PT_END(&process->pt);

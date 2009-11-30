@@ -42,6 +42,46 @@ module Fnordlicht
         $dev.flush
     end
 
+    def save_rgb(addr, slot, r, g, b, step, delay, pause)
+        $dev.write addr.chr
+        $dev.write "\x04"
+        $dev.write slot.chr
+        $dev.write step.chr
+        $dev.write delay.chr
+        $dev.write [pause].pack('S')
+        $dev.write r.chr
+        $dev.write g.chr
+        $dev.write b.chr
+        $dev.write "\x00\x00\x00\x00\x00"
+        $dev.flush
+    end
+
+    def save_hsv(addr, slot, h, s, v, step, delay, pause)
+        $dev.write addr.chr
+        $dev.write "\x05"
+        $dev.write slot.chr
+        $dev.write step.chr
+        $dev.write delay.chr
+        $dev.write [pause].pack('S')
+        $dev.write [h].pack('v')
+        $dev.write s.chr
+        $dev.write v.chr
+        $dev.write "\x00\x00\x00\x00"
+        $dev.flush
+    end
+
+    def save_current(addr, slot, step, delay, pause)
+        $dev.write addr.chr
+        $dev.write "\x06"
+        $dev.write slot.chr
+        $dev.write step.chr
+        $dev.write delay.chr
+        $dev.write [pause].pack('S')
+        $dev.write "\x00\x00\x00\x00"
+        $dev.write "\x00\x00\x00\x00"
+        $dev.flush
+    end
+
     def modify_current(addr, step, delay, r, g, b, h, s, v)
         $dev.write addr.chr
         $dev.write "\x0b"

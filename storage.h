@@ -30,13 +30,15 @@
 #include <stdbool.h>
 
 /* store a color configuration in EEPROM
- * size: 8 byte */
+ * size: 8 byte
+ *
+ * use union color_t here, check rgb_marker! */
 struct storage_color_t
 {
     uint8_t step;
     uint8_t delay;
     uint16_t pause;
-    struct union_color_t color;
+    union color_t color;
 };
 
 /* store the startup configuration in EEPROM
@@ -57,7 +59,7 @@ struct storage_t
     struct storage_config_t config;
 
     /* color storage, size: 60*8 == 480 byte */
-    struct storage_color_t colors[CONFIG_EEPROM_COLORS];
+    struct storage_color_t color[CONFIG_EEPROM_COLORS];
 
     /* checksum, size: 2 byte */
     uint16_t checksum;

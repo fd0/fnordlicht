@@ -93,21 +93,28 @@ struct dual_color_t
     };
 };
 
-struct union_color_t
+union color_t
 {
-    union {
-        struct {
-            uint8_t red;
-            uint8_t green;
-            uint8_t blue;
+    /* rgb */
+    struct {
+        union {
+            struct {
+                uint8_t red;
+                uint8_t green;
+                uint8_t blue;
+            };
+            uint8_t rgb[3];
         };
-        uint8_t rgb[3];
-        struct {
-            uint16_t hue;
-            uint8_t saturation;
-            uint8_t value;
-        };
-        uint8_t hsv[4];
+        /* marker, 0xff if rgb */
+        uint8_t rgb_marker;
+    };
+
+    /* hsv */
+    struct {
+        uint8_t saturation;
+        uint8_t value;
+        /* 0 <= hue <= 349, otherwise rgb might be assumed */
+        uint16_t hue;
     };
 };
 

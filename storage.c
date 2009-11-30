@@ -79,11 +79,15 @@ bool storage_load_config(void)
 
 void storage_save(uint8_t position, struct storage_color_t *color)
 {
-
+    eeprom_write_block(color, &eeprom_storage.color[position], sizeof(struct storage_color_t));
+    while(!eeprom_is_ready());
+    eeprom_write_word(&eeprom_storage.checksum, eeprom_checksum());
+    while(!eeprom_is_ready());
 }
 
 void storage_load(uint8_t position, struct storage_color_t *color)
 {
+    eeprom_read_block(color, &eeprom_storage.color[position], sizeof(struct storage_color_t));
 }
 
 bool storage_valid(void)
