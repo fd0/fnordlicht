@@ -7,10 +7,11 @@ module Fnordlicht
         $dev.flush
     end
 
-    def stop(addr)
+    def stop(addr, fading = 1)
         $dev.write addr.chr
         $dev.write "\x0A"
-        $dev.write "\x00\x00\x00\x00\x00"
+        $dev.write fading.chr
+        $dev.write "\x00\x00\x00\x00"
         $dev.write "\x00\x00\x00\x00\x00"
         $dev.write "\x00\x00\x00"
         $dev.flush

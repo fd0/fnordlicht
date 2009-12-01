@@ -311,7 +311,8 @@ void parse_start_program(struct remote_msg_start_program_t *msg)
 void parse_stop(struct remote_msg_stop_t *msg)
 {
     script_stop();
-    pwm_stop_fading();
+    if (msg->fade)
+        pwm_stop_fading();
 }
 
 void parse_modify_current(struct remote_msg_modify_current_t *msg)
