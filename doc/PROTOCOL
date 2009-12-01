@@ -249,7 +249,8 @@ command |   function        | description
 
       Start a program (a function compiled into the firmware) with given
       parameters.  This command stops all other programs (and EEPROM fade
-      sequences).
+      sequences).  For a list of programs and parameters see section
+      "Static Programs".
 
       byte offset | name    |  description
       ---------------------------------
@@ -324,32 +325,32 @@ command |   function        | description
        * PROGRAM (mode == 0):
                 Start a static program compiled into the firmware, using the
                 following 10 bytes as parameters for the program (for details
-                see START_PROGRAM).
+                see section "Static Programs").
 
        * STATIC_COLOR (mode == 1):
                 Fade to a specified (rgb) color, using step and delay for fading
 
       If startup mode is PROGRAM, the CONFIGURE_STARTUP packet is constructed in
       this way (for the program indexes and meaning of the parameters see
-      START_PROGRAM):
+      section "Static Programs"):
 
       byte offset | name       |  description
       ------------------------------------
                 2 | mode       | desired startup mode (0 in this case)
                 3 | program    | static program index
-             3-14 | parameters | parameters to configured program
+             4-14 | parameters | parameters to configured program
 
       If startup mode is STATIC_COLOR, the CONFIGURE_STARTUP packet is
       constructed as follows:
 
       byte offset | name       |  description
       ------------------------------------
-                2 | mode       | desired startup mode (1 or 2 in this case)
-                3 | step       | step for fading (STATIC_COLOR)
-                4 | delay      | delay for fading (STATIC_COLOR)
-                5 | red        | red (for STATIC_COLOR)
-                6 | green      | green (for STATIC_COLOR)
-                7 | blue       | blue (for STATIC_COLOR)
+                2 | mode       | desired startup mode (1 in this case)
+                3 | step       | step for fading
+                4 | delay      | delay for fading
+                5 | red        | red
+                6 | green      | green
+                7 | blue       | blue
              8-14 | -          | don't care
 
 
@@ -476,3 +477,92 @@ command |   function        | description
                 3 | ~chksum | two's complement of the checksum
              4-14 | -       | don't care
 
+
+Static Programs
+---------------
+
+This section describes the programs which are (in the default version)
+compiled into the firmware.
+
+    program "colorwheel", program index 0
+    -------------------------------------
+
+    This program fades throught the HSV color space, with fixed saturation and
+    value, starting at hue_start.  In each step, hue_step is added to the
+    current hue value, afterwards the device fades to the resulting color (using
+    fade_step and fade_delay) and waits for the time specified by fade_sleep.
+
+        byte offset | name       | description
+        ---------------------------------------------------------
+                  0 | fade_step  | used for fading to new color
+                    |            |   (unsigned 8 bit integer)
+                  1 | fade_delay | used for fading to now color
+                    |            |   (unsigned 8 bit integer)
+                2-3 | fade_sleep | sleep between steps (in 100ms)
+                    |            |   (unsigned 16 bit integer)
+                4-5 | hue_start  | start at this hue value
+                    |            |   (unsigned 16 bit integer
+                6-7 | hue_step   | add this to the hue in each step
+                    |            |   (signed 16 bit integer)
+                  8 | saturation | saturation
+                    |            |   (unsigned 8 bit integer)
+                  9 | value      | value
+                    |            |   (unsigned 8 bit integer)
+
+
+    program "random", program index 1
+    ---------------------------------
+
+    When this program is started, the pseudo-random generator is initialized
+    with the seed value.  If use_address is set, the address of a device is
+    XORed with the seed before initializing the pseudo-random generator, so
+    the random values also depend on the address of the device.
+
+    In each step, this program generates a new random hue value which is at
+    least min_distance away from the current hue value.  Afterwards the device
+    fades to the new color (using the generated hue and the configured
+    saturation and value from the parameters).  The parameters fade_step and
+    fade_delay are used in each fade.  Afterwards the device sleeps for a
+    configurable amount of time (fade_sleep).
+
+        byte offset | name         | description
+        ----------------------------------------------------------------------
+                0-1 | seed         | used for initializing the random generator
+                    |              |   (unsigned 16 bit integer)
+                  2 | use_address  | XOR the address of the current device
+                    |              | with the seed before initializing the
+                    |              | random generator
+                    |              |   (unsigned 8 bit integer)
+                  3 | fade_step    | used for fading to new color
+                    |              |   (unsigned 8 bit integer)
+                  4 | fade_delay   | used for fading to now color
+                    |              |   (unsigned 8 bit integer)
+                5-6 | fade_sleep   | sleep between steps (in 100ms)
+                    |              |   (unsigned 16 bit integer)
+                  7 | saturation   | saturation
+                    |              |   (unsigned 8 bit integer)
+                  8 | value        | value
+                    |              |   (unsigned 8 bit integer)
+                  9 | min_distance | minimal distance for new hue value
+                    |              |   (unsigned 8 bit integer)
+
+
+    program "replay", program index 2
+    ---------------------------------
+
+    The commands SAVE_RGB, SAVE_HSV and SAVE_CURRENT stores a color,
+    fade_step, fade_delay and fade_sleep to the EEPROM.  This program replays
+    the stored colors, from start to end.  If repeat is 0, the sequence stops
+    when end is reached, if repeat is 1, the sequence is restarted from the
+    beginning and if repeat is 2, the color sequence is played in reverse
+    order, from end to beginning.
+
+        byte offset | name         | description
+        ----------------------------------------------------------------------
+                  0 | start        | index of the first color
+                    |              |   (unsigned 8 bit integer)
+                  1 | end          | index of the last color (included)
+                    |              |   (unsigned 8 bit integer)
+                  3 | repeat       | configure repetition
+                    |              |   (unsigned 8 bit integer)
+                4-9 | don't care   |
