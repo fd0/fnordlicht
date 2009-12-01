@@ -40,7 +40,7 @@
 static void startup(void)
 {
     /* if configuration is valid */
-    if (storage_valid()) {
+    if (storage_valid_config()) {
 
         /* read default mode from storage */
         switch (startup_config.startup_mode) {

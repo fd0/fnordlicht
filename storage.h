@@ -41,10 +41,14 @@ struct storage_color_t
     union color_t color;
 };
 
+#define EEPROM_MAGIC_BYTE 0x23
+
 /* store the startup configuration in EEPROM
  * size: 12 byte */
 struct storage_config_t
 {
+    /* magic byte, must match EEPROM_MAGIC_BYTE to mark a valid configuration */
+    uint8_t magic;
     enum startup_mode_t startup_mode;
     /* startup parameters, defined in remote_proto.h, size: 11 byte */
     union startup_parameters_t params;
@@ -61,7 +65,7 @@ struct storage_t
     /* color storage, size: 60*8 == 480 byte */
     struct storage_color_t color[CONFIG_EEPROM_COLORS];
 
-    /* checksum, size: 2 byte */
+    /* crc16 checksum over config and color[], size: 2 byte */
     uint16_t checksum;
 };
 
@@ -73,14 +77,14 @@ extern EEMEM struct storage_t eeprom_storage;
 void storage_init(void);
 
 /* save storage config cfg to eeprom */
-bool storage_save_config(void);
+void storage_save_config(void);
 /* load storage config cfg from eeprom */
-bool storage_load_config(void);
+void storage_load_config(void);
 
 void storage_save_color(uint8_t position, struct storage_color_t *color);
 void storage_load_color(uint8_t position, struct storage_color_t *color);
 
 /* return true if configuration has been loaded and is valid */
-bool storage_valid(void);
+bool storage_valid_config(void);
 
 #endif

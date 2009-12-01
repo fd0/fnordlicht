@@ -54,27 +54,28 @@ void storage_init(void)
     uint16_t checksum1 = eeprom_checksum();
     uint16_t checksum2 = eeprom_read_word(&eeprom_storage.checksum);
     storage.eeprom_good = (checksum1 == checksum2);
-    if (storage.eeprom_good)
-        storage_load_config();
+    storage_load_config();
 }
 
-bool storage_save_config(void)
+void storage_save_config(void)
 {
+    /* set magic byte and save startup_config to EEPROM */
+    startup_config.magic = EEPROM_MAGIC_BYTE;
     eeprom_write_block(&startup_config, &eeprom_storage.config, sizeof(struct storage_config_t));
     eeprom_write_word(&eeprom_storage.checksum, eeprom_checksum());
+
+    /* reset magic config and mark EEPROM as good */
+    startup_config.magic = 0;
     storage.eeprom_good = true;
-    return true;
 }
 
-bool storage_load_config(void)
+void storage_load_config(void)
 {
     if (!storage.eeprom_good)
         return false;
 
     /* load config */
     eeprom_read_block(&startup_config, &eeprom_storage.config, sizeof(struct storage_config_t));
-
-    return true;
 }
 
 void storage_save_color(uint8_t position, struct storage_color_t *color)
@@ -90,7 +91,7 @@ void storage_load_color(uint8_t position, struct storage_color_t *color)
     eeprom_read_block(color, &eeprom_storage.color[position], sizeof(struct storage_color_t));
 }
 
-bool storage_valid(void)
+bool storage_valid_config(void)
 {
-    return storage.eeprom_good;
+    return (storage.eeprom_good && startup_config.magic == EEPROM_MAGIC_BYTE);
 }
