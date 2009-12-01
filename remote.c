@@ -269,6 +269,8 @@ void parse_save_hsv(struct remote_msg_save_hsv_t *msg)
     c.color.hue = msg->color.hue;
     c.color.saturation = msg->color.saturation;
     c.color.value = msg->color.value;
+
+    storage_save(msg->slot, &c);
 }
 
 void parse_save_current(struct remote_msg_save_current_t *msg)
