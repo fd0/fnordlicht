@@ -77,7 +77,7 @@ bool storage_load_config(void)
     return true;
 }
 
-void storage_save(uint8_t position, struct storage_color_t *color)
+void storage_save_color(uint8_t position, struct storage_color_t *color)
 {
     eeprom_write_block(color, &eeprom_storage.color[position], sizeof(struct storage_color_t));
     while(!eeprom_is_ready());
@@ -85,7 +85,7 @@ void storage_save(uint8_t position, struct storage_color_t *color)
     while(!eeprom_is_ready());
 }
 
-void storage_load(uint8_t position, struct storage_color_t *color)
+void storage_load_color(uint8_t position, struct storage_color_t *color)
 {
     eeprom_read_block(color, &eeprom_storage.color[position], sizeof(struct storage_color_t));
 }

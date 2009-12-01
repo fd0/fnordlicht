@@ -143,7 +143,7 @@ PT_THREAD(program_replay(struct process_t *process))
 
     while (1) {
         /* load next color value */
-        storage_load(pos, &c);
+        storage_load_color(pos, &c);
 
         if (c.color.rgb_marker == 0xff) {
             struct rgb_color_t color;

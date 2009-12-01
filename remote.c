@@ -253,7 +253,7 @@ void parse_save_rgb(struct remote_msg_save_rgb_t *msg)
     c.color.green = msg->color.green;
     c.color.blue = msg->color.blue;
 
-    storage_save(msg->slot, &c);
+    storage_save_color(msg->slot, &c);
 }
 
 void parse_save_hsv(struct remote_msg_save_hsv_t *msg)
@@ -270,7 +270,7 @@ void parse_save_hsv(struct remote_msg_save_hsv_t *msg)
     c.color.saturation = msg->color.saturation;
     c.color.value = msg->color.value;
 
-    storage_save(msg->slot, &c);
+    storage_save_color(msg->slot, &c);
 }
 
 void parse_save_current(struct remote_msg_save_current_t *msg)
@@ -290,7 +290,7 @@ void parse_save_current(struct remote_msg_save_current_t *msg)
     c.color.green = global_pwm.current.green;
     c.color.blue = global_pwm.current.blue;
 
-    storage_save(msg->slot, &c);
+    storage_save_color(msg->slot, &c);
 }
 
 void parse_config_offsets(struct remote_msg_config_offsets_t *msg)

@@ -72,13 +72,13 @@ extern EEMEM struct storage_t eeprom_storage;
 /* initialize storage */
 void storage_init(void);
 
-/* save storage config cfg (or global_storage if cfg is NULL) to eeprom */
+/* save storage config cfg to eeprom */
 bool storage_save_config(void);
-/* load storage config cfg (or global_storage if cfg is NULL) from eeprom */
+/* load storage config cfg from eeprom */
 bool storage_load_config(void);
 
-void storage_save(uint8_t position, struct storage_color_t *color);
-void storage_load(uint8_t position, struct storage_color_t *color);
+void storage_save_color(uint8_t position, struct storage_color_t *color);
+void storage_load_color(uint8_t position, struct storage_color_t *color);
 
 /* return true if configuration has been loaded and is valid */
 bool storage_valid(void);
