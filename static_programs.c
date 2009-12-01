@@ -41,7 +41,7 @@ PROGMEM program_handler static_programs[] = {
 
 PT_THREAD(program_colorwheel(struct process_t *process))
 {
-    static uint8_t sleep;
+    static uint16_t sleep;
 
     PT_BEGIN(&process->pt);
 
@@ -113,7 +113,7 @@ PT_THREAD(program_random(struct process_t *process))
         PT_WAIT_UNTIL(&process->pt, pwm_target_reached());
 
         /* sleep (remember: we are called every 100ms) */
-        static uint8_t sleep;
+        static uint16_t sleep;
 
         if (process->params.random.fade_sleep > 0) {
             sleep = process->params.random.fade_sleep;
@@ -187,7 +187,6 @@ PT_THREAD(program_replay(struct process_t *process))
         /* wait */
         while (c.pause--)
             PT_YIELD(&process->pt);
-
     }
 
     PT_END(&process->pt);
