@@ -136,10 +136,16 @@
 #define PWM_DDR DDRB
 #define PWM_PORT PORTB
 
-/* color <-> channel assignment */
-#define CHANNEL_RED     0
-#define CHANNEL_GREEN   1
-#define CHANNEL_BLUE    2
+/* secondary output pins */
+#ifndef CONFIG_SECONDARY_PWM
+#define CONFIG_SECONDARY_PWM 1
+#endif
+
+/* use PD5-PD7 as secondary PWM pins */
+#define PWM2_CHANNEL_MASK (_BV(PD5) | _BV(PD6) | _BV(PD7))
+#define PWM2_DDR DDRD
+#define PWM2_PORT PORTD
+#define PWM2_SHIFT 5
 
 /* configure normal or inverted pwm */
 #if !defined(PWM_INVERTED) && defined(HARDWARE_fnordlicht)

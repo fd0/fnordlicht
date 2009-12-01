@@ -127,8 +127,22 @@ void pwm_init(void)
     PWM_PORT &= ~(PWM_CHANNEL_MASK);
 #endif
 
+#if CONFIG_SECONDARY_PWM
+#ifdef PWM_INVERTED
+    /* set all pins high -> leds off */
+    PWM2_PORT |= PWM2_CHANNEL_MASK;
+#else
+    /* set all pins low -> leds off */
+    PWM2_PORT &= ~(PWM2_CHANNEL_MASK);
+#endif
+#endif
+
     /* configure pins as outputs */
     PWM_DDR = PWM_CHANNEL_MASK;
+
+#if CONFIG_SECONDARY_PWM
+    PWM2_DDR = PWM2_CHANNEL_MASK;
+#endif
 
     /* initialize timer 1 */
 
@@ -618,6 +632,9 @@ ISR(SIG_OUTPUT_COMPARE1A)
     if (pwm.new_cycle) {
         /* output initial values */
         PWM_PORT = (PWM_PORT & ~(PWM_CHANNEL_MASK)) | pwm.next_bitmask;
+#if CONFIG_SECONDARY_PWM
+        PWM2_PORT = (PWM2_PORT & ~(PWM2_CHANNEL_MASK)) | (pwm.next_bitmask << PWM2_SHIFT);
+#endif
 
         /* if next timeslot would happen too fast or has already happened, just spinlock */
         while (TCNT1 + 500 > pwm.slots[pwm.index].top)
@@ -627,6 +644,9 @@ ISR(SIG_OUTPUT_COMPARE1A)
 
             /* output value */
             PWM_PORT = (PWM_PORT & ~(PWM_CHANNEL_MASK)) | pwm.slots[pwm.index].mask;
+#if CONFIG_SECONDARY_PWM
+            PWM2_PORT = (PWM2_PORT & ~(PWM2_CHANNEL_MASK)) | (pwm.slots[pwm.index].mask << PWM2_SHIFT);
+#endif
 
             /* we can safely increment index here, since we are in the first timeslot and there
              * will always be at least one timeslot after this (middle) */
@@ -645,6 +665,9 @@ ISR(SIG_OUTPUT_COMPARE1B)
 {
     /* normal interrupt, output pre-calculated bitmask */
     PWM_PORT = (PWM_PORT & ~(PWM_CHANNEL_MASK)) | pwm.next_bitmask;
+#if CONFIG_SECONDARY_PWM
+    PWM2_PORT = (PWM2_PORT & ~(PWM2_CHANNEL_MASK)) | (pwm.next_bitmask << PWM2_SHIFT);
+#endif
 
     /* and calculate the next timeslot */
     prepare_next_timeslot();
