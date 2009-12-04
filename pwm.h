@@ -46,7 +46,7 @@ struct global_pwm_t
     uint8_t fade_step[PWM_CHANNELS];
 };
 
-extern volatile struct global_pwm_t global_pwm;
+extern struct global_pwm_t global_pwm;
 
 /* prototypes */
 void pwm_init(void);

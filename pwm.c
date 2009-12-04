@@ -109,11 +109,11 @@ static const uint16_t timeslot_table[] PROGMEM =
 
 /* pwm timeslots (the top values and masks for the timer1 interrupt) */
 static struct timeslots_t pwm;
-volatile struct global_pwm_t global_pwm;
+struct global_pwm_t global_pwm;
 
 /* FUNCTIONS AND INTERRUPTS */
 /* prototypes */
-void update_pwm_timeslots(void);
+void update_pwm_timeslots(struct rgb_color_t *target);
 void update_rgb(uint8_t c);
 
 /* initialize pwm hardware and structures */
@@ -168,7 +168,7 @@ void pwm_init(void)
     }
 
     /* calculate initial timeslots */
-    update_pwm_timeslots();
+    update_pwm_timeslots(&global_pwm.current);
 
     /* disable fading timers */
     fading.running = 0;
@@ -181,7 +181,7 @@ void pwm_poll(void)
     if (fading.pwm_last_pulse) {
         fading.pwm_last_pulse = 0;
 
-        update_pwm_timeslots();
+        update_pwm_timeslots(&global_pwm.current);
     }
 }
 
@@ -217,7 +217,7 @@ void pwm_poll_fading(void)
 }
 
 /** update pwm timeslot table */
-void update_pwm_timeslots(void)
+void update_pwm_timeslots(struct rgb_color_t *target)
 {
     uint8_t sorted[PWM_CHANNELS];
     for (uint8_t i = 0; i < PWM_CHANNELS; i++)
@@ -226,7 +226,7 @@ void update_pwm_timeslots(void)
     /* sort channels according to the current brightness */
     for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
         for (uint8_t j = i+1; j < PWM_CHANNELS; j++) {
-            if (global_pwm.current.rgb[sorted[j]] < global_pwm.current.rgb[sorted[i]]) {
+            if (target->rgb[sorted[j]] < target->rgb[sorted[i]]) {
                 uint8_t temp;
 
                 temp = sorted[i];
