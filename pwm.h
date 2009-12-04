@@ -27,9 +27,6 @@
 #include "timer.h"
 #include "color.h"
 
-/* possible pwm interrupts in a pwm cycle */
-#define PWM_MAX_TIMESLOTS (PWM_CHANNELS+1)
-
 #if PWM_CHANNELS != 3
 #error "PWM_CHANNELS is not 3, this is unsupported!"
 #endif

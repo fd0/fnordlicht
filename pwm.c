@@ -35,6 +35,8 @@
 
 /* TYPES AND PROTOTYPES */
 
+#define PWM_MAX_TIMESLOTS (PWM_CHANNELS+1)
+
 /* encapsulates all pwm data including timeslot and output mask array */
 struct timeslots_t
 {
