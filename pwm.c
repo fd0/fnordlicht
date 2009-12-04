@@ -35,41 +35,41 @@
 
 /* TYPES AND PROTOTYPES */
 
-#define PWM_MAX_TIMESLOTS (PWM_CHANNELS+1)
+#define PWM_MAX_TIMESLOTS (2*(PWM_CHANNELS+2))
 
 /* encapsulates all pwm data including timeslot and output mask array */
+enum timeslot_type_t
+{
+    TS_FIRST = 0,
+    TS_NORMAL = 1,
+    TS_LAST = 2,
+};
+
+struct timeslot_t
+{
+    enum timeslot_type_t type;
+    uint8_t mask;
+    uint16_t top;
+};
+
 struct timeslots_t
 {
-    struct {
-        uint8_t mask;
-        uint16_t top;
-    } slots[PWM_MAX_TIMESLOTS];
+    /* store timslots in a queue */
+    struct timeslot_t slot[PWM_MAX_TIMESLOTS];
 
-    uint8_t index;  /* current timeslot index in the 'slots' array */
-    uint8_t count;  /* number of entries in slots */
-    uint8_t next_bitmask; /* next output bitmask */
-    uint8_t new_cycle; /* set for the first or middle interrupt in a pwm cycle */
+    uint8_t read;   /* current read head in 'slot' array */
+    uint8_t write;  /* current write head in 'slot' array */
 };
 
 /* internal data for the fading engine */
 struct fading_engine_t
 {
-    /* set by pwm interrupt after last interrupt in the current cycle, signals
-     * the main loop to rebuild the pwm timslot table */
-    uint8_t pwm_last_pulse;
-
     /* a timer for each channel */
     timer_t timer[PWM_CHANNELS];
 
     /* and a bitmask, which stands for 'timer is running' */
     uint8_t running;
 };
-
-static inline void prepare_next_timeslot(void);
-
-/* GLOBAL VARIABLES */
-
-struct fading_engine_t fading;
 
 /* timer top values for 256 brightness levels (stored in flash) */
 static const uint16_t timeslot_table[] PROGMEM =
@@ -107,14 +107,22 @@ static const uint16_t timeslot_table[] PROGMEM =
   50331, 51282, 52236, 53195, 54158, 55124, 56095, 57069,
   58047, 59030, 60016, 61006, 62000, 62998 };
 
-/* pwm timeslots (the top values and masks for the timer1 interrupt) */
-static struct timeslots_t pwm;
+/* GLOBAL VARIABLES */
 struct global_pwm_t global_pwm;
+static struct timeslots_t timeslots;
+static struct fading_engine_t fading;
+
+/* next output bitmask and type */
+static volatile uint8_t pwm_next_bitmask;
 
 /* FUNCTIONS AND INTERRUPTS */
 /* prototypes */
 void update_pwm_timeslots(struct rgb_color_t *target);
 void update_rgb(uint8_t c);
+void enqueue_timeslot(enum timeslot_type_t type, uint8_t mask, uint16_t top);
+void dequeue_timeslot(struct timeslot_t *d);
+void update_last_timeslot(uint8_t mask, enum timeslot_type_t type);
+uint8_t timeslots_fill(void);
 
 /* initialize pwm hardware and structures */
 void pwm_init(void)
@@ -166,9 +174,17 @@ void pwm_init(void)
         global_pwm.fade_delay[i] = 1;
         global_pwm.fade_step[i] = 1;
     }
+    timeslots.read = 0;
+    timeslots.write = 0;
 
-    /* calculate initial timeslots */
+    /* calculate initial timeslots (2 times) */
     update_pwm_timeslots(&global_pwm.current);
+    update_pwm_timeslots(&global_pwm.current);
+
+    /* set initial timeslot */
+    struct timeslot_t t;
+    dequeue_timeslot(&t);
+    pwm_next_bitmask = t.mask;
 
     /* disable fading timers */
     fading.running = 0;
@@ -177,12 +193,9 @@ void pwm_init(void)
 /* prepare new timeslots */
 void pwm_poll(void)
 {
-    /* after the last pwm timeslot, rebuild the timeslot table */
-    if (fading.pwm_last_pulse) {
-        fading.pwm_last_pulse = 0;
-
+    /* refill timeslots queue */
+    while (timeslots_fill() < (PWM_MAX_TIMESLOTS-PWM_CHANNELS-2))
         update_pwm_timeslots(&global_pwm.current);
-    }
 }
 
 /* update color values for current fading */
@@ -216,7 +229,7 @@ void pwm_poll_fading(void)
     }
 }
 
-/** update pwm timeslot table */
+/** update pwm timeslot table (for target color) */
 void update_pwm_timeslots(struct rgb_color_t *target)
 {
     uint8_t sorted[PWM_CHANNELS];
@@ -237,82 +250,78 @@ void update_pwm_timeslots(struct rgb_color_t *target)
     }
 
     /* calculate initial bitmask */
+    uint8_t initial_bitmask;
 #ifdef PWM_INVERTED
-    pwm.next_bitmask = PWM_CHANNEL_MASK;
+    initial_bitmask = PWM_CHANNEL_MASK;
 #else
-    pwm.next_bitmask = 0;
+    initial_bitmask = 0;
 #endif
 
     uint8_t chanmask = 1;
     for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
-        if (global_pwm.current.rgb[i] > 0) {
+        if (target->rgb[i] > 0) {
 #ifdef PWM_INVERTED
-            pwm.next_bitmask &= ~chanmask;
+            initial_bitmask &= ~chanmask;
 #else
-            pwm.next_bitmask |= chanmask;
+            initial_bitmask |= chanmask;
 #endif
         }
 
         chanmask <<= 1;
     }
 
-    /* timeslot index */
-    uint8_t j = 0;
+    /* insert first timeslot */
+    enqueue_timeslot(TS_FIRST, initial_bitmask, 65000);
 
     /* calculate timeslots and masks */
-    uint8_t mask = pwm.next_bitmask;
+    uint8_t mask = initial_bitmask;
     uint8_t last_brightness = 0;
     for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
+        uint8_t brightness = target->rgb[sorted[i]];
 
-        /* check if a timeslot is needed */
-        if (global_pwm.current.rgb[sorted[i]] > 0 && global_pwm.current.rgb[sorted[i]] < 255) {
-            /* if the next timeslot will be after the middle of the pwm cycle, insert the middle interrupt */
-            if (last_brightness < 181 && global_pwm.current.rgb[sorted[i]] >= 181) {
-                /* middle interrupt: top 65k and mask 0xff */
-                pwm.slots[j].top = 65000;
-                j++;
-            }
+        /* if color is off or max, process next color */
+        if (brightness == 0 || brightness == 255)
+            continue;
 
-            /* insert new timeslot if brightness is new */
-            if (global_pwm.current.rgb[sorted[i]] > last_brightness) {
+        /* check if current timeslot would happen after the middle interrupt */
+        if (last_brightness < 181 && brightness >= 181) {
+            /* insert middle interrupt */
 
-                /* remember mask and brightness for next timeslot */
-#ifdef PWM_INVERTED
-                mask |= _BV(sorted[i]);
-#else
-                mask &= ~_BV(sorted[i]);
-#endif
-                last_brightness = global_pwm.current.rgb[sorted[i]];
+            enqueue_timeslot(TS_NORMAL, mask, 65000);
+        }
 
-                /* allocate new timeslot */
-                pwm.slots[j].top = pgm_read_word(&timeslot_table[global_pwm.current.rgb[sorted[i]] - 1 ]);
-                pwm.slots[j].mask = mask;
-                j++;
-            } else {
-                /* change mask of last-inserted timeslot */
-#ifdef PWM_INVERTED
-                mask |= _BV(sorted[i]);
-#else
-                mask &= ~_BV(sorted[i]);
-#endif
-                pwm.slots[j-1].mask = mask;
-            }
+        /* if brightness is new, allocate a new timeslot */
+        if (brightness > last_brightness) {
+
+            /* update mask and last_brightness */
+            last_brightness = brightness;
+            #ifdef PWM_INVERTED
+            mask |= _BV(sorted[i]);
+            #else
+            mask &= ~_BV(sorted[i]);
+            #endif
+
+            /* save timeslot */
+            uint16_t top = pgm_read_word(&timeslot_table[target->rgb[sorted[i]] - 1 ]);
+            enqueue_timeslot(TS_NORMAL, mask, top);
+        } else {
+            /* just update mask of last timeslot */
+            #ifdef PWM_INVERTED
+            mask |= _BV(sorted[i]);
+            #else
+            mask &= ~_BV(sorted[i]);
+            #endif
+
+            update_last_timeslot(mask, TS_NORMAL);
         }
     }
 
     /* if all interrupts happen before the middle interrupt, insert it here */
-    if (last_brightness < 181) {
-        /* middle interrupt: top 65k and mask off */
-        pwm.slots[j].top = 65000;
-        j++;
-    }
-
-    /* reset pwm structure */
-    pwm.index = 0;
-    pwm.count = j;
-
-    /* next interrupt is the first in a cycle, so set the new_cycle to 1 */
-    pwm.new_cycle = 1;
+    if (last_brightness < 181)
+        enqueue_timeslot(TS_LAST, mask, 65000);
+    /* else mark the last inserted interrupt */
+    else
+        update_last_timeslot(mask, TS_LAST);
 }
 
 /** fade any channels not already at their target brightness */
@@ -341,23 +350,43 @@ void update_rgb(uint8_t c)
     }
 }
 
-/** prepare next timeslot */
-static inline void prepare_next_timeslot(void)
+/* timeslot queue handling */
+void enqueue_timeslot(enum timeslot_type_t type, uint8_t mask, uint16_t top)
 {
-    /* check if this is the last interrupt */
-    if (pwm.index >= pwm.count) {
-        /* select first timeslot and trigger timeslot rebuild */
-        pwm.index = 0;
-        fading.pwm_last_pulse = 1;
-        OCR1B = 65000;
-    } else {
-        /* load new top and bitmask */
-        OCR1B = pwm.slots[pwm.index].top;
-        pwm.next_bitmask = pwm.slots[pwm.index].mask;
+    struct timeslot_t *t = &timeslots.slot[timeslots.write];
+    t->type = type;
+    t->mask = mask;
+    t->top = top;
+    timeslots.write = (timeslots.write + 1) % PWM_MAX_TIMESLOTS;
+}
 
-        /* select next timeslot */
-        pwm.index++;
-    }
+void dequeue_timeslot(struct timeslot_t *d)
+{
+    struct timeslot_t *t = &timeslots.slot[timeslots.read];
+    d->type = t->type;
+    d->mask = t->mask;
+    d->top = t->top;
+    timeslots.read = (timeslots.read + 1) % PWM_MAX_TIMESLOTS;
+}
+
+void update_last_timeslot(uint8_t mask, enum timeslot_type_t type)
+{
+    uint8_t i;
+    if (timeslots.write > 0)
+        i = timeslots.write-1;
+    else
+        i = PWM_MAX_TIMESLOTS-1;
+
+    timeslots.slot[i].mask = mask;
+    timeslots.slot[i].type = type;
+}
+
+uint8_t timeslots_fill(void)
+{
+    if (timeslots.write >= timeslots.read)
+        return timeslots.write - timeslots.read;
+    else
+        return PWM_MAX_TIMESLOTS - (timeslots.read - timeslots.write);
 }
 
 /* convert hsv to rgb color
@@ -632,47 +661,36 @@ void pwm_modify_hsv(struct hsv_color_offset_t *color, uint8_t step, uint8_t dela
 /** timer1 overflow (=output compare a) interrupt */
 ISR(SIG_OUTPUT_COMPARE1A)
 {
-    /* decide if this interrupt is the beginning of a pwm cycle */
-    if (pwm.new_cycle) {
-        /* output initial values */
-        PWM_PORT = (PWM_PORT & ~(PWM_CHANNEL_MASK)) | pwm.next_bitmask;
-#if CONFIG_SECONDARY_PWM
-        PWM2_PORT = (PWM2_PORT & ~(PWM2_CHANNEL_MASK)) | (pwm.next_bitmask << PWM2_SHIFT);
-#endif
+    /* output new values */
+    PWM_PORT = (PWM_PORT & ~(PWM_CHANNEL_MASK)) | pwm_next_bitmask;
+    #if CONFIG_SECONDARY_PWM
+    PWM2_PORT = (PWM2_PORT & ~(PWM2_CHANNEL_MASK)) | (pwm_next_bitmask << PWM2_SHIFT);
+    #endif
 
-        /* if next timeslot would happen too fast or has already happened, just spinlock */
-        while (TCNT1 + 500 > pwm.slots[pwm.index].top)
-        {
-            /* spin until timer interrupt is near enough */
-            while (pwm.slots[pwm.index].top > TCNT1);
+    /* prepare next interrupt */
+    struct timeslot_t t;
+    dequeue_timeslot(&t);
 
-            /* output value */
-            PWM_PORT = (PWM_PORT & ~(PWM_CHANNEL_MASK)) | pwm.slots[pwm.index].mask;
-#if CONFIG_SECONDARY_PWM
-            PWM2_PORT = (PWM2_PORT & ~(PWM2_CHANNEL_MASK)) | (pwm.slots[pwm.index].mask << PWM2_SHIFT);
-#endif
+    /* if next timeslot would happen too fast or has already happened, just spinlock */
+    while (TCNT1 + 100 > t.top)
+    {
+        /* spin until timer interrupt is near enough */
+        while (t.top > TCNT1);
 
-            /* we can safely increment index here, since we are in the first timeslot and there
-             * will always be at least one timeslot after this (middle) */
-            pwm.index++;
-        }
+        /* output new values */
+        PWM_PORT = (PWM_PORT & ~(PWM_CHANNEL_MASK)) | t.mask;
+        #if CONFIG_SECONDARY_PWM
+        PWM2_PORT = (PWM2_PORT & ~(PWM2_CHANNEL_MASK)) | (t.mask << PWM2_SHIFT);
+        #endif
 
-        pwm.new_cycle = 0;
+        /* load next timeslot */
+        dequeue_timeslot(&t);
     }
 
-    /* prepare the next timeslot */
-    prepare_next_timeslot();
+    /* save values for next interrupt */
+    OCR1B = t.top;
+    pwm_next_bitmask = t.mask;
 }
 
 /** timer1 output compare b interrupt */
-ISR(SIG_OUTPUT_COMPARE1B)
-{
-    /* normal interrupt, output pre-calculated bitmask */
-    PWM_PORT = (PWM_PORT & ~(PWM_CHANNEL_MASK)) | pwm.next_bitmask;
-#if CONFIG_SECONDARY_PWM
-    PWM2_PORT = (PWM2_PORT & ~(PWM2_CHANNEL_MASK)) | (pwm.next_bitmask << PWM2_SHIFT);
-#endif
-
-    /* and calculate the next timeslot */
-    prepare_next_timeslot();
-}
+ISR(SIG_OUTPUT_COMPARE1B, ISR_ALIASOF(SIG_OUTPUT_COMPARE1A));
