@@ -219,7 +219,9 @@ void pwm_poll_fading(void)
 /** update pwm timeslot table */
 void update_pwm_timeslots(void)
 {
-    uint8_t sorted[PWM_CHANNELS] = { 0, 1, 2 };
+    uint8_t sorted[PWM_CHANNELS];
+    for (uint8_t i = 0; i < PWM_CHANNELS; i++)
+        sorted[i] = i;
 
     /* sort channels according to the current brightness */
     for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
