@@ -100,6 +100,7 @@
 #define PWM_PORT B
 #define PWM_CHANNELS 3
 #define PWM_CHANNEL_MASK (_BV(PB0) | _BV(PB1) | _BV(PB2))
+#define PWM_SHIFT 0
 
 /* use PD5-PD7 as secondary PWM pins */
 #define PWM2_PORT D

@@ -667,7 +667,7 @@ void pwm_modify_hsv(struct hsv_color_offset_t *color, uint8_t step, uint8_t dela
 ISR(SIG_OUTPUT_COMPARE1A)
 {
     /* output new values */
-    P_PORT = (P_PORT & ~(PWM_CHANNEL_MASK)) | pwm_next_bitmask;
+    P_PORT = (P_PORT & ~(PWM_CHANNEL_MASK)) | (pwm_next_bitmask << PWM_SHIFT);
     #if CONFIG_SECONDARY_PWM
     P2_PORT = (P2_PORT & ~(PWM2_CHANNEL_MASK)) | (pwm_next_bitmask << PWM2_SHIFT);
     #endif
@@ -683,7 +683,7 @@ ISR(SIG_OUTPUT_COMPARE1A)
         while (t.top > TCNT1);
 
         /* output new values */
-        P_PORT = (P_PORT & ~(PWM_CHANNEL_MASK)) | t.mask;
+        P_PORT = (P_PORT & ~(PWM_CHANNEL_MASK)) | (t.mask << PWM_SHIFT);
         #if CONFIG_SECONDARY_PWM
         P2_PORT = (P2_PORT & ~(PWM2_CHANNEL_MASK)) | (t.mask << PWM2_SHIFT);
         #endif
