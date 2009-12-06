@@ -96,13 +96,13 @@
 /* fifo size should be a power of 2 and below 128 */
 #define CONFIG_FIFO_SIZE 64
 
-/* number of pwm channels */
+/* configure primary pwm pins (MUST be three successive pins in a port) */
 #define PWM_PORT B
 #define PWM_CHANNELS 3
 #define PWM_CHANNEL_MASK (_BV(PB0) | _BV(PB1) | _BV(PB2))
 #define PWM_SHIFT 0
 
-/* use PD5-PD7 as secondary PWM pins */
+/* configure secondary pwm pins (MUST be three successive pins in a port) */
 #define PWM2_PORT D
 #define PWM2_CHANNEL_MASK (_BV(PD5) | _BV(PD6) | _BV(PD7))
 #define PWM2_SHIFT 5
