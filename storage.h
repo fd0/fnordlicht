@@ -44,7 +44,7 @@ struct storage_color_t
 #define EEPROM_MAGIC_BYTE 0x23
 
 /* store the startup configuration in EEPROM
- * size: 12 byte */
+ * size: 13 byte */
 struct storage_config_t
 {
     /* magic byte, must match EEPROM_MAGIC_BYTE to mark a valid configuration */
@@ -75,6 +75,8 @@ extern EEMEM struct storage_t eeprom_storage;
 
 /* initialize storage */
 void storage_init(void);
+/* poll storage */
+void storage_poll(void);
 
 /* save storage config cfg to eeprom */
 void storage_save_config(void);

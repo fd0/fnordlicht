@@ -102,5 +102,11 @@ int main(void)
 
         /* update fading */
         pwm_poll_fading();
+
+        /* update pwm */
+        pwm_poll();
+
+        /* process storage requests */
+        storage_poll();
     }
 }

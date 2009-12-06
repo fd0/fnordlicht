@@ -120,4 +120,7 @@
 #define REMOTE_INT_PORT D
 #define REMOTE_INT_PIN PD2
 
+/* configure storage bufer size */
+#define STORAGE_BUFFER_SIZE 13
+
 #endif /* _FNORDLICHT_CONFIG_H */

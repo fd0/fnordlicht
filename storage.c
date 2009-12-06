@@ -21,9 +21,11 @@
  */
 
 #include "storage.h"
+#include "remote.h"
 #include "pt/pt.h"
 #include <avr/eeprom.h>
 #include <util/crc16.h>
+#include <string.h>
 
 /* global structures */
 struct storage_config_t startup_config;
@@ -33,6 +35,18 @@ EEMEM struct storage_t eeprom_storage;
 struct storage_internal_t
 {
     bool eeprom_good;
+
+    /* buffer for nonblocking read/write */
+    uint8_t buf[STORAGE_BUFFER_SIZE];
+    uint8_t index;
+    uint8_t *address;
+    uint8_t bytes_remaining;
+    struct pt thread;
+
+    enum {
+        STORAGE_IDLE = 0,
+        STORAGE_WRITE = 1,
+    } state;
 };
 
 static struct storage_internal_t storage;
@@ -55,14 +69,69 @@ void storage_init(void)
     uint16_t checksum2 = eeprom_read_word(&eeprom_storage.checksum);
     storage.eeprom_good = (checksum1 == checksum2);
     storage_load_config();
+
+    /* initialize state structure */
+    storage.state = STORAGE_IDLE;
+    PT_INIT(&storage.thread);
+}
+
+static PT_THREAD(storage_thread(struct pt *thread))
+{
+    PT_BEGIN(thread);
+
+    while (1) {
+        if (storage.state == STORAGE_WRITE) {
+            /* pull int line */
+            remote_pull_int();
+
+            /* write data */
+            while (storage.bytes_remaining--) {
+                eeprom_write_byte(storage.address++, storage.buf[storage.index++]);
+
+                while (!eeprom_is_ready())
+                    PT_YIELD(thread);
+            }
+
+            /* update checksum */
+            eeprom_write_word(&eeprom_storage.checksum, eeprom_checksum());
+            while (!eeprom_is_ready())
+                PT_YIELD(thread);
+
+            /* release int line */
+            remote_release_int();
+
+            storage.state = STORAGE_IDLE;
+        }
+
+        PT_YIELD(thread);
+    }
+
+    PT_END(thread);
+}
+
+void storage_poll(void)
+{
+    /* call storage thread */
+    if (storage.state != STORAGE_IDLE)
+        PT_SCHEDULE(storage_thread(&storage.thread));
 }
 
 void storage_save_config(void)
 {
+    if (storage.state != STORAGE_IDLE)
+        return;
+
     /* set magic byte and save startup_config to EEPROM */
     startup_config.magic = EEPROM_MAGIC_BYTE;
-    eeprom_write_block(&startup_config, &eeprom_storage.config, sizeof(struct storage_config_t));
-    eeprom_write_word(&eeprom_storage.checksum, eeprom_checksum());
+
+    /* copy data to buffer */
+    memcpy(&storage.buf[0], &startup_config, sizeof(struct storage_config_t));
+    /* set address and bytes_remaining */
+    storage.index = 0;
+    storage.bytes_remaining = sizeof(struct storage_config_t);
+    storage.address = (uint8_t *)&eeprom_storage.config;
+    /* start write */
+    storage.state = STORAGE_WRITE;
 
     /* reset magic config and mark EEPROM as good */
     startup_config.magic = 0;
@@ -80,10 +149,17 @@ void storage_load_config(void)
 
 void storage_save_color(uint8_t position, struct storage_color_t *color)
 {
-    eeprom_write_block(color, &eeprom_storage.color[position], sizeof(struct storage_color_t));
-    while(!eeprom_is_ready());
-    eeprom_write_word(&eeprom_storage.checksum, eeprom_checksum());
-    while(!eeprom_is_ready());
+    if (storage.state != STORAGE_IDLE)
+        return;
+
+    /* copy data to buffer */
+    memcpy(&storage.buf[0], color, sizeof(struct storage_color_t));
+    /* set address and bytes_remaining */
+    storage.index = 0;
+    storage.bytes_remaining = sizeof(struct storage_color_t);
+    storage.address = (uint8_t *)&eeprom_storage.color[position];
+    /* start write */
+    storage.state = STORAGE_WRITE;
 }
 
 void storage_load_color(uint8_t position, struct storage_color_t *color)
