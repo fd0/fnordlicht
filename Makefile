@@ -92,7 +92,7 @@ all: $(TARGET).hex
 
 # create config.mk (if it does not exist yet)
 $(CURDIR)/config.mk:
-	@cp config.mk.template config.mk
+	@$(CP) config.mk.template config.mk
 	@echo "===================================================="
 	@echo "created file $@"
 	@echo "please tune your settings there!"
@@ -140,17 +140,18 @@ AVRDUDE_FLAGS += -p $(AVRDUDE_MCU)
 $(TARGET).elf: $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
-# all objects (.o files)
-$(OBJECTS): $(HEADERS)
+# all objects (.o files) and config.mk
+$(OBJECTS): $(HEADERS) config.mk
 
 # remove all compiled files
 clean:
 	$(RM) $(foreach ext,elf hex eep.hex map,$(TARGET).$(ext)) \
 		$(foreach file,$(patsubst %.o,%,$(OBJECTS)),$(foreach ext,o lst lss,$(file).$(ext)))
 
-# additionally remove the dependency makefile
+# additionally remove the dependency makefile and config.mk
 distclean: clean
 	$(RMDIR) .dep
+	$(RM) config.mk
 
 # avrdude-related targets
 install program: program-$(TARGET)
