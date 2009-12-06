@@ -316,19 +316,17 @@ command |   function        | description
     --------------------------------------------------
 
       Configure what a device should perform after power-up.  Mode is an
-      unsigned 8 bit integer, selecting the desired startup mode.  Values which
-      are not necessary for the selected mode should be treated as don't care
-      values (ie set to zero).
+      unsigned 8 bit integer, selecting the desired startup mode.
 
       Two different modes can be configured:
 
-       * PROGRAM (mode == 0):
+       * NOTHING (mode == 0):
+                Do nothing after startup (ie do not show any color, stay black)
+
+       * PROGRAM (mode == 1):
                 Start a static program compiled into the firmware, using the
                 following 10 bytes as parameters for the program (for details
                 see section "Static Programs").
-
-       * STATIC_COLOR (mode == 1):
-                Fade to a specified (rgb) color, using step and delay for fading
 
       If startup mode is PROGRAM, the CONFIGURE_STARTUP packet is constructed in
       this way (for the program indexes and meaning of the parameters see
@@ -336,22 +334,9 @@ command |   function        | description
 
       byte offset | name       |  description
       ------------------------------------
-                2 | mode       | desired startup mode (0 in this case)
+                2 | mode       | desired startup mode (1 in this case)
                 3 | program    | static program index
              4-14 | parameters | parameters to configured program
-
-      If startup mode is STATIC_COLOR, the CONFIGURE_STARTUP packet is
-      constructed as follows:
-
-      byte offset | name       |  description
-      ------------------------------------
-                2 | mode       | desired startup mode (1 in this case)
-                3 | step       | step for fading
-                4 | delay      | delay for fading
-                5 | red        | red
-                6 | green      | green
-                7 | blue       | blue
-             8-14 | -          | don't care
 
 
 

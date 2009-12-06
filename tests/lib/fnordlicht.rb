@@ -145,8 +145,21 @@ module Fnordlicht
         $dev.flush
     end
 
+    def config_startup_nothing(addr)
+        mode = 0 # do nothing
+
+        $dev.write addr.chr
+        $dev.write "\x0D"
+        $dev.write mode.chr
+
+        $dev.write "\x00\x00"
+        $dev.write "\x00\x00\x00\x00\x00"
+        $dev.write "\x00\x00\x00\x00\x00"
+        $dev.flush
+    end
+
     def config_startup_program(addr, program, params)
-        mode = 0 # start program
+        mode = 1 # start program
 
         $dev.write addr.chr
         $dev.write "\x0D"
@@ -161,22 +174,6 @@ module Fnordlicht
         1.upto(rest) do
             $dev.write("\x00")
         end
-        $dev.flush
-    end
-
-    def config_startup_static(addr, step, delay, r, g, b)
-        mode = 1 # static color
-
-        $dev.write addr.chr
-        $dev.write "\x0D"
-        $dev.write mode.chr
-
-        $dev.write step.chr
-        $dev.write delay.chr
-        $dev.write r.chr
-        $dev.write g.chr
-        $dev.write b.chr
-        $dev.write("\x00\x00\x00\x00\x00\x00\x00")
         $dev.flush
     end
 

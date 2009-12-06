@@ -43,17 +43,9 @@ static void startup(void)
     if (storage_valid_config()) {
 
         /* read default mode from storage */
-        switch (startup_config.startup_mode) {
-
-            case STARTUP_PROGRAM:
-                /* start program */
-                script_start(0, startup_config.params.program, (union program_params_t *)startup_config.params.program_parameters);
-                break;
-
-            case STARTUP_STATIC:
-                /* fade to target color */
-                pwm_fade_rgb(&startup_config.params.color, startup_config.params.step, startup_config.params.delay);
-                break;
+        if (startup_config.startup_mode == STARTUP_PROGRAM) {
+            /* start program */
+            script_start(0, startup_config.params.program, (union program_params_t *)startup_config.params.program_parameters);
         }
     } else {
         /* start default program */

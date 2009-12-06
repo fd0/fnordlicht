@@ -43,8 +43,8 @@
 
 #define REMOTE_CMD_RESYNC           0x1b
 
-/* max mode for startup configuration is 2 */
-#define REMOTE_STARTUP_MAX_MODE     2
+/* max mode for startup configuration is 1 */
+#define REMOTE_STARTUP_MAX_MODE     1
 /* maximum parameter size (for copy loop), size of structure storage_config_t,
  * minus 1 for startup_mode enum */
 #define REMOTE_STARTUP_MAX_PARAMSIZE 11
@@ -157,8 +157,8 @@ struct remote_msg_pull_int_t
 
 enum startup_mode_t
 {
-    STARTUP_PROGRAM = 0,
-    STARTUP_STATIC = 1,
+    STARTUP_NOTHING = 0,
+    STARTUP_PROGRAM = 1,
 };
 
 union startup_parameters_t
