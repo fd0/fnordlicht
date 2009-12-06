@@ -24,10 +24,19 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <stdint.h>
+
 /* macros for extracting low and high byte */
 #define LO8(x) (uint8_t)(0x00ff & (x))
 #define HI8(x) (uint8_t)((0xff00 & (x)) >> 8)
 
+/* macros for concatenating PORT, PIN and DDR */
+#define _CONCAT(a, b)            a ## b
+#define _OUTPORT(name)           _CONCAT(PORT, name)
+#define _INPORT(name)            _CONCAT(PIN, name)
+#define _DDRPORT(name)           _CONCAT(DDR, name)
+
+/* structure for accessing bytes and words in an uint32_t */
 union uint32_t_access {
     uint8_t bytes[4];
     uint16_t words[2];
