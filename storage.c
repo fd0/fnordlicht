@@ -72,7 +72,7 @@ void storage_save_config(void)
 void storage_load_config(void)
 {
     if (!storage.eeprom_good)
-        return false;
+        return;
 
     /* load config */
     eeprom_read_block(&startup_config, &eeprom_storage.config, sizeof(struct storage_config_t));
