@@ -26,6 +26,7 @@
 
 #include <avr/version.h>
 #include "config.h"
+#include "common.h"
 
 /* check for avr-libc version */
 #if __AVR_LIBC_VERSION__ < 10600UL
@@ -115,5 +116,9 @@
 
 /* define default supported number of tasks */
 #define CONFIG_SCRIPT_TASKS 1
+
+/* configure INT line for remote */
+#define REMOTE_INT_PORT D
+#define REMOTE_INT_PIN PD2
 
 #endif /* _FNORDLICHT_CONFIG_H */

@@ -32,9 +32,17 @@
 #include "remote-proto.h"
 #include "common.h"
 #include "storage.h"
+#include "timer.h"
+
+/* abbreviations for port, ddr and pin */
+#define R_PORT _OUTPORT(REMOTE_INT_PORT)
+#define R_DDR _DDRPORT(REMOTE_INT_PORT)
+#define R_PIN _INPORT(REMOTE_INT_PORT)
+#define INTPIN REMOTE_INT_PIN
 
 struct remote_state_t
 {
+    /* serial communication */
     union {
         struct remote_msg_t msg;
         uint8_t buf[REMOTE_MSG_LEN];
@@ -45,6 +53,13 @@ struct remote_state_t
     uint8_t synced;
     uint8_t address;
     struct pt thread;
+
+    /* int line */
+    timer_t int_timer;
+    enum {
+        INT_IDLE = 0,
+        INT_PULLED = 1,
+    } int_state;
 };
 
 struct remote_state_t remote;
@@ -79,6 +94,11 @@ void remote_init(void)
     global_remote.offsets.hue = 0;
     global_remote.offsets.saturation = 255;
     global_remote.offsets.value = 255;
+
+    /* initialize pin, tri-state */
+    R_DDR &= ~_BV(INTPIN);
+    R_PORT &= ~_BV(INTPIN);
+    remote.int_state = INT_IDLE;
 }
 
 uint8_t remote_address(void)
@@ -183,6 +203,14 @@ void remote_poll(void)
 
     if (remote.synced)
         PT_SCHEDULE(remote_thread(&remote.thread));
+
+    /* check int timer */
+    if (remote.int_state == INT_PULLED && timer_expired(&remote.int_timer)) {
+        /* reset pin to tri-state */
+        R_DDR &= ~_BV(INTPIN);
+        R_PORT &= ~_BV(INTPIN);
+        remote.int_state = INT_IDLE;
+    }
 }
 
 /* static helper functions */
@@ -333,7 +361,17 @@ void parse_modify_current(struct remote_msg_modify_current_t *msg)
 
 void parse_pull_int(struct remote_msg_pull_int_t *msg)
 {
+    /* pull pin to ground */
+    R_DDR |= _BV(INTPIN);
+    R_PORT &= ~_BV(INTPIN);
 
+    /* start timer, minimum delay 10ms */
+    if (msg->delay == 0)
+        msg->delay = 1;
+    timer_set(&remote.int_timer, msg->delay);
+
+    /* remember state */
+    remote.int_state = INT_PULLED;
 }
 
 void parse_config_startup(struct remote_msg_config_startup_t *msg)
