@@ -22,7 +22,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "config.h"
+#include "globals.h"
 #include "remote.h"
 #include "fifo.h"
 #include "uart.h"

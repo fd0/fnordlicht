@@ -23,7 +23,7 @@
 
 #include <stdint.h>
 /* for PWM_CHANNELS */
-#include "config.h"
+#include "globals.h"
 
 #ifndef COLOR_H
 #define COLOR_H

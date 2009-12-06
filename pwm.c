@@ -22,7 +22,7 @@
  */
 
 /* includes */
-#include "config.h"
+#include "globals.h"
 
 #include <avr/io.h>
 #include <stdint.h>

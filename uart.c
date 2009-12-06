@@ -21,7 +21,7 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config.h"
+#include "globals.h"
 
 #if CONFIG_SERIAL
 

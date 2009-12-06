@@ -24,7 +24,7 @@
 #define __SCRIPT_H
 
 #include <stdint.h>
-#include "config.h"
+#include "globals.h"
 #include "pt/pt.h"
 #include "timer.h"
 #include "static_programs.h"

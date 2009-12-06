@@ -22,7 +22,7 @@
 
 #include <avr/pgmspace.h>
 #include <string.h>
-#include "config.h"
+#include "globals.h"
 #include "script.h"
 #include "static_programs.h"
 #include "pwm.h"

@@ -26,7 +26,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "config.h"
+#include "globals.h"
 
 typedef uint8_t fifo_content_t;
 typedef uint8_t fifo_size_t;

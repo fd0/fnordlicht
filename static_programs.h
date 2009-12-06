@@ -24,7 +24,7 @@
 #define __STATIC_PROGRAMS_H
 
 #include <stdint.h>
-#include "config.h"
+#include "globals.h"
 #include "pt/pt.h"
 
 struct process_t;

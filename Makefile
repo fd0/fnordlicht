@@ -44,7 +44,17 @@ INCLUDES =
 DEBUG = 0
 
 # default static color program
-SCRIPT_DEFAULT = 0
+CONFIG_SCRIPT_DEFAULT = 0
+# include the script interpreter
+CONFIG_SCRIPT = 1
+# include uart support
+CONFIG_SERIAL = 1
+# include remote command support (needs uart)
+CONFIG_REMOTE = 1
+# secondary pwm output
+CONFIG_SECONDARY_PWM = 1
+# default baudrate
+CONFIG_SERIAL_BAUDRATE = 19200
 
 # avrdude programmer protocol
 PROG = usbasp
@@ -53,7 +63,10 @@ DEV = usb
 # further flags for avrdude
 AVRDUDE_FLAGS =
 
-CFLAGS += -DHARDWARE_$(HARDWARE)=1 -DCONFIG_SCRIPT_DEFAULT=$(SCRIPT_DEFAULT)
+CFLAGS += -DHARDWARE_$(HARDWARE)=1 -DCONFIG_SCRIPT_DEFAULT=$(CONFIG_SCRIPT_DEFAULT)
+CFLAGS += -DCONFIG_SCRIPT=$(CONFIG_SCRIPT) -DCONFIG_SERIAL=$(CONFIG_SERIAL)
+CFLAGS += -DCONFIG_REMOTE=$(CONFIG_REMOTE) -DCONFIG_SECONDARY_PWM=$(CONFIG_SECONDARY_PWM)
+CFLAGS += -DCONFIG_SERIAL_BAUDRATE=$(CONFIG_SERIAL_BAUDRATE)
 
 ####################################################
 # 'make' configuration

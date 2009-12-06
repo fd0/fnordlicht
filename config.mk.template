@@ -17,7 +17,7 @@
 # possible values:
 # - 0   -- colorwheel   (default)
 # - 1   -- random colors
-#SCRIPT_DEFAULT = 0
+#CONFIG_SCRIPT_DEFAULT = 0
 
 ###################################################################
 # PROGRAMMER
@@ -41,3 +41,22 @@
 
 # use more debug-flags when compiling
 #DEBUG = 1
+
+###################################################################
+# FIRMWARE CONFIGURATION
+#
+
+# include the script interpreter
+#CONFIG_SCRIPT = 1
+
+# include uart support
+#CONFIG_SERIAL = 1
+
+# include remote command support (needs uart)
+#CONFIG_REMOTE = 1
+
+# secondary pwm output
+#CONFIG_SECONDARY_PWM = 1
+
+# default baudrate
+#CONFIG_SERIAL_BAUDRATE = 19200

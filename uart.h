@@ -24,7 +24,7 @@
 #ifndef UART_H
 #define UART_H
 
-#include "config.h"
+#include "globals.h"
 #include "fifo.h"
 
 #if !CONFIG_SERIAL
