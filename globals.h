@@ -44,7 +44,6 @@
 
 /* cpu specific configuration registers */
 #if defined(__AVR_ATmega8__)
-#define _ATMEGA8
 
 #define _TIMSK_TIMER1 TIMSK
 #define _UCSRB_UART0 UCSRB
@@ -76,7 +75,6 @@
 #define UDR0 UDR
 
 #elif defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__)
-#define _ATMEGA88
 
 #define _TIMSK_TIMER1 TIMSK1
 #define _UCSRB_UART0 UCSR0B

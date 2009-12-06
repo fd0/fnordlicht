@@ -29,10 +29,20 @@ static volatile uint8_t internal_counter;
 
 void timer_init(void)
 {
+#if defined(__AVR_ATmega8__)
     /* initialize timer2, CTC at 10ms, prescaler 1024 */
     OCR2 = F_CPU/1024/100;
     TCCR2 = _BV(WGM21) | _BV(CS22) | _BV(CS21) | _BV(CS20);
     TIMSK |= _BV(OCIE2);
+#elif defined(__AVR_ATmega48__) || defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__)
+    /* initialize timer2, CTC at 10ms, prescaler 1024 */
+    OCR2A = F_CPU/1024/100;
+    TCCR2A = _BV(WGM21);
+    TCCR2B = _BV(CS22) | _BV(CS21) | _BV(CS20);
+    TIMSK2 = _BV(OCIE2A);
+#else
+#error "unknown controller, unable to initialize timer2"
+#endif
 }
 
 void timer_set(timer_t *t, uint8_t timeout)
@@ -57,7 +67,12 @@ bool timer_expired(timer_t *t)
 }
 
 /* timer interrupt function */
-ISR(TIMER2_COMP_vect, ISR_NOBLOCK)
-{
+#if defined(__AVR_ATmega8__)
+ISR(TIMER2_COMP_vect, ISR_NOBLOCK) {
     internal_counter++;
 }
+#elif defined(__AVR_ATmega48__) || defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__)
+ISR(TIMER2_COMPA_vect, ISR_NOBLOCK) {
+    internal_counter++;
+}
+#endif

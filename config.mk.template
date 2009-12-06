@@ -34,6 +34,12 @@
 
 ###################################################################
 # controller
+#
+# possible values:
+# - atmega8
+# - atmega88
+# - atmega168
+#
 #MCU = atmega8
 
 # frequency
