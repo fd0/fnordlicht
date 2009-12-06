@@ -97,15 +97,13 @@
 #define CONFIG_FIFO_SIZE 64
 
 /* number of pwm channels */
+#define PWM_PORT B
 #define PWM_CHANNELS 3
 #define PWM_CHANNEL_MASK (_BV(PB0) | _BV(PB1) | _BV(PB2))
-#define PWM_DDR DDRB
-#define PWM_PORT PORTB
 
 /* use PD5-PD7 as secondary PWM pins */
+#define PWM2_PORT D
 #define PWM2_CHANNEL_MASK (_BV(PD5) | _BV(PD6) | _BV(PD7))
-#define PWM2_DDR DDRD
-#define PWM2_PORT PORTD
 #define PWM2_SHIFT 5
 
 /* configure maximal static program parameter size */

@@ -33,8 +33,13 @@
 #include "pwm.h"
 #include "timer.h"
 
-/* TYPES AND PROTOTYPES */
+/* abbreviations for port, ddr and pin */
+#define P_PORT _OUTPORT(PWM_PORT)
+#define P_DDR _DDRPORT(PWM_PORT)
+#define P2_PORT _OUTPORT(PWM2_PORT)
+#define P2_DDR _DDRPORT(PWM2_PORT)
 
+/* TYPES AND PROTOTYPES */
 #define PWM_MAX_TIMESLOTS (2*(PWM_CHANNELS+2))
 
 /* encapsulates all pwm data including timeslot and output mask array */
@@ -131,27 +136,27 @@ void pwm_init(void)
 
 #ifdef PWM_INVERTED
     /* set all pins high -> leds off */
-    PWM_PORT |= PWM_CHANNEL_MASK;
+    P_PORT |= PWM_CHANNEL_MASK;
 #else
     /* set all pins low -> leds off */
-    PWM_PORT &= ~(PWM_CHANNEL_MASK);
+    P_PORT &= ~(PWM_CHANNEL_MASK);
 #endif
 
 #if CONFIG_SECONDARY_PWM
 #ifdef PWM_INVERTED
     /* set all pins high -> leds off */
-    PWM2_PORT |= PWM2_CHANNEL_MASK;
+    P2_PORT |= PWM2_CHANNEL_MASK;
 #else
     /* set all pins low -> leds off */
-    PWM2_PORT &= ~(PWM2_CHANNEL_MASK);
+    P2_PORT &= ~(PWM2_CHANNEL_MASK);
 #endif
 #endif
 
     /* configure pins as outputs */
-    PWM_DDR = PWM_CHANNEL_MASK;
+    P_DDR = PWM_CHANNEL_MASK;
 
 #if CONFIG_SECONDARY_PWM
-    PWM2_DDR = PWM2_CHANNEL_MASK;
+    P2_DDR = PWM2_CHANNEL_MASK;
 #endif
 
     /* initialize timer 1 */
@@ -662,9 +667,9 @@ void pwm_modify_hsv(struct hsv_color_offset_t *color, uint8_t step, uint8_t dela
 ISR(SIG_OUTPUT_COMPARE1A)
 {
     /* output new values */
-    PWM_PORT = (PWM_PORT & ~(PWM_CHANNEL_MASK)) | pwm_next_bitmask;
+    P_PORT = (P_PORT & ~(PWM_CHANNEL_MASK)) | pwm_next_bitmask;
     #if CONFIG_SECONDARY_PWM
-    PWM2_PORT = (PWM2_PORT & ~(PWM2_CHANNEL_MASK)) | (pwm_next_bitmask << PWM2_SHIFT);
+    P2_PORT = (P2_PORT & ~(PWM2_CHANNEL_MASK)) | (pwm_next_bitmask << PWM2_SHIFT);
     #endif
 
     /* prepare next interrupt */
@@ -678,9 +683,9 @@ ISR(SIG_OUTPUT_COMPARE1A)
         while (t.top > TCNT1);
 
         /* output new values */
-        PWM_PORT = (PWM_PORT & ~(PWM_CHANNEL_MASK)) | t.mask;
+        P_PORT = (P_PORT & ~(PWM_CHANNEL_MASK)) | t.mask;
         #if CONFIG_SECONDARY_PWM
-        PWM2_PORT = (PWM2_PORT & ~(PWM2_CHANNEL_MASK)) | (t.mask << PWM2_SHIFT);
+        P2_PORT = (P2_PORT & ~(PWM2_CHANNEL_MASK)) | (t.mask << PWM2_SHIFT);
         #endif
 
         /* load next timeslot */
