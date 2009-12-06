@@ -59,6 +59,7 @@ struct remote_state_t
     enum {
         INT_IDLE = 0,
         INT_PULLED = 1,
+        INT_PULLED_TIMER = 2,
     } int_state;
 };
 
@@ -205,12 +206,30 @@ void remote_poll(void)
         PT_SCHEDULE(remote_thread(&remote.thread));
 
     /* check int timer */
-    if (remote.int_state == INT_PULLED && timer_expired(&remote.int_timer)) {
-        /* reset pin to tri-state */
-        R_DDR &= ~_BV(INTPIN);
-        R_PORT &= ~_BV(INTPIN);
-        remote.int_state = INT_IDLE;
+    if (remote.int_state == INT_PULLED_TIMER && timer_expired(&remote.int_timer)) {
+        remote_release_int();
     }
+}
+
+void remote_pull_int(void)
+{
+    if (remote.int_state != INT_IDLE)
+        return;
+
+    /* pull int pin to ground */
+    R_DDR |= _BV(INTPIN);
+    R_PORT &= ~_BV(INTPIN);
+}
+
+void remote_release_int(void)
+{
+    if (remote.int_state == INT_IDLE)
+        return;
+
+    /* reset pin to tri-state */
+    R_DDR &= ~_BV(INTPIN);
+    R_PORT &= ~_BV(INTPIN);
+    remote.int_state = INT_IDLE;
 }
 
 /* static helper functions */
@@ -362,8 +381,7 @@ void parse_modify_current(struct remote_msg_modify_current_t *msg)
 void parse_pull_int(struct remote_msg_pull_int_t *msg)
 {
     /* pull pin to ground */
-    R_DDR |= _BV(INTPIN);
-    R_PORT &= ~_BV(INTPIN);
+    remote_pull_int();
 
     /* start timer, minimum delay 10ms */
     if (msg->delay == 0)
@@ -371,7 +389,7 @@ void parse_pull_int(struct remote_msg_pull_int_t *msg)
     timer_set(&remote.int_timer, msg->delay);
 
     /* remember state */
-    remote.int_state = INT_PULLED;
+    remote.int_state = INT_PULLED_TIMER;
 }
 
 void parse_config_startup(struct remote_msg_config_startup_t *msg)

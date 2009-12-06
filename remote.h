@@ -53,5 +53,8 @@ void remote_init(void);
 void remote_poll(void);
 uint8_t remote_address(void);
 
+void remote_pull_int(void);
+void remote_release_int(void);
+
 #endif
 #endif
