@@ -81,7 +81,7 @@ PT_THREAD(program_random(struct process_t *process))
         uint16_t address = remote_address();
         seed ^= address;
     }
-    srandom(process->params.random.seed);
+    srandom(seed);
 
     static struct hsv_color_t c;
     c.value = process->params.random.value;
