@@ -92,10 +92,11 @@ PT_THREAD(program_random(struct process_t *process))
         rnd.words[0] %= 360;
 
         /* check for minimal color distance, regenerate random if not */
-        if (process->params.random.min_distance) {
-            if (c.hue > rnd.words[0] && c.hue - rnd.words[0] < process->params.random.min_distance)
+        uint8_t distance = process->params.random.min_distance;
+        if (distance) {
+            if (c.hue > rnd.words[0] && c.hue - rnd.words[0] < distance)
                 continue;
-            if (c.hue < rnd.words[0] && rnd.words[0] - c.hue < process->params.random.min_distance)
+            if (c.hue < rnd.words[0] && rnd.words[0] - c.hue < distance)
                 continue;
         }
 
