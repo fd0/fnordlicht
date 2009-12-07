@@ -651,10 +651,12 @@ void pwm_modify_hsv(struct hsv_color_offset_t *color, uint8_t step, uint8_t dela
 /** timer1 overflow (=output compare a) interrupt */
 ISR(SIG_OUTPUT_COMPARE1A)
 {
+    /* read next_bitmask */
+    uint8_t next_bitmask = pwm_next_bitmask;
     /* output new values */
-    P_PORT = (P_PORT & ~(PWM_CHANNEL_MASK)) | (pwm_next_bitmask << PWM_SHIFT);
+    P_PORT = (P_PORT & ~(PWM_CHANNEL_MASK)) | (next_bitmask << PWM_SHIFT);
     #if CONFIG_SECONDARY_PWM
-    P2_PORT = (P2_PORT & ~(PWM2_CHANNEL_MASK)) | (pwm_next_bitmask << PWM2_SHIFT);
+    P2_PORT = (P2_PORT & ~(PWM2_CHANNEL_MASK)) | (next_bitmask << PWM2_SHIFT);
     #endif
 
     /* prepare next interrupt */
