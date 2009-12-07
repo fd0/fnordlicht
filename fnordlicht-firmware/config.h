@@ -74,6 +74,12 @@
     #define PWM_INVERTED
     #endif
 
+    /* disable secondary pwm for old fnordlicht hardware */
+    #if defined(CONFIG_SECONDARY_PWM) && CONFIG_SECONDARY_PWM
+    #undef CONFIG_SECONDARY_PWM
+    #define CONFIG_SECONDARY_PWM 0
+    #endif
+
 #elif defined(HARDWARE_fnordlichtmini)
     /* specific settings for fnordlichtmini hardware */
 
