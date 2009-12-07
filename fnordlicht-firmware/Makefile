@@ -89,9 +89,13 @@ DEPFLAGS = -MD -MP -MF .dep/$(@F).d
 # flags for the compiler (for .c files)
 CFLAGS += -g -Os -mmcu=$(MCU) -DF_CPU=$(F_CPU) -std=gnu99 -fshort-enums $(DEPFLAGS)
 CFLAGS += $(addprefix -I,$(INCLUDES))
+# optimize for size
+CFLAGS += -mcall-prologues
+
 # flags for the compiler (for .S files)
 ASFLAGS += -g -mmcu=$(MCU) -DF_CPU=$(F_CPU) -x assembler-with-cpp $(DEPFLAGS)
 ASFLAGS += $(addprefix -I,$(INCLUDES))
+
 # flags for the linker
 LDFLAGS += -mmcu=$(MCU)
 
