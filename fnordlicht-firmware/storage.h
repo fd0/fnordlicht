@@ -49,9 +49,8 @@ struct storage_config_t
 {
     /* magic byte, must match EEPROM_MAGIC_BYTE to mark a valid configuration */
     uint8_t magic;
-    enum startup_mode_t startup_mode;
-    /* startup parameters, defined in remote_proto.h, size: 11 byte */
-    union startup_parameters_t params;
+    /* startup parameters, defined in remote_proto.h, size: 12 byte */
+    struct startup_parameters_t params;
 };
 
 /* storage structure for EEPROM

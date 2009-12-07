@@ -161,24 +161,21 @@ enum startup_mode_t
     STARTUP_PROGRAM = 1,
 };
 
-union startup_parameters_t
+/* startup parameters including mode, size: 12 byte */
+struct startup_parameters_t
 {
-    /* raw access to data, size: 11 byte */
-    uint8_t raw[11];
+    enum startup_mode_t mode;
 
-    /* structure for startup_mode == STARTUP_PROGRAM
-     * size: 11 byte */
-    struct {
-        uint8_t program;
-        uint8_t program_parameters[PROGRAM_PARAMETER_SIZE];
-    };
+    union {
+        /* raw access to data, size: 11 byte */
+        uint8_t raw[11];
 
-    /* structure for startup_mode == STARTUP_STATIC
-     * size: 5 byte */
-    struct {
-        uint8_t step;
-        uint8_t delay;
-        struct rgb_color_t color;
+        /* structure for startup_mode == STARTUP_PROGRAM
+         * size: 11 byte */
+        struct {
+            uint8_t program;
+            uint8_t program_parameters[PROGRAM_PARAMETER_SIZE];
+        };
     };
 };
 
@@ -186,8 +183,7 @@ struct remote_msg_config_startup_t
 {
     uint8_t address;
     uint8_t cmd;
-    enum startup_mode_t mode;
-    union startup_parameters_t params;
+    struct startup_parameters_t params;
 };
 
 /* bootloader commands */

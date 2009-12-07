@@ -42,8 +42,8 @@ static void startup(void)
     /* if configuration is valid */
     if (storage_valid_config()) {
 
-        /* read default mode from storage */
-        if (startup_config.startup_mode == STARTUP_PROGRAM) {
+        /* read default mode from storage (do nothing if mode is invalid) */
+        if (startup_config.params.mode == STARTUP_PROGRAM) {
             /* start program */
             script_start(0, startup_config.params.program, (union program_params_t *)startup_config.params.program_parameters);
         }
