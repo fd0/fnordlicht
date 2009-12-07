@@ -12,5 +12,5 @@ $dev = SerialPort.new("/dev/ttyUSB0", 19200)
 puts "sending sync sequence"
 sync()
 
-puts "configure startup: program colorwheel (fast, start with yellow)"
+puts "configure startup: do nothing"
 config_startup_nothing(255)
