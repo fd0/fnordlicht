@@ -1,0 +1,28 @@
+fnordlicht and fnordlichtmini firmware
+======================================
+
+This is the firmware sourcecode for different hardware devices, namely:
+* fnordlicht            (for details see [1])
+* fnordlichtmini        (for details see [2])
+* fnordlicht-controller (for details see [3])
+
+Directory layout
+================
+
+This repository consists of several different subdirectories:
+
+bugs/                               files for the ditz[3] issue tracking system
+doc/                                further documentation and serial protocol description
+fnordlicht-firmware/                firmware sourcecode for fnordlicht and fnordlichtmini
+fnordlicht-bootloader/              serial bootloader for fnordlicht and fnordlichtmini
+fnordlicht-controller-firmware/     firmware for fnordlicht-controller
+fnordlicht-controller-bootloader/   usb bootloader for fnordlicht-controller
+tests/                              ruby-scripts for testing the serial
+                                    protocol implementation
+
+Links
+=====
+
+[1] http://www.lochraster.org/fnordlicht
+[2] http://www.lochraster.org/fnordlichtmini
+[3] http://ditz.rubyforge.org
