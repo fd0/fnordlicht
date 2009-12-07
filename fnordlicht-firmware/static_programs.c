@@ -42,10 +42,9 @@ PROGMEM program_handler static_programs[] = {
 PT_THREAD(program_colorwheel(struct process_t *process))
 {
     static uint16_t sleep;
+    static struct hsv_color_t c;
 
     PT_BEGIN(&process->pt);
-
-    static struct hsv_color_t c;
 
     c.hue = process->params.colorwheel.hue_start;
     c.value = process->params.colorwheel.value;
@@ -73,6 +72,9 @@ PT_THREAD(program_colorwheel(struct process_t *process))
 
 PT_THREAD(program_random(struct process_t *process))
 {
+    static uint16_t sleep;
+    static struct hsv_color_t c;
+
     PT_BEGIN(&process->pt);
 
     /* initialize random generator */
@@ -83,7 +85,6 @@ PT_THREAD(program_random(struct process_t *process))
     }
     srandom(seed);
 
-    static struct hsv_color_t c;
     c.value = process->params.random.value;
     c.saturation = process->params.random.saturation;
 
@@ -113,8 +114,6 @@ PT_THREAD(program_random(struct process_t *process))
         PT_WAIT_UNTIL(&process->pt, pwm_target_reached());
 
         /* sleep (remember: we are called every 100ms) */
-        static uint16_t sleep;
-
         if (process->params.random.fade_sleep > 0) {
             sleep = process->params.random.fade_sleep;
 
@@ -128,14 +127,14 @@ PT_THREAD(program_random(struct process_t *process))
 
 PT_THREAD(program_replay(struct process_t *process))
 {
-    PT_BEGIN(&process->pt);
-
     static uint8_t pos;
     static enum {
         UP = 0,
         DOWN = 1,
     } direction;
     static struct storage_color_t c;
+
+    PT_BEGIN(&process->pt);
 
     /* reset variables */
     pos = process->params.replay.start;
