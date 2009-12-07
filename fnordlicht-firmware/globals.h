@@ -107,6 +107,9 @@
 #define PWM2_CHANNEL_MASK (_BV(PD5) | _BV(PD6) | _BV(PD7))
 #define PWM2_SHIFT 5
 
+/* min brightness level */
+#define PWM_MIN_BRIGHTNESS 10
+
 /* configure maximal static program parameter size */
 #define PROGRAM_PARAMETER_SIZE 10
 

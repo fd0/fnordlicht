@@ -256,7 +256,7 @@ void update_pwm_timeslots(struct rgb_color_t *target)
 
     uint8_t chanmask = 1;
     for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
-        if (target->rgb[i] > 0) {
+        if (target->rgb[i] > PWM_MIN_BRIGHTNESS) {
 #ifdef PWM_INVERTED
             initial_bitmask &= ~chanmask;
 #else
@@ -276,8 +276,8 @@ void update_pwm_timeslots(struct rgb_color_t *target)
     for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
         uint8_t brightness = target->rgb[sorted[i]];
 
-        /* if color is off or max, process next color */
-        if (brightness == 0 || brightness == 255)
+        /* if color is (nearly off) or max, process next color */
+        if (brightness <= PWM_MIN_BRIGHTNESS || brightness == 255)
             continue;
 
         /* check if current timeslot would happen after the middle interrupt */
