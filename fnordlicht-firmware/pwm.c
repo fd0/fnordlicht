@@ -43,16 +43,8 @@
 #define PWM_MAX_TIMESLOTS (2*(PWM_CHANNELS+2))
 
 /* encapsulates all pwm data including timeslot and output mask array */
-enum timeslot_type_t
-{
-    TS_FIRST = 0,
-    TS_NORMAL = 1,
-    TS_LAST = 2,
-};
-
 struct timeslot_t
 {
-    enum timeslot_type_t type;
     uint8_t mask;
     uint16_t top;
 };
@@ -117,16 +109,16 @@ struct global_pwm_t global_pwm;
 static struct timeslots_t timeslots;
 static struct fading_engine_t fading;
 
-/* next output bitmask and type */
+/* next output bitmask */
 static volatile uint8_t pwm_next_bitmask;
 
 /* FUNCTIONS AND INTERRUPTS */
 /* prototypes */
 void update_pwm_timeslots(struct rgb_color_t *target);
 void update_rgb(uint8_t c);
-void enqueue_timeslot(enum timeslot_type_t type, uint8_t mask, uint16_t top);
+void enqueue_timeslot(uint8_t mask, uint16_t top);
 void dequeue_timeslot(struct timeslot_t *d);
-void update_last_timeslot(uint8_t mask, enum timeslot_type_t type);
+void update_last_timeslot(uint8_t mask);
 uint8_t timeslots_fill(void);
 
 /* initialize pwm hardware and structures */
@@ -276,7 +268,7 @@ void update_pwm_timeslots(struct rgb_color_t *target)
     }
 
     /* insert first timeslot */
-    enqueue_timeslot(TS_FIRST, initial_bitmask, 65000);
+    enqueue_timeslot(initial_bitmask, 65000);
 
     /* calculate timeslots and masks */
     uint8_t mask = initial_bitmask;
@@ -290,9 +282,8 @@ void update_pwm_timeslots(struct rgb_color_t *target)
 
         /* check if current timeslot would happen after the middle interrupt */
         if (last_brightness < 181 && brightness >= 181) {
-            /* insert middle interrupt */
-
-            enqueue_timeslot(TS_NORMAL, mask, 65000);
+            /* insert (normal) middle interrupt */
+            enqueue_timeslot(mask, 65000);
         }
 
         /* if brightness is new, allocate a new timeslot */
@@ -306,9 +297,9 @@ void update_pwm_timeslots(struct rgb_color_t *target)
             mask &= ~_BV(sorted[i]);
             #endif
 
-            /* save timeslot */
+            /* save (normal) timeslot */
             uint16_t top = pgm_read_word(&timeslot_table[target->rgb[sorted[i]] - 1 ]);
-            enqueue_timeslot(TS_NORMAL, mask, top);
+            enqueue_timeslot(mask, top);
         } else {
             /* just update mask of last timeslot */
             #ifdef PWM_INVERTED
@@ -317,16 +308,13 @@ void update_pwm_timeslots(struct rgb_color_t *target)
             mask &= ~_BV(sorted[i]);
             #endif
 
-            update_last_timeslot(mask, TS_NORMAL);
+            update_last_timeslot(mask);
         }
     }
 
     /* if all interrupts happen before the middle interrupt, insert it here */
     if (last_brightness < 181)
-        enqueue_timeslot(TS_LAST, mask, 65000);
-    /* else mark the last inserted interrupt */
-    else
-        update_last_timeslot(mask, TS_LAST);
+        enqueue_timeslot(mask, 65000);
 }
 
 /** fade any channels not already at their target brightness */
@@ -356,10 +344,9 @@ void update_rgb(uint8_t c)
 }
 
 /* timeslot queue handling */
-void enqueue_timeslot(enum timeslot_type_t type, uint8_t mask, uint16_t top)
+void enqueue_timeslot(uint8_t mask, uint16_t top)
 {
     struct timeslot_t *t = &timeslots.slot[timeslots.write];
-    t->type = type;
     t->mask = mask;
     t->top = top;
     timeslots.write = (timeslots.write + 1) % PWM_MAX_TIMESLOTS;
@@ -368,13 +355,12 @@ void enqueue_timeslot(enum timeslot_type_t type, uint8_t mask, uint16_t top)
 void dequeue_timeslot(struct timeslot_t *d)
 {
     struct timeslot_t *t = &timeslots.slot[timeslots.read];
-    d->type = t->type;
     d->mask = t->mask;
     d->top = t->top;
     timeslots.read = (timeslots.read + 1) % PWM_MAX_TIMESLOTS;
 }
 
-void update_last_timeslot(uint8_t mask, enum timeslot_type_t type)
+void update_last_timeslot(uint8_t mask)
 {
     uint8_t i;
     if (timeslots.write > 0)
@@ -383,7 +369,6 @@ void update_last_timeslot(uint8_t mask, enum timeslot_type_t type)
         i = PWM_MAX_TIMESLOTS-1;
 
     timeslots.slot[i].mask = mask;
-    timeslots.slot[i].type = type;
 }
 
 uint8_t timeslots_fill(void)
