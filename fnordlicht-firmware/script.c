@@ -131,6 +131,9 @@ void script_start(uint8_t task, uint8_t index, union program_params_t *params)
 
     /* enable script */
     global_script.tasks[task].enable = 1;
+
+    /* reset timer */
+    timer_set(&global_script.timer, 10);
 }
 
 #endif
