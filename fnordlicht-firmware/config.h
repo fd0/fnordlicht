@@ -67,9 +67,18 @@
 #define CONFIG_SERIAL_BAUDRATE 19200
 #endif
 
-/* configure normal or inverted pwm */
-#if !defined(PWM_INVERTED) && defined(HARDWARE_fnordlicht)
-#define PWM_INVERTED
+/* check if hardware is valid */
+#if defined(HARDWARE_fnordlicht)
+    /* specific settings for old fnordlicht hardware */
+    #if !defined(PWM_INVERTED)
+    #define PWM_INVERTED
+    #endif
+
+#elif defined(HARDWARE_fnordlichtmini)
+    /* specific settings for fnordlichtmini hardware */
+
+#else
+#error "unknown HARDWARE platform!"
 #endif
 
 #endif /* _FNORDLICHT_CONFIG_H */

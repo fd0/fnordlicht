@@ -8,7 +8,7 @@
 # HARDWARE PLATFORM TYPE
 #
 # possible values:
-# - fnordlicht -- original fnordlicht hardware     (default)
+# - fnordlicht -- original fnordlicht hardware
 # - fnordlichtmini -- fnordlichtmini hardware
 #HARDWARE = fnordlicht
 

@@ -8,10 +8,11 @@
 # under version control.
 # Just run 'make' to create a "config.mk" with the default settings
 
-# hardware type, possible values:
+# hardware type, possible values (default is unset):
+# ATTENTION: please configure in config.mk, this is just included here for reference!
 # - fnordlicht -- original fnordlicht hardware
 # - fnordlichtmini -- fnordlichtmini hardware
-HARDWARE = fnordlicht
+#HARDWARE = fnordlicht
 
 # controller
 MCU = atmega8
@@ -108,8 +109,10 @@ $(CURDIR)/config.mk:
 	@$(CP) config.mk.template config.mk
 	@echo "===================================================="
 	@echo "created file $@"
-	@echo "please tune your settings there!"
+	@echo 'please tune your settings (especially $$HARDWARE)'
+	@echo "there, then run 'make' again"
 	@echo "===================================================="
+	@exit 1
 
 # include config file
 -include $(CURDIR)/config.mk
@@ -148,10 +151,17 @@ AVRDUDE_FLAGS += -p $(AVRDUDE_MCU)
 # make targets
 ####################################################
 
-.PHONY: clean distclean avrdude-terminal
+.PHONY: hardware-check clean distclean avrdude-terminal
 
-$(TARGET).elf: $(OBJECTS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+# check if HARDWARE is set
+hardware-check:
+ifeq ($(HARDWARE),)
+	@echo 'please edit config.mk and set $$HARDWARE'
+	@exit 1
+endif
+
+$(TARGET).elf: hardware-check $(OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS)
 
 # all objects (.o files) and config.mk
 $(OBJECTS): $(HEADERS) config.mk
