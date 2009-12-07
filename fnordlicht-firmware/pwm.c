@@ -145,10 +145,10 @@ void pwm_init(void)
 #endif
 
     /* configure pins as outputs */
-    P_DDR = PWM_CHANNEL_MASK;
+    P_DDR |= PWM_CHANNEL_MASK;
 
 #if CONFIG_SECONDARY_PWM
-    P2_DDR = PWM2_CHANNEL_MASK;
+    P2_DDR |= PWM2_CHANNEL_MASK;
 #endif
 
     /* initialize timer 1 */
