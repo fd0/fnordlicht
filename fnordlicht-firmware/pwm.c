@@ -227,7 +227,7 @@ void pwm_poll_fading(void)
 /** update pwm timeslot table (for target color) */
 void update_pwm_timeslots(struct rgb_color_t *target)
 {
-    uint8_t sorted[PWM_CHANNELS];
+    static uint8_t sorted[PWM_CHANNELS];
     for (uint8_t i = 0; i < PWM_CHANNELS; i++)
         sorted[i] = i;
 
