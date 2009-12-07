@@ -4,7 +4,7 @@ desc: |-
   output the pwm signal on the three different external pins
   (for fnordlichtmini-hardware on PD5-PD7)
 type: :feature
-component: fnordlicht
+component: fnordlicht/firmware
 release: "0.3"
 reporter: Alexander Neumann <alexander@bumpern.de>
 status: :closed

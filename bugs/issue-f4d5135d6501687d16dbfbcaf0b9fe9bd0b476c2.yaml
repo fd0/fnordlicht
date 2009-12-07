@@ -2,7 +2,7 @@
 title: add code to configure and use the watchdog
 desc: ""
 type: :feature
-component: fnordlicht
+component: fnordlicht/firmware
 release: "0.3"
 reporter: Alexander Neumann <alexander@bumpern.de>
 status: :unstarted

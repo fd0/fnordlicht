@@ -2,7 +2,7 @@
 title: pwm smoothing
 desc: implement fix-comma addition in pwm module, so that fading is done more smoothly
 type: :feature
-component: fnordlicht
+component: fnordlicht/firmware
 release: 
 reporter: Alexander Neumann <alexander@bumpern.de>
 status: :unstarted

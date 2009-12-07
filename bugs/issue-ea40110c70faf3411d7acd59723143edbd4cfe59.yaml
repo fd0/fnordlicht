@@ -2,7 +2,7 @@
 title: document static programs in doc/PROTOCOL
 desc: ""
 type: :task
-component: fnordlicht
+component: fnordlicht/firmware
 release: "0.3"
 reporter: Alexander Neumann <alexander@bumpern.de>
 status: :closed

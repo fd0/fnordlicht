@@ -3,7 +3,13 @@ name: fnordlicht
 version: "0.5"
 components: 
 - !ditz.rubyforge.org,2008-03-06/component 
-  name: fnordlicht
+  name: fnordlicht/firmware
+- !ditz.rubyforge.org,2008-03-06/component 
+  name: fnordlicht/bootloader
+- !ditz.rubyforge.org,2008-03-06/component 
+  name: "fnordlicht-controller/firmware"
+- !ditz.rubyforge.org,2008-03-06/component 
+  name: "fnordlicht-controller/bootloader"
 releases: 
 - !ditz.rubyforge.org,2008-03-06/release 
   name: "0.3"

@@ -2,7 +2,7 @@
 title: implement bootloader
 desc: implement a bootloader which speaks the protocol defined at the end of doc/PROTOCOL
 type: :feature
-component: fnordlicht
+component: fnordlicht/firmware
 release: "0.3"
 reporter: Alexander Neumann <alexander@bumpern.de>
 status: :unstarted
