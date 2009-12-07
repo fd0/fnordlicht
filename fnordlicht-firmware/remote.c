@@ -82,16 +82,7 @@ static void parse_config_startup(struct remote_msg_config_startup_t *msg);
 
 void remote_init(void)
 {
-    /* initialize struct */
-    remote.buflen = 0;
-    remote.sync = 0;
-    remote.synced = 0;
-    global_remote.address = 0;
-
     /* initialize offsets */
-    global_remote.offsets.step = 0;
-    global_remote.offsets.delay = 0;
-    global_remote.offsets.hue = 0;
     global_remote.offsets.saturation = 255;
     global_remote.offsets.value = 255;
 

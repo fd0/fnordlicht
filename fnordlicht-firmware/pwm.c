@@ -171,8 +171,6 @@ void pwm_init(void)
         global_pwm.fade_delay[i] = 1;
         global_pwm.fade_step[i] = 1;
     }
-    timeslots.read = 0;
-    timeslots.write = 0;
 
     /* calculate initial timeslots (2 times) */
     update_pwm_timeslots(&global_pwm.current);
