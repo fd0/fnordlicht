@@ -111,7 +111,8 @@ PT_THREAD(program_random(struct process_t *process))
         pwm_fade_hsv(&c, process->params.random.fade_step, process->params.random.fade_delay);
 
         /* wait until target reached */
-        PT_WAIT_UNTIL(&process->pt, pwm_target_reached());
+        if (process->params.random.wait_for_fade)
+            PT_WAIT_UNTIL(&process->pt, pwm_target_reached());
 
         /* sleep (remember: we are called every 100ms) */
         if (process->params.random.fade_sleep > 0) {

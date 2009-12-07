@@ -499,24 +499,37 @@ compiled into the firmware.
     ---------------------------------
 
     When this program is started, the pseudo-random generator is initialized
-    with the seed value.  If use_address is set, the address of a device is
-    XORed with the seed before initializing the pseudo-random generator, so
-    the random values also depend on the address of the device.
+    with the seed value.  If the use_address-bit within the flags byte is set,
+    the address of a device is XORed with the seed before initializing the
+    pseudo-random generator, so the random values also depend on the address of
+    the device.
 
     In each step, this program generates a new random hue value which is at
     least min_distance away from the current hue value.  Afterwards the device
     fades to the new color (using the generated hue and the configured
     saturation and value from the parameters).  The parameters fade_step and
-    fade_delay are used in each fade.  Afterwards the device sleeps for a
-    configurable amount of time (fade_sleep).
+    fade_delay are used in each fade.  If the wait_for_fade-bit within the
+    flags byte is set, the device waits until the target color is reached.
+    Afterwards the device sleeps for a configurable amount of time (fade_sleep).
+
+        flags (1 byte)
+        --------------
+
+        Bits:
+        MSB         LSB
+        7 6 5 4 3 2 1 0
+        |         | | |
+        |         | | \- use_address -- XOR device address and seed before
+        |         | |    initializing the pseudo random generator
+        |         | \--- wait_for_fade -- wait until the (newly generated)
+        |         |      target color is reached before sleeping
+        \---------+----- reserved
 
         byte offset | name         | description
         ----------------------------------------------------------------------
                 0-1 | seed         | used for initializing the random generator
                     |              |   (unsigned 16 bit integer)
-                  2 | use_address  | XOR the address of the current device
-                    |              | with the seed before initializing the
-                    |              | random generator
+                  2 | flags        | flags
                     |              |   (unsigned 8 bit integer)
                   3 | fade_step    | used for fading to new color
                     |              |   (unsigned 8 bit integer)

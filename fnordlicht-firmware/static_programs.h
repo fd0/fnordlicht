@@ -46,7 +46,9 @@ struct colorwheel_params_t
 struct random_params_t
 {
     uint16_t seed;
-    uint8_t use_address;
+    uint8_t use_address:1;
+    uint8_t wait_for_fade:1;
+    uint8_t reserved:6;
     uint8_t fade_step;
     uint8_t fade_delay;
     uint16_t fade_sleep;
