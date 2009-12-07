@@ -59,12 +59,9 @@ PT_THREAD(program_colorwheel(struct process_t *process))
         PT_WAIT_UNTIL(&process->pt, pwm_target_reached());
 
         /* sleep (remember: we are called every 100ms) */
-        if (process->params.colorwheel.fade_sleep > 0) {
-            sleep = process->params.colorwheel.fade_sleep;
-
-            while (sleep--)
-                PT_YIELD(&process->pt);
-        }
+        sleep = process->params.colorwheel.fade_sleep;
+        while (sleep--)
+            PT_YIELD(&process->pt);
     }
 
     PT_END(&process->pt);
@@ -79,10 +76,8 @@ PT_THREAD(program_random(struct process_t *process))
 
     /* initialize random generator */
     uint16_t seed = process->params.random.seed;
-    if (process->params.random.use_address) {
-        uint16_t address = remote_address();
-        seed ^= address;
-    }
+    if (process->params.random.use_address)
+        seed ^= remote_address();
     srandom(seed);
 
     c.value = process->params.random.value;

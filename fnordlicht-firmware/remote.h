@@ -35,6 +35,7 @@ struct remote_offsets_t
 };
 
 struct global_remote_t {
+    uint8_t address;
     struct remote_offsets_t offsets;
 };
 
@@ -51,7 +52,7 @@ extern struct global_remote_t global_remote;
 
 void remote_init(void);
 void remote_poll(void);
-uint8_t remote_address(void);
+#define remote_address() (global_remote.address)
 
 void remote_pull_int(void);
 void remote_release_int(void);

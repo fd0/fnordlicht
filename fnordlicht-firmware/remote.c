@@ -51,7 +51,6 @@ struct remote_state_t
 
     uint8_t sync;
     uint8_t synced;
-    uint8_t address;
     struct pt thread;
 
     /* int line */
@@ -87,7 +86,7 @@ void remote_init(void)
     remote.buflen = 0;
     remote.sync = 0;
     remote.synced = 0;
-    remote.address = 0;
+    global_remote.address = 0;
 
     /* initialize offsets */
     global_remote.offsets.step = 0;
@@ -102,18 +101,10 @@ void remote_init(void)
     remote.int_state = INT_IDLE;
 }
 
-uint8_t remote_address(void)
-{
-    if (remote.synced)
-        return remote.address;
-    else
-        return 0;
-}
-
 static void remote_parse_msg(struct remote_msg_t *msg)
 {
     /* verify address */
-    if (msg->address != remote.address && msg->address != REMOTE_ADDR_BROADCAST)
+    if (msg->address != global_remote.address && msg->address != REMOTE_ADDR_BROADCAST)
         return;
 
     /* parse command */
@@ -176,7 +167,7 @@ void remote_poll(void)
         /* check if sync sequence has been received before */
         if (remote.sync == REMOTE_SYNC_LEN) {
             /* synced, safe address and send next address to following device */
-            remote.address = data;
+            global_remote.address = data;
             uart_putc(data+1);
 
             /* reset remote buffer */
