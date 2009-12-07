@@ -383,9 +383,16 @@ void parse_pull_int(struct remote_msg_pull_int_t *msg)
     /* pull pin to ground */
     remote_pull_int();
 
-    /* start timer, minimum delay 10ms */
+    /* start timer, minimum delay 50ms */
     if (msg->delay == 0)
         msg->delay = 1;
+
+    /* maximum delay 2550ms */
+    if (msg->delay <= 51)
+        msg->delay *= 5;
+    else
+        msg->delay = 255;
+
     timer_set(&remote.int_timer, msg->delay);
 
     /* remember state */

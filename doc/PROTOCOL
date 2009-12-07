@@ -300,15 +300,15 @@ command |   function        | description
     Command: PULL_INT - pull down INT line (0x0C)
     ---------------------------------------------
 
-      Instruct the adressed device to pull down the INT line (connected to all
-      devices in parallel) for a given amount of time.  This can be efficiently
-      used to determine the number of devices listening to the bus (eg. by
-      binary search).
+      Instruct the adressed device to immediately pull down the INT line
+      (connected to all devices in parallel) for a given amount of time.  This
+      can be efficiently used to determine the number of devices listening to
+      the bus (eg. by binary search).
 
       byte offset | name    |  description
       ---------------------------------
                 2 | delay   | time to wait before releasing the INT line
-                            | (in 10ms)
+                            | (in 50ms, maximum 2550ms, jitter +-10ms)
              3-14 | -       | don't care
 
 

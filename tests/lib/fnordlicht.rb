@@ -177,6 +177,17 @@ module Fnordlicht
         $dev.flush
     end
 
+    def pull_int(addr, delay)
+        $dev.write addr.chr
+        $dev.write "\x0C"
+        $dev.write delay.chr
+
+        $dev.write "\x00\x00"
+        $dev.write "\x00\x00\x00\x00\x00"
+        $dev.write "\x00\x00\x00\x00\x00"
+        $dev.flush
+    end
+
     # secondary functions
     def fade_updown_rgb(addr, r, g, b, step, delay, sleep_time)
         fade_rgb(addr, r, g, b, step, delay)
