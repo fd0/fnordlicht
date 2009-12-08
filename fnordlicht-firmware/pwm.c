@@ -196,21 +196,14 @@ void pwm_poll(void)
 /* update color values for current fading */
 void pwm_poll_fading(void)
 {
-    /* check running timers */
     uint8_t mask = 1;
     for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
+        /* check running timers */
         if ( (fading.running & mask) && timer_expired(&fading.timer[i])) {
             update_rgb(i);
             fading.running &= ~mask;
         }
 
-        /* shift mask */
-        mask <<= 1;
-    }
-
-    /* (re)start timers, if target changed */
-    mask = 1;
-    for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
         /* if timer is not running and current != target, start timer */
         if (!(fading.running & mask)
                 && global_pwm.current.rgb[i] != global_pwm.target.rgb[i]
