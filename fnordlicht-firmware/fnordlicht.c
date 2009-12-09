@@ -23,7 +23,7 @@
 
 /* includes */
 #include "globals.h"
-#include "io.h"
+#include "../common/io.h"
 
 #include <stdint.h>
 #include <avr/interrupt.h>

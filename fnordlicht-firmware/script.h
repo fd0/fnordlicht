@@ -25,7 +25,7 @@
 
 #include <stdint.h>
 #include "globals.h"
-#include "pt/pt.h"
+#include "../common/pt/pt.h"
 #include "timer.h"
 #include "static_programs.h"
 

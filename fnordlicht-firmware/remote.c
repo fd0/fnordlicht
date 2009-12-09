@@ -27,7 +27,7 @@
 #include "fifo.h"
 #include "uart.h"
 #include "pwm.h"
-#include "pt/pt.h"
+#include "../common/pt/pt.h"
 #include "script.h"
 #include "remote-proto.h"
 #include "common.h"

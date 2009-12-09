@@ -17,6 +17,7 @@ fnordlicht-firmware/                firmware sourcecode for fnordlicht and fnord
 fnordlicht-bootloader/              serial bootloader for fnordlicht and fnordlichtmini
 fnordlicht-controller-firmware/     firmware for fnordlicht-controller
 fnordlicht-controller-bootloader/   usb bootloader for fnordlicht-controller
+common/                             common C header files used by all programs
 tests/                              ruby-scripts for testing the serial
                                     protocol implementation
 

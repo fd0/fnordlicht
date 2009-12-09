@@ -22,7 +22,7 @@
 
 #include "storage.h"
 #include "remote.h"
-#include "pt/pt.h"
+#include "../common/pt/pt.h"
 #include <avr/eeprom.h>
 #include <util/crc16.h>
 #include <string.h>

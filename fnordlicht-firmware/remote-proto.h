@@ -23,44 +23,8 @@
 #ifndef __REMOTE_PROTO
 #define __REMOTE_PROTO 1
 
+#include "../common/remote-proto.h"
 #include "color.h"
-
-#define REMOTE_MSG_LEN 15
-#define REMOTE_SYNC_LEN 15
-
-/* normal commands */
-#define REMOTE_CMD_FADE_RGB         0x02
-#define REMOTE_CMD_FADE_HSV         0x03
-#define REMOTE_CMD_SAVE_RGB         0x04
-#define REMOTE_CMD_SAVE_HSV         0x05
-#define REMOTE_CMD_SAVE_CURRENT     0x06
-#define REMOTE_CMD_CONFIG_OFFSETS   0x07
-#define REMOTE_CMD_START_PROGRAM    0x09
-#define REMOTE_CMD_STOP             0x0A
-#define REMOTE_CMD_MODIFY_CURRENT   0x0B
-#define REMOTE_CMD_PULL_INT         0x0C
-#define REMOTE_CMD_CONFIG_STARTUP   0x0D
-
-#define REMOTE_CMD_RESYNC           0x1b
-
-/* max mode for startup configuration is 1 */
-#define REMOTE_STARTUP_MAX_MODE     1
-/* maximum parameter size (for copy loop), size of structure storage_config_t,
- * minus 1 for startup_mode enum */
-#define REMOTE_STARTUP_MAX_PARAMSIZE 11
-
-/* bootloader commands */
-#define REMOTE_CMD_BOOTLOADER       0x80
-
-#define REMOTE_ADDR_BROADCAST 0xff
-
-/* normal commands */
-struct remote_msg_t
-{
-    uint8_t address;
-    uint8_t cmd;
-    uint8_t data[REMOTE_MSG_LEN-2];
-};
 
 struct remote_msg_fade_rgb_t
 {
@@ -184,29 +148,6 @@ struct remote_msg_config_startup_t
     uint8_t address;
     uint8_t cmd;
     struct startup_parameters_t params;
-};
-
-/* bootloader commands */
-enum mem_type_t
-{
-    MEM_FLASH = 0,
-    MEM_EEPROM = 1,
-};
-
-struct remote_msg_boot_config_t
-{
-    uint8_t address;
-    uint8_t cmd;
-    enum mem_type_t mem;
-    uint16_t start_address;
-    uint16_t length;
-};
-
-struct remote_msg_boot_flash_t
-{
-    uint8_t address;
-    uint8_t cmd;
-    uint8_t data[REMOTE_MSG_LEN-2];
 };
 
 #endif

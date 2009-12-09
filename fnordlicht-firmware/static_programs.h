@@ -25,7 +25,7 @@
 
 #include <stdint.h>
 #include "globals.h"
-#include "pt/pt.h"
+#include "../common/pt/pt.h"
 
 struct process_t;
 /* return value is char, see definition of PT_THREAD() */
