@@ -28,6 +28,7 @@
 #include <stdint.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
+#include <avr/wdt.h>
 
 #include "common.h"
 #include "pwm.h"
@@ -56,6 +57,16 @@ static void startup(void)
         global_pwm.target.red = 50;
 #endif
     }
+}
+
+/* NEVER CALL DIRECTLY! */
+void disable_watchdog(void) \
+  __attribute__((naked)) \
+  __attribute__((section(".init3")));
+void disable_watchdog(void)
+{
+    MCUSR = 0;
+    wdt_disable();
 }
 
 /** main function
