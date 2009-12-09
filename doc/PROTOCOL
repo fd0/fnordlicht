@@ -102,7 +102,7 @@ command |   function        | description
    0x27 |                   | RESERVED (sync-sequence)
 
    0x80 | BOOTLOADER        | start bootloader
-   0x81 | BOOT_CONF         | configure bootloader options
+   0x81 | BOOT_CONFIG       | configure bootloader options
    0x82 | BOOT_DATA_INITIAL | initial data packet to bootloader
    0x83 | BOOT_DATA_CONT    | continuation data packet to bootloader
    0x84 | BOOT_CRC_CHECK    | compare check-sum
@@ -358,8 +358,8 @@ command |   function        | description
              6-14 | -       | don't care
 
 
-    Command: BOOT_CONF - configure bootloader options (0x81)
-    --------------------------------------------------------
+    Command: BOOT_CONFIG - configure bootloader options (0x81)
+    ----------------------------------------------------------
 
       Set configuration options of the bootloader.  Currently the only
       options are the start address and the size of the flash buffer.
@@ -410,7 +410,7 @@ command |   function        | description
       previously received data in the data buffer.  If both checksums do not
       match, the boot loader MUST immediately pull down the INT line.
       The INT line must be held down for the time specified in delay and be
-      released afterwards
+      released afterwards.  chksum is a little endian unsigned 16 bit integer.
 
       The CRC calculation uses the polynomial x^16 + x^15 + x^2 + 1 (0xa001)
       and 0xffff as initial value.
