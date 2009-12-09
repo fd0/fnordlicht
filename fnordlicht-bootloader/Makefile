@@ -2,10 +2,17 @@
 # fnordlicht-ng Makefile
 ####################################################
 
-# hardware type, possible values
+# ATTENTION:
+# Any of these variables are overridden with the values from the file
+# "config.mk", you can tune your settings there.  The file "config.mk" is not
+# under version control.
+# Just run 'make' to create a "config.mk" with the default settings
+
+# hardware type, possible values (default is unset):
+# ATTENTION: please configure in config.mk, this is just included here for reference!
 # - fnordlicht -- original fnordlicht hardware
 # - fnordlichtmini -- fnordlichtmini hardware
-HARDWARE = fnordlicht
+#HARDWARE = fnordlicht
 
 # controller
 MCU = atmega8
@@ -35,7 +42,7 @@ INCLUDES =
 
 
 # use more debug-flags when compiling
-DEBUG = 1
+DEBUG = 0
 
 
 # avrdude programmer protocol
@@ -130,15 +137,37 @@ DEPFLAGS = -MD -MP -MF .dep/$(@F).d
 # flags for the compiler (for .c files)
 CFLAGS += -g -Os -mmcu=$(MCU) -DF_CPU=$(F_CPU) -std=gnu99 -fshort-enums $(DEPFLAGS)
 CFLAGS += $(addprefix -I,$(INCLUDES))
+# optimize for size
+#CFLAGS += -mcall-prologues
+#CFLAGS += --param inline-call-cost=2  -finline-limit=3 -fno-inline-small-functions
+#CFLAGS += -Wl,--relax
+#CFLAGS += -fno-split-wide-types
+
 # flags for the compiler (for .S files)
 ASFLAGS += -g -mmcu=$(MCU) -DF_CPU=$(F_CPU) -x assembler-with-cpp $(DEPFLAGS)
 ASFLAGS += $(addprefix -I,$(INCLUDES))
+
 # flags for the linker
 LDFLAGS += -mmcu=$(MCU)
 
 # fill in object files
 OBJECTS += $(SRC:.c=.o)
 OBJECTS += $(ASRC:.S=.o)
+
+.PHONY: all
+
+# main make target (moved up here because of the config.mk target)
+all: $(TARGET).hex
+
+# create config.mk (if it does not exist yet)
+$(CURDIR)/config.mk:
+	@$(CP) config.mk.template config.mk
+	@echo "===================================================="
+	@echo "created file $@"
+	@echo 'please tune your settings (especially $$HARDWARE)'
+	@echo "there, then run 'make' again"
+	@echo "===================================================="
+	@exit 1
 
 # include config file
 -include $(CURDIR)/config.mk
@@ -177,25 +206,30 @@ AVRDUDE_FLAGS += -p $(AVRDUDE_MCU)
 # make targets
 ####################################################
 
-.PHONY: all clean distclean avrdude-terminal
+.PHONY: hardware-check clean distclean avrdude-terminal
 
-# main rule
-all: $(TARGET).hex
+# check if HARDWARE is set
+hardware-check:
+ifeq ($(HARDWARE),)
+	@echo 'please edit config.mk and set $$HARDWARE'
+	@exit 1
+endif
 
-$(TARGET).elf: $(OBJECTS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+$(TARGET).elf: hardware-check $(OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS)
 
-# all objects (.o files)
-$(OBJECTS): $(HEADERS)
+# all objects (.o files) and config.mk
+$(OBJECTS): $(HEADERS) config.mk
 
 # remove all compiled files
 clean:
 	$(RM) $(foreach ext,elf hex eep.hex map,$(TARGET).$(ext)) \
 		$(foreach file,$(patsubst %.o,%,$(OBJECTS)),$(foreach ext,o lst lss,$(file).$(ext)))
 
-# additionally remove the dependency makefile
+# additionally remove the dependency makefile and config.mk
 distclean: clean
 	$(RMDIR) .dep
+	$(RM) config.mk
 
 # avrdude-related targets
 install program: program-$(TARGET)
@@ -225,12 +259,9 @@ program-eeprom-%: %.eep.hex
 %.lss: %.elf
 	$(OBJDUMP) -h -S $< > $@
 
--include $(shell $(MKDIR) .dep 2>/dev/null) $(wildcard .dep/*)
+.PHONY: fuses-atmega8-fnordlichtmini
 
-# fuse targets
-.PHONY: fuses-atmega8-fnordlichtmini lock
 fuses-atmega8-fnordlichtmini:
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U lfuse:w:0xff:m -U hfuse:w:0xda:m
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U lfuse:w:0xff:m -U hfuse:w:0xd9:m
 
-lock:
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U lock:w:0x2f:m
+-include $(shell $(MKDIR) .dep 2>/dev/null) $(wildcard .dep/*)
