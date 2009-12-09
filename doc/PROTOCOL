@@ -362,21 +362,15 @@ command |   function        | description
     ----------------------------------------------------------
 
       Set configuration options of the bootloader.  Currently the only
-      options are the start address and the size of the flash buffer.
+      options is the start address.
 
       Start address is an unsigned 16-bit integer automatically incremented
       by the configured packet size upon each flash command.
 
-      The buffersize field is an unsigned 8-bit integer. It configures the
-      packet size to 2^buffersize. The packet size always has to be a multiple
-      of the maximum page size considering all devices that ought to be
-      flashed.
-
       byte offset | name         |  description
       ---------------------------------
               2-3 | start        | address to flash to
-                4 | buffersize   | packet size (as power of 2)
-             5-14 | -            | don't care
+             4-14 | -            | don't care
 
 
     Command: BOOT_DATA_INITIAL - initial data packet to bootloader (0x82)
