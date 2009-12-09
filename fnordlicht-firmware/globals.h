@@ -26,7 +26,7 @@
 
 #include <avr/version.h>
 #include "config.h"
-#include "common.h"
+#include "../common/common.h"
 
 /* check for avr-libc version */
 #if __AVR_LIBC_VERSION__ < 10600UL

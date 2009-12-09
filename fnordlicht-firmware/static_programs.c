@@ -27,7 +27,7 @@
 #include "pwm.h"
 #include "timer.h"
 #include "remote.h"
-#include "common.h"
+#include "../common/common.h"
 #include "storage.h"
 
 #if CONFIG_SCRIPT

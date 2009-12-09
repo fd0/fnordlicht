@@ -30,7 +30,7 @@
 #include <avr/pgmspace.h>
 #include <avr/wdt.h>
 
-#include "common.h"
+#include "../common/common.h"
 #include "pwm.h"
 #include "uart.h"
 #include "remote.h"

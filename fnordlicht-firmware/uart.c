@@ -29,7 +29,7 @@
 #include <avr/interrupt.h>
 
 #include "globals.h"
-#include "common.h"
+#include "../common/common.h"
 #include "pwm.h"
 #include "fifo.h"
 #include "uart.h"

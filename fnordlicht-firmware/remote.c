@@ -30,7 +30,7 @@
 #include "../common/pt/pt.h"
 #include "script.h"
 #include "remote-proto.h"
-#include "common.h"
+#include "../common/common.h"
 #include "storage.h"
 #include "timer.h"
 

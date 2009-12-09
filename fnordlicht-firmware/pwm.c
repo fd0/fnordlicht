@@ -29,7 +29,7 @@
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 
-#include "common.h"
+#include "../common/common.h"
 #include "pwm.h"
 #include "timer.h"
 
