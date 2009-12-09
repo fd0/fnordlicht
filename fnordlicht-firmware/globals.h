@@ -48,7 +48,9 @@
 
 #define _TIMSK_TIMER1 TIMSK
 #define _UCSRB_UART0 UCSRB
+#define _UCSRA_UART0 UCSRA
 #define _UDRIE_UART0 UDRIE
+#define _RXC_UART0 RXC
 #define _TXEN_UART0 TXEN
 #define _RXEN_UART0 RXEN
 #define _RXCIE_UART0 RXCIE
@@ -78,8 +80,10 @@
 #elif defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__)
 
 #define _TIMSK_TIMER1 TIMSK1
+#define _UCSRA_UART0 UCSR0A
 #define _UCSRB_UART0 UCSR0B
 #define _UDRIE_UART0 UDRIE0
+#define _RXC_UART0 RXC0
 #define _TXEN_UART0 TXEN0
 #define _RXEN_UART0 RXEN0
 #define _RXCIE_UART0 RXCIE0
