@@ -361,31 +361,30 @@ command |   function        | description
     Command: BOOT_CONF - configure bootloader options (0x81)
     --------------------------------------------------------
 
-      Set configuration options of the bootloader.  Currently solely the
-      address where to write the data to and size of data chunks written
-      each round.
+      Set configuration options of the bootloader.  Currently the only
+      options are the start address and the size of the flash buffer.
 
       Start address is an unsigned 16-bit integer automatically incremented
       by the configured packet size upon each flash command.
 
-      Packet size is an unsigned 8-bit integer resembling a power of 2.
-      This is the packet size actually configured is 2^pktsz.  The packet
-      size always has to be a multiple of the maximum page size considering
-      all devices that ought to be flashed.
+      The buffersize field is an unsigned 8-bit integer. It configures the
+      packet size to 2^buffersize. The packet size always has to be a multiple
+      of the maximum page size considering all devices that ought to be
+      flashed.
 
-      byte offset | name    |  description
+      byte offset | name         |  description
       ---------------------------------
-              2-3 | start   | address to flash to
-                4 | pktsz   | packet size (as power of 2)
-             5-14 | -       | don't care
+              2-3 | start        | address to flash to
+                4 | buffersize   | packet size (as power of 2)
+             5-14 | -            | don't care
 
 
     Command: BOOT_DATA_INITIAL - initial data packet to bootloader (0x82)
     ---------------------------------------------------------------------
 
-      Store (initial) data packet (13 data bytes) to the beginning of the
-      flash data buffer.  Further data can be provided using the
-      BOOT_DATA_CONT. command.
+      Store (initial) data packet (13 data bytes) to the beginning of the flash
+      data buffer.  Before this happens, the data buffer will be cleared. Further
+      data can be provided using the BOOT_DATA_CONT.
 
       byte offset | name    |  description
       ---------------------------------
@@ -396,7 +395,8 @@ command |   function        | description
     ------------------------------------------------------------------------
 
       Store continuation data packet (further 13 data bytes) to the end of
-      the flash data buffer.
+      the flash data buffer.  If the buffer is full, additional bytes will
+      be ignored.
 
       byte offset | name    |  description
       ---------------------------------
@@ -407,13 +407,20 @@ command |   function        | description
     --------------------------------------------------
 
       Compare provided CRC-16 checksum against calculated checksum over
-      previously received data.  If both checksums do not match, immediately
-      pull down the INT line.
+      previously received data in the data buffer.  If both checksums do not
+      match, the boot loader MUST immediately pull down the INT line.
+      The INT line must be held down for the time specified in delay and be
+      released afterwards
+
+      The CRC calculation uses the polynomial x^16 + x^15 + x^2 + 1 (0xa001)
+      and 0xffff as initial value.
 
       byte offset | name    |  description
       ---------------------------------
               2-3 | chksum  | CRC-16 checksum over the data chunk
-             4-14 | -       | don't care
+                4 | delay   | time to wait before releasing the INT line
+                            | (in 50ms, maximum 2550ms, jitter +-10ms)
+             5-14 | -       | don't care
 
 
     Command: BOOT_FLASH - write provided data to flash (0x85)
@@ -438,7 +445,7 @@ command |   function        | description
     Command: BOOT_ENTER_APP - start application (0x86)
     --------------------------------------------------
 
-      Launch application code.
+      Leave bootloader and launch application code.
 
 
       byte offset | name    |  description
