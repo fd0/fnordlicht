@@ -108,8 +108,6 @@ command |   function        | description
    0x84 | BOOT_CRC_CHECK    | compare check-sum
    0x85 | BOOT_FLASH        | write provided data to flash
    0x86 | BOOT_ENTER_APP    | start application
-   0x87 | BOOT_UPDATE_CRC   | update application code checksum
-   0x88 |                   | RESERVED (bootload-sequence)
 
 
     Command: FADE_RGB - set color/fade to color (RGB) (0x02)
@@ -446,21 +444,6 @@ command |   function        | description
       byte offset | name    |  description
       ------------------------------------
              2-14 | -       | don't care
-
-
-    Command: BOOT_UPDATE_CRC - update application code checksum (0x87)
-    ------------------------------------------------------------------
-
-      Write provided application code checksum to EEPROM.  The checksum is
-      calculated over the whole application section, i.e. considering the
-      nop operation of the AVR (0xFF).
-
-
-      byte offset | name    |  description
-      ---------------------------------
-                2 | chksum  | Application checksum (CRC-8)
-                3 | ~chksum | two's complement of the checksum
-             4-14 | -       | don't care
 
 
 Static Programs
