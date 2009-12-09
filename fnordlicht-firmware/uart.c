@@ -28,12 +28,13 @@
 #include "io.h"
 #include <avr/interrupt.h>
 
+#include "globals.h"
 #include "common.h"
 #include "pwm.h"
 #include "fifo.h"
 #include "uart.h"
 
-/* define uart baud rate (19200) and mode (8N1) */
+/* define uart mode (8N1) */
 #if defined(__AVR_ATmega8__)
 /* in atmega8, we need a special switching bit
  * for addressing UCSRC */
@@ -42,17 +43,6 @@
 #elif defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__)
 /* in atmega88, this isn't needed any more */
 #define UART_UCSRC _BV(_UCSZ0_UART0) | _BV(_UCSZ1_UART0)
-#endif
-
-#if CONFIG_SERIAL_BAUDRATE == 115200 && F_CPU == 16000000UL
-    #define UART_UBRR 8
-#elif CONFIG_SERIAL_BAUDRATE == 115200 && F_CPU == 20000000UL
-    #define UART_UBRR 10
-#else
-    #if CONFIG_SERIAL_BAUDRATE > 57600
-    #warn "high uart baudrate, UART_UBRR might not be correct!"
-    #endif
-    #define UART_UBRR (F_CPU/(CONFIG_SERIAL_BAUDRATE * 16L)-1)
 #endif
 
 /* global variables */
@@ -71,9 +61,18 @@ void uart_putc(uint8_t data)
 /** init the hardware uart */
 void uart_init(void)
 {
+    #define BAUD CONFIG_SERIAL_BAUDRATE
+    #include <util/setbaud.h>
+
     /* set baud rate */
-    _UBRRH_UART0 = (uint8_t)(UART_UBRR >> 8);  /* high byte */
-    _UBRRL_UART0 = (uint8_t)UART_UBRR;         /* low byte */
+    _UBRRH_UART0 = UBRRH_VALUE;
+    _UBRRL_UART0 = UBRRL_VALUE;
+
+    #if USE_2X
+    UCSRA |= (1 << U2X);
+    #else
+    UCSRA &= ~(1 << U2X);
+    #endif
 
     /* set mode */
     _UCSRC_UART0 = UART_UCSRC;
