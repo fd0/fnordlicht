@@ -61,26 +61,38 @@ struct remote_msg_t
 };
 
 /* bootloader commands */
-enum mem_type_t
+#define BOOTLOADER_MAGIC_BYTE1 = 0x6b
+#define BOOTLOADER_MAGIC_BYTE2 = 0x56
+#define BOOTLOADER_MAGIC_BYTE3 = 0x27
+#define BOOTLOADER_MAGIC_BYTE4 = 0xfc
+struct remote_msg_bootloader
 {
-    MEM_FLASH = 0,
-    MEM_EEPROM = 1,
+    uint8_t address;
+    uint8_t cmd;
+    uint8_t magic[4];
 };
 
 struct remote_msg_boot_config_t
 {
     uint8_t address;
     uint8_t cmd;
-    enum mem_type_t mem;
     uint16_t start_address;
-    uint16_t length;
+    uint8_t buffersize;
 };
 
-struct remote_msg_boot_flash_t
+struct remote_msg_boot_data_t
 {
     uint8_t address;
     uint8_t cmd;
     uint8_t data[REMOTE_MSG_LEN-2];
+};
+
+struct remote_msg_boot_crc_check_t
+{
+    uint8_t address;
+    uint8_t cmd;
+    uint16_t checksum;
+    uint8_t delay;
 };
 
 #endif
