@@ -23,8 +23,8 @@
 
 /* includes */
 #include "globals.h"
+#include "io.h"
 
-#include <avr/io.h>
 #include <stdint.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>

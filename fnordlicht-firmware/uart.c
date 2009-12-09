@@ -25,7 +25,7 @@
 
 #if CONFIG_SERIAL
 
-#include <avr/io.h>
+#include "io.h"
 #include <avr/interrupt.h>
 
 #include "common.h"

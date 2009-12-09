@@ -21,8 +21,8 @@
  */
 
 #include <stdint.h>
-#include <avr/io.h>
 #include <avr/interrupt.h>
+#include "io.h"
 #include "timer.h"
 
 static volatile uint8_t internal_counter;
