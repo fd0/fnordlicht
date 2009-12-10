@@ -148,6 +148,8 @@ DEPFLAGS = -MD -MP -MF .dep/$(@F).d
 CFLAGS += -g -Os -mmcu=$(MCU) -DF_CPU=$(F_CPU) -std=gnu99 -fshort-enums $(DEPFLAGS)
 CFLAGS += $(addprefix -I,$(INCLUDES))
 CFLAGS += -fno-split-wide-types
+CFLAGS += --param inline-call-cost=2  -finline-limit=3 -fno-inline-small-functions
+CFLAGS += -Wl,--relax
 
 # flags for the compiler (for .S files)
 ASFLAGS += -g -mmcu=$(MCU) -DF_CPU=$(F_CPU) -x assembler-with-cpp $(DEPFLAGS)
