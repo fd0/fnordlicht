@@ -30,7 +30,7 @@ SRC = $(wildcard *.c)
 
 # asm sourcecode files
 # eg. 'interrupts.S foobar/another.S'
-ASRC =
+ASRC = $(wildcard *.S)
 
 # headers which should be considered when recompiling
 # eg. 'global.h foobar/important.h'
@@ -57,6 +57,8 @@ AVRDUDE_FLAGS =
 CFLAGS += -DHARDWARE_$(HARDWARE)=1
 CFLAGS += -DCONFIG_SERIAL_BAUDRATE=$(CONFIG_SERIAL_BAUDRATE)
 
+# use a custom linker script
+LDFLAGS += -L$(PWD)/ldscripts
 
 # bootloader section start
 # (see datasheet)
@@ -70,6 +72,9 @@ ifeq ($(MCU),atmega8)
 	BOOT_SECTION_START = 0x1c00
 	# 7kb data memory (raw memory minus bootloader space)
 	DATA_MEM = 7
+
+	# use custom linker script
+	LDFLAGS += -T avr4.x
 endif
 ifeq ($(MCU),atmega88)
 	# atmega88 with 1024 words bootloader:
@@ -81,6 +86,9 @@ ifeq ($(MCU),atmega88)
 	BOOT_SECTION_START = 0x1c00
 	# 7kb data memory (raw memory minus bootloader space)
 	DATA_MEM = 7
+
+	# use custom linker script
+	LDFLAGS += -T avr4.x
 endif
 ifeq ($(MCU),atmega168)
 	# atmega168 with 1024 words bootloader:
@@ -92,28 +100,9 @@ ifeq ($(MCU),atmega168)
 	#BOOT_SECTION_START = 0x3c00
 	# 14kb data memory (raw memory minus bootloader space)
 	DATA_MEM = 14
-endif
-ifeq ($(MCU),atmega32)
-	# atmega32 with 1024 words bootloader:
-	# bootloader section starts at 0x3c00 (word-address) == 0x7800 (byte-address)
-	#BOOT_SECTION_START = 0x7800
-	#
-	# atmega32 with 512 words bootloader:
-	# bootloader section starts at 0x3e00 (word-address) == 0x7c00 (byte-address)
-	BOOT_SECTION_START = 0x7c00
-	# 31kb data memory (raw memory minus bootloader space)
-	DATA_MEM = 31
-endif
-ifeq ($(MCU),atmega644)
-	# atmega644 with 1024 words bootloader:
-	# bootloader section starts at 0x7c00 (word-address) == 0xf800 (byte-address)
-	BOOT_SECTION_START = 0xf800
-	#
-	# atmega644 with 512 words bootloader:
-	# bootloader section starts at 0x7e00 (word-address) == 0xfc00 (byte-address)
-	#BOOT_SECTION_START = 0xfc00
-	# 62kb data memory (raw memory minus bootloader space)
-	DATA_MEM = 62
+
+	# use custom linker script
+	LDFLAGS += -T avr5.x
 endif
 
 LDFLAGS += -Wl,--section-start=.text=$(BOOT_SECTION_START)
