@@ -32,7 +32,8 @@ started, sleep for 100ms and check afterwards, if the INT line is pulled down
 start the main firmware.  Otherwise it should not attempt to start the main
 firmware, but wait for commands received over the bus.  This procedure allows a
 recovery from a broken firmware which does not process commands received over
-the bus (such as the BOOTLOADER command).
+the bus (such as the BOOTLOADER command).  To enter the bootloader via the
+BOOTLOADER command, first pull down the INT line, then issue the command.
 
 Initial sync sequence
 ---------------------
@@ -343,11 +344,9 @@ command |   function        | description
 
       If a bootloader is installed, jump to the bootloader, otherwise just
       restart the device.  A magic byte sequence of 0xfc27566b (little endian)
-      must follow the command byte.
-
-      Before entering the bootloader area the application code pulls the
-      interrupt line low.  The bootloader code releases it again to indicate
-      successful entry.
+      must follow the command byte.  Pull down the INT line BEFORE sending this
+      command, otherwise the bootloader might not be able to detect wether to
+      start the main firmware or remain within the bootloader code.
 
       byte offset | name    |  description
       ---------------------------------
