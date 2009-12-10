@@ -208,10 +208,7 @@ module Fnordlicht
         data = data[0..12]
         $dev.write(data)
 
-        if data.length < 13
-            $stderr.puts("less than 13 data bytes!")
-            $dev.write("\x00" * (13-data.length))
-        end
+        $dev.write("\xff" * (13-data.length))
         $dev.flush
     end
 
@@ -223,10 +220,7 @@ module Fnordlicht
         data = data[0..12]
         $dev.write(data)
 
-        if data.length < 13
-            $stderr.puts("less than 13 data bytes!")
-            $dev.write("\x00" * (13-data.length))
-        end
+        $dev.write("\x00" * (13-data.length))
         $dev.flush
     end
 
