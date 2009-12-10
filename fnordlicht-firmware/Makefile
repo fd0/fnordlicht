@@ -109,7 +109,7 @@ OBJECTS += $(ASRC:.S=.o)
 .PHONY: all
 
 # main make target (moved up here because of the config.mk target)
-all: $(TARGET).hex
+all: $(TARGET).hex $(TARGET).bin
 
 # create config.mk (if it does not exist yet)
 $(CURDIR)/config.mk:
@@ -204,6 +204,10 @@ program-eeprom-%: %.eep.hex
 	@echo -n "size for $< is "
 	@$(SIZE) -A $@ | grep '\.sec1' | tr -s ' ' | cut -d" " -f2
 	@echo "===================================================="
+
+# special programming targets
+%.bin: %.elf
+	$(OBJCOPY) -O binary -R .eeprom $< $@
 
 %.eep.hex: %.elf
 	$(OBJCOPY) --set-section-flags=.eeprom="alloc,load" --change-section-lma .eeprom=0 -O ihex -j .eeprom $< $@
