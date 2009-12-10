@@ -104,8 +104,8 @@ command |   function        | description
 
    0x80 | BOOTLOADER        | start bootloader
    0x81 | BOOT_CONFIG       | configure bootloader options
-   0x82 | BOOT_DATA_INITIAL | initial data packet to bootloader
-   0x83 | BOOT_DATA_CONT    | continuation data packet to bootloader
+   0x82 | BOOT_INIT         | initialize bootloader data buffer
+   0x83 | BOOT_DATA         | store data in bootloader data buffer
    0x84 | BOOT_CRC_CHECK    | compare check-sum
    0x85 | BOOT_FLASH        | write provided data to flash
    0x86 | BOOT_ENTER_APP    | start application
@@ -373,24 +373,21 @@ command |   function        | description
              4-14 | -            | don't care
 
 
-    Command: BOOT_DATA_INITIAL - initial data packet to bootloader (0x82)
-    ---------------------------------------------------------------------
+    Command: BOOT_INIT - initialize bootloader data buffer (0x82)
+    -------------------------------------------------------------
 
-      Store (initial) data packet (13 data bytes) to the beginning of the flash
-      data buffer.  Before this happens, the data buffer will be cleared. Further
-      data can be provided using the BOOT_DATA_CONT.
+      This resets and clears the internal bootloader data buffer.
 
       byte offset | name    |  description
       ---------------------------------
              2-14 | data    | payload
 
 
-    Command: BOOT_DATA_CONT - continuation data packet to bootloader (0x83)
-    ------------------------------------------------------------------------
+    Command: BOOT_DATA - store data in the bootloader data buffer (0x83)
+    --------------------------------------------------------------------
 
-      Store continuation data packet (further 13 data bytes) to the end of
-      the flash data buffer.  If the buffer is full, additional bytes will
-      be ignored.
+      Store data (up to 13 data bytes) at the end of the bootloader data
+      buffer.  If the buffer is full, additional bytes will be ignored.
 
       byte offset | name    |  description
       ---------------------------------

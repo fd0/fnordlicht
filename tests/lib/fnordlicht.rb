@@ -200,19 +200,14 @@ module Fnordlicht
         $dev.flush
     end
 
-    def boot_data_initial(addr, data)
+    def boot_init(addr)
         $dev.write(addr.chr)
         $dev.write("\x82")
-
-        # just write the first 13 bytes
-        data = data[0..12]
-        $dev.write(data)
-
-        $dev.write("\xff" * (13-data.length))
+        $dev.write("\xff" * 13)
         $dev.flush
     end
 
-    def boot_data_cont(addr, data)
+    def boot_data(addr, data)
         $dev.write(addr.chr)
         $dev.write("\x83")
 

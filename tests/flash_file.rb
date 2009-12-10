@@ -56,12 +56,10 @@ open(file, 'r') do |f|
         break if d.nil?
         puts "writing chunk (%s bytes)" % d.length
 
-        boot_data_initial(address, d[0..12])
-        if d.length > 13
-            d[13..-1].split('').each_slice(13) do |s|
-                boot_data_cont(address, s.join(''))
-                #sleep 0.05
-            end
+        boot_init(address);
+        d.split('').each_slice(13) do |s|
+            boot_data(address, s.join(''))
+            #sleep 0.05
         end
         checksum = compute_checksum(d)
         boot_crc_check(address, d.length, checksum, 5);

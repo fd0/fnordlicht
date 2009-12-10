@@ -50,8 +50,8 @@
 /* bootloader commands */
 #define REMOTE_CMD_BOOTLOADER       0x80
 #define REMOTE_CMD_BOOT_CONFIG      0x81
-#define REMOTE_CMD_DATA_INITIAL     0x82
-#define REMOTE_CMD_DATA_CONT        0x83
+#define REMOTE_CMD_BOOT_INIT        0x82
+#define REMOTE_CMD_BOOT_DATA        0x83
 #define REMOTE_CMD_CRC_CHECK        0x84
 #define REMOTE_CMD_FLASH            0x85
 #define REMOTE_CMD_ENTER_APP        0x86

@@ -117,12 +117,7 @@ static void parse_boot_config(struct remote_msg_boot_config_t *msg)
     global.data_address = (uint8_t *)msg->start_address;
 }
 
-static void clear_buffer(void)
-{
-    global.data_len = 0;
-}
-
-static void parse_data_cont(struct remote_msg_boot_data_t *msg)
+static void parse_data(struct remote_msg_boot_data_t *msg)
 {
     uint8_t len = sizeof(msg->data);
     if (global.data_len + len > CONFIG_BOOTLOADER_BUFSIZE)
@@ -221,8 +216,9 @@ static void remote_parse_msg(struct remote_msg_t *msg)
     switch (msg->cmd) {
         case REMOTE_CMD_BOOT_CONFIG: parse_boot_config((struct remote_msg_boot_config_t *)msg);
                                      break;
-        case REMOTE_CMD_DATA_INITIAL: clear_buffer();
-        case REMOTE_CMD_DATA_CONT:   parse_data_cont((struct remote_msg_boot_data_t *)msg);
+        case REMOTE_CMD_BOOT_INIT:   global.data_len = 0;
+                                     break;
+        case REMOTE_CMD_BOOT_DATA:   parse_data((struct remote_msg_boot_data_t *)msg);
                                      break;
         case REMOTE_CMD_CRC_CHECK:   parse_crc((struct remote_msg_boot_crc_check_t *)msg);
                                      break;
