@@ -38,7 +38,7 @@ Initial sync sequence
 ---------------------
 
 For the purpose of (automatic) address discovery and resetting the bus, a
-sync sequence consisting of 15x ESC (0x27) followed by an address byte is used.
+sync sequence consisting of 15x ESC (0x1b) followed by an address byte is used.
 The controller sends 15x ESC, followed by a null byte. Please note that the
 length of the sync sequence (16 byte) is different from the length of a
 command packet, which is 15 byte!
@@ -99,7 +99,7 @@ command |   function        | description
    0x0B | MODIFY_CURRENT    | modify current color
    0x0C | PULL_INT          | pull down INT line
    0x0D | CONFIG_STARTUP    | configure startup
-   0x27 |                   | RESERVED (sync-sequence)
+   0x1B |                   | RESERVED (sync-sequence)
 
    0x80 | BOOTLOADER        | start bootloader
    0x81 | BOOT_CONFIG       | configure bootloader options
