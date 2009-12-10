@@ -106,8 +106,6 @@ static void start_application(void)
     _TIFR_TIMER1 = 0xff;
 
     /* move interrupt vectors and start real application */
-    _IVREG = _BV(IVCE);
-    _IVREG = 0;
     jump_to_application();
 }
 
