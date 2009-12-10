@@ -265,8 +265,8 @@ int main(void)
     while(1) {
         remote_poll();
 
-        if (TIFR & _BV(OCF1A)) {
-            TIFR = _BV(OCF1A);
+        if (_TIFR_TIMER1 & _BV(OCF1A)) {
+            _TIFR_TIMER1 = _BV(OCF1A);
 
             static uint8_t c;
             if (c == 20) {

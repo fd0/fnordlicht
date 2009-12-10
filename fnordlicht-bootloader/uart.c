@@ -54,9 +54,9 @@ void uart_init(void)
     _UBRRL_UART0 = UBRRL_VALUE;
 
     #if USE_2X
-    UCSRA |= (1 << U2X);
+    _UCSRA_UART0 |= (1 << _U2X_UART0);
     #else
-    UCSRA &= ~(1 << U2X);
+    _UCSRA_UART0 &= ~(1 << _U2X_UART0);
     #endif
 
     /* set mode */
