@@ -110,26 +110,6 @@ module Fnordlicht
         $dev.flush
     end
 
-    def config(addr, scripting)
-        $dev.write addr.chr
-        $dev.write "\x03"
-        $dev.write scripting.chr
-        $dev.write "\x00\x00\x00\x00\x00\x00\x00"
-        $dev.flush
-    end
-
-    def fade(addr, speedl, speedh, r, g, b)
-        $dev.write addr.chr
-        $dev.write "\x02"
-        $dev.write speedl.chr
-        $dev.write speedh.chr
-        $dev.write r.chr
-        $dev.write g.chr
-        $dev.write b.chr
-        $dev.write "\x00\x00\x00"
-        $dev.flush
-    end
-
     def start_program(addr, program, params)
         $dev.write addr.chr
         $dev.write "\x09"
