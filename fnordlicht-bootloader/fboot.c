@@ -24,11 +24,11 @@
 #include <avr/io.h>
 #include <avr/boot.h>
 #include <avr/wdt.h>
+#include <avr/pgmspace.h>
 #include <util/delay.h>
 #include <util/crc16.h>
 #include <string.h>
 #include "../common/io.h"
-#include "../common/pt/pt.h"
 #include "../common/remote-proto.h"
 #include "../common/common.h"
 #include "uart.h"
@@ -55,11 +55,61 @@ struct global_t
     uint8_t *data_address;
 
     uint8_t delay;
-
-    struct pt thread;
 };
 
 struct global_t global;
+
+
+/* disable watchgo - NEVER CALL DIRECTLY! */
+uint8_t mcusr_mirror __attribute__ ((section (".noinit")));
+void disable_watchdog(void) \
+  __attribute__((naked)) \
+  __attribute__((section(".init3")));
+void disable_watchdog(void)
+{
+    mcusr_mirror = MCUSR;
+    MCUSR = 0;
+    wdt_disable();
+}
+
+/* enter application */
+void jump_to_application(void) __attribute__((naked, noinline));
+void jump_to_application(void)
+{
+    /* jump to application reset vector */
+    asm("ldi r30, 0");
+    asm("ldi r31, 0");
+    asm("icall");
+}
+
+
+static void start_application(void)
+{
+    /* pwm pins */
+    P_PORT = 0;
+    P_DDR = 0;
+
+    /* in pin */
+    R_PORT = 0;
+    R_DDR = 0;
+
+    /* uart */
+    _UBRRH_UART0 = 0;
+    _UBRRL_UART0 = 0;
+    _UCSRA_UART0 = _BV(_TXC_UART0);
+    _UCSRB_UART0 = 0;
+
+    /* timer1 */
+    TCCR1B = 0;
+    OCR1A = 0;
+    TCNT1 = 0;
+    _TIFR_TIMER1 = 0xff;
+
+    /* move interrupt vectors and start real application */
+    _IVREG = _BV(IVCE);
+    _IVREG = 0;
+    jump_to_application();
+}
 
 static void parse_boot_config(struct remote_msg_boot_config_t *msg)
 {
@@ -109,7 +159,12 @@ static void flash(void)
     uint8_t *addr = global.data_address;
     uint16_t *data = &global.data_buf16[0];
 
-    for (uint8_t page = 0; page < global.data_len/SPM_PAGESIZE; page++) {
+    uint8_t last_page = global.data_len/SPM_PAGESIZE;
+    if (global.data_len % SPM_PAGESIZE)
+        last_page++;
+
+    for (uint8_t page = 0; page < last_page; page++)
+    {
         PWM_PIN_ON(PWM_BLUE);
 
         /* erase page */
@@ -156,25 +211,10 @@ static void remote_parse_msg(struct remote_msg_t *msg)
                                      break;
         case REMOTE_CMD_FLASH:       flash();
                                      break;
-        case REMOTE_CMD_ENTER_APP:   /* let the watchdog restart the program */
-                                     wdt_enable(WDTO_60MS);
-                                     while(1);
+        case REMOTE_CMD_ENTER_APP:   /* cleanup and start application */
+                                     start_application();
                                      break;
     }
-}
-
-static PT_THREAD(remote_thread(struct pt *thread))
-{
-    PT_BEGIN(thread);
-
-    while (1) {
-        PT_WAIT_UNTIL(thread, global.len == REMOTE_MSG_LEN);
-
-        remote_parse_msg(&global.msg);
-        global.len = 0;
-    }
-
-    PT_END(thread);
 }
 
 static void remote_poll(void)
@@ -195,7 +235,6 @@ static void remote_poll(void)
 
             /* enable remote command thread */
             global.synced = 1;
-            PT_INIT(&global.thread);
         } else {
             /* just pass through data */
             uart_putc(data);
@@ -213,24 +252,43 @@ static void remote_poll(void)
             global.sync_len = 0;
     }
 
-    if (global.synced)
-        PT_SCHEDULE(remote_thread(&global.thread));
-
+    if (global.synced && global.len == REMOTE_MSG_LEN) {
+        remote_parse_msg(&global.msg);
+        global.len = 0;
+    }
 }
 
-/* NEVER CALL DIRECTLY! */
-void disable_watchdog(void) \
-  __attribute__((naked)) \
-  __attribute__((section(".init3")));
-void disable_watchdog(void)
+static void check_startup(void)
 {
-    MCUSR = 0;
-    wdt_disable();
+    /* check for valid reset vector */
+    if (pgm_read_word(NULL) == 0xffff)
+        return;
+
+    /* configure pullup resistor at int pin */
+    R_PORT |= _BV(INTPIN);
+
+    /* sleep 100ms */
+    for (uint8_t i = 0; i < CONFIG_DELAY; i++)
+        _delay_loop_2(CONFIG_DELAY_LOOP2);
+
+    /* if int pin is pulled down, remain in bootloader */
+    if (!(R_PIN & _BV(INTPIN)))
+        return;
+
+    /* els cleanup and start application */
+    start_application();
 }
 
-
-int main(void)
+int __attribute__ ((noreturn,OS_main)) main(void)
 {
+    /* immediately start application, if the reset has been caused
+     * by a watchdog reset */
+    if (mcusr_mirror & _BV(WDRF))
+        jump_to_application();
+
+    /* start application if necessary */
+    check_startup();
+
     /* configure and enable uart */
     uart_init();
 

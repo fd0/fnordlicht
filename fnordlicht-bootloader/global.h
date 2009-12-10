@@ -72,4 +72,8 @@
 #define PWM_GREEN 1
 #define PWM_BLUE 2
 
+/* wait 100ms before checking INT pin (for delay_loop_2(50000)) */
+#define CONFIG_DELAY F_CPU/4/50000/10
+#define CONFIG_DELAY_LOOP2 50000
+
 #endif
