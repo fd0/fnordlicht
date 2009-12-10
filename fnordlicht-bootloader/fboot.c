@@ -182,7 +182,7 @@ static void flash(void)
 
     for (uint8_t page = 0; page < last_page; page++)
     {
-        PWM_PIN_ON(PWM_BLUE);
+        PWM_PIN_ON(PWM_GREEN);
 
         /* erase page */
         boot_page_erase(addr);
@@ -201,7 +201,7 @@ static void flash(void)
         /* re-enable application flash section, so we can read it again */
         boot_rww_enable();
 
-        PWM_PIN_OFF(PWM_BLUE);
+        PWM_PIN_OFF(PWM_GREEN);
         addr += SPM_PAGESIZE;
     }
 
@@ -340,7 +340,7 @@ int __attribute__ ((noreturn,OS_main)) main(void)
             static uint8_t c;
             if (c == 20) {
                 /* blink */
-                PWM_PIN_TOGGLE(PWM_GREEN);
+                PWM_PIN_TOGGLE(PWM_BLUE);
                 c = 0;
             } else
                 c++;
