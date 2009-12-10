@@ -1,9 +1,9 @@
 /* vim:ts=4 sts=4 et tw=80
  *
- *         fnordlicht firmware
+ *         fnordlichtmini serial bootloader
  *
  *    for additional information please
- *    see http://lochraster.org/fnordlicht
+ *    see http://lochraster.org/fnordlichtmini
  *
  * (c) by Alexander Neumann <alexander@bumpern.de>
  *     Lars Noschinski <lars@public.noschinski.de>
