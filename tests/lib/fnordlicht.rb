@@ -182,4 +182,74 @@ module Fnordlicht
         fade_hsv(addr, h, s, 0, step, delay)
         sleep(sleep_time)
     end
+
+    # bootloader functions
+    def start_bootloader(addr)
+        $dev.write(addr.chr)
+        $dev.write("\x80")
+        $dev.write("\x6b\x56\x27\xfc")
+        $dev.write("\x00\x00\x00\x00\x00\x00\x00\x00\x00")
+        $dev.flush
+    end
+
+    def boot_config(addr, start_addr)
+        $dev.write(addr.chr)
+        $dev.write("\x81")
+        $dev.write [start_addr].pack('v')
+        $dev.write("\x00"*11)
+        $dev.flush
+    end
+
+    def boot_data_initial(addr, data)
+        $dev.write(addr.chr)
+        $dev.write("\x82")
+
+        # just write the first 13 bytes
+        data = data[0..12]
+        $dev.write(data)
+
+        if data.length < 13
+            $stderr.puts("less than 13 data bytes!")
+            $dev.write("\x00" * (13-data.length))
+        end
+        $dev.flush
+    end
+
+    def boot_data_cont(addr, data)
+        $dev.write(addr.chr)
+        $dev.write("\x83")
+
+        # just write the first 13 bytes
+        data = data[0..12]
+        $dev.write(data)
+
+        if data.length < 13
+            $stderr.puts("less than 13 data bytes!")
+            $dev.write("\x00" * (13-data.length))
+        end
+        $dev.flush
+    end
+
+    def boot_crc_check(addr, checksum, delay)
+        $dev.write(addr.chr)
+        $dev.write("\x84")
+        $dev.write [checksum].pack('v')
+        $dev.write delay.chr
+        $dev.write("\x00"*10)
+        $dev.flush
+    end
+
+    def boot_flash(addr)
+        $dev.write(addr.chr)
+        $dev.write("\x85")
+        $dev.write("\x00"*13)
+        $dev.flush
+    end
+
+    def boot_enter_application(addr)
+        $dev.write(addr.chr)
+        $dev.write("\x86")
+        $dev.write("\x00"*13)
+        $dev.flush
+    end
 end

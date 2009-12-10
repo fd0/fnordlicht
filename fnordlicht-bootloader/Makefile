@@ -44,6 +44,8 @@ INCLUDES =
 # use more debug-flags when compiling
 DEBUG = 0
 
+# default baudrate
+CONFIG_SERIAL_BAUDRATE = 19200
 
 # avrdude programmer protocol
 PROG = usbasp
@@ -53,6 +55,7 @@ DEV = usb
 AVRDUDE_FLAGS =
 
 CFLAGS += -DHARDWARE_$(HARDWARE)=1
+CFLAGS += -DCONFIG_SERIAL_BAUDRATE=$(CONFIG_SERIAL_BAUDRATE)
 
 
 # bootloader section start
@@ -259,9 +262,12 @@ program-eeprom-%: %.eep.hex
 %.lss: %.elf
 	$(OBJDUMP) -h -S $< > $@
 
-.PHONY: fuses-atmega8-fnordlichtmini
+.PHONY: fuses-atmega8-fnordlichtmini fuses-lock
 
 fuses-atmega8-fnordlichtmini:
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U lfuse:w:0xff:m -U hfuse:w:0xda:m
+
+fuses-lock:
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U lock:w:0x2f:m
 
 -include $(shell $(MKDIR) .dep 2>/dev/null) $(wildcard .dep/*)
