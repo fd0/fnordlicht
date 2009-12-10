@@ -58,7 +58,25 @@ CFLAGS += -DHARDWARE_$(HARDWARE)=1
 CFLAGS += -DCONFIG_SERIAL_BAUDRATE=$(CONFIG_SERIAL_BAUDRATE)
 
 # use a custom linker script
-LDFLAGS += -L$(PWD)/ldscripts
+LDFLAGS += -L$(CURDIR)/ldscripts
+
+.PHONY: all
+
+# main make target (moved up here because of the config.mk target)
+all: $(TARGET).hex
+
+# create config.mk (if it does not exist yet)
+$(CURDIR)/config.mk:
+	@$(CP) config.mk.template config.mk
+	@echo "===================================================="
+	@echo "created file $@"
+	@echo 'please tune your settings (especially $$HARDWARE)'
+	@echo "there, then run 'make' again"
+	@echo "===================================================="
+	@exit 1
+
+# include config file
+-include $(CURDIR)/config.mk
 
 # bootloader section start
 # (see datasheet)
@@ -93,13 +111,13 @@ endif
 ifeq ($(MCU),atmega168)
 	# atmega168 with 1024 words bootloader:
 	# bootloader section starts at 0x1c00 (word-address) == 0x3800 (byte-address)
-	BOOT_SECTION_START = 0x3800
+	#BOOT_SECTION_START = 0x3800
 	#
 	# atmega168 with 512 words bootloader:
 	# bootloader section starts at 0x1e00 (word-address) == 0x3c00 (byte-address)
-	#BOOT_SECTION_START = 0x3c00
-	# 14kb data memory (raw memory minus bootloader space)
-	DATA_MEM = 14
+	BOOT_SECTION_START = 0x3c00
+	# 15kb data memory (raw memory minus bootloader space)
+	DATA_MEM = 15
 
 	# use custom linker script
 	LDFLAGS += -T avr5.x
@@ -141,24 +159,6 @@ LDFLAGS += -mmcu=$(MCU)
 # fill in object files
 OBJECTS += $(SRC:.c=.o)
 OBJECTS += $(ASRC:.S=.o)
-
-.PHONY: all
-
-# main make target (moved up here because of the config.mk target)
-all: $(TARGET).hex
-
-# create config.mk (if it does not exist yet)
-$(CURDIR)/config.mk:
-	@$(CP) config.mk.template config.mk
-	@echo "===================================================="
-	@echo "created file $@"
-	@echo 'please tune your settings (especially $$HARDWARE)'
-	@echo "there, then run 'make' again"
-	@echo "===================================================="
-	@exit 1
-
-# include config file
--include $(CURDIR)/config.mk
 
 # include more debug flags, if $(DEBUG) is 1
 ifeq ($(DEBUG),1)
