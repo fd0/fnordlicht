@@ -32,28 +32,7 @@
 #include "../common/remote-proto.h"
 #include "../common/common.h"
 #include "uart.h"
-
-#ifndef CONFIG_BOOTLOADER_BUFSIZE
-#define CONFIG_BOOTLOADER_BUFSIZE 512
-#endif
-
-/* configure primary pwm pins (MUST be three successive pins in a port) */
-#define PWM_PORT B
-#define PWM_CHANNELS 3
-#define PWM_CHANNEL_MASK (_BV(PB0) | _BV(PB1) | _BV(PB2))
-#define PWM_SHIFT 0
-
-/* configure INT pin */
-#define REMOTE_INT_PORT D
-#define REMOTE_INT_PIN PD2
-
-/* abbreviations for port, ddr and pin */
-#define P_PORT _OUTPORT(PWM_PORT)
-#define P_DDR _DDRPORT(PWM_PORT)
-#define R_PORT _OUTPORT(REMOTE_INT_PORT)
-#define R_DDR _DDRPORT(REMOTE_INT_PORT)
-#define R_PIN _INPORT(REMOTE_INT_PORT)
-#define INTPIN REMOTE_INT_PIN
+#include "global.h"
 
 struct global_t
 {
@@ -118,7 +97,7 @@ static void parse_crc(struct remote_msg_boot_crc_check_t *msg)
         /* pull int to gnd */
         R_DDR |= _BV(INTPIN);
 
-        P_PORT |= 0b1;
+        PWM_PIN_ON(PWM_RED);
     }
 }
 
@@ -141,16 +120,15 @@ static void flash(void)
             boot_spm_busy_wait();
         }
 
-        P_PORT ^= (0b100 << PWM_SHIFT);
-
         /* after filling the temp buffer, write the page and wait till we're done */
+        PWM_PIN_ON(PWM_BLUE);
         boot_page_write(addr);
         boot_spm_busy_wait();
 
         /* re-enable application flash section, so we can read it again */
         boot_rww_enable();
-        P_PORT &= ~(0b100 << PWM_SHIFT);
 
+        PWM_PIN_OFF(PWM_BLUE);
         addr += SPM_PAGESIZE;
     }
 
