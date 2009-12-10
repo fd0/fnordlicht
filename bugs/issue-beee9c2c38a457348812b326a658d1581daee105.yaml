@@ -1,0 +1,19 @@
+--- !ditz.rubyforge.org,2008-03-06/issue 
+title: reorder command opcodes
+desc: ""
+type: :bugfix
+component: fnordlicht/firmware
+release: "0.3"
+reporter: Alexander Neumann <alexander@bumpern.de>
+status: :unstarted
+disposition: 
+creation_time: 2009-12-10 09:48:01.894996 Z
+references: []
+
+id: beee9c2c38a457348812b326a658d1581daee105
+log_events: 
+- - 2009-12-10 09:48:02.623046 Z
+  - Alexander Neumann <alexander@bumpern.de>
+  - created
+  - ""
+git_branch: 
