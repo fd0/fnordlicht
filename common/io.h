@@ -36,6 +36,7 @@
 #define _UDRIE_UART0 UDRIE
 #define _UDRE_UART0 UDRE
 #define _RXC_UART0 RXC
+#define _TXC_UART0 TXC
 #define _TXEN_UART0 TXEN
 #define _RXEN_UART0 RXEN
 #define _RXCIE_UART0 RXCIE
@@ -62,6 +63,7 @@
 #define RXC0 RXC
 #define RXB80 RXB8
 #define UDR0 UDR
+#define _IVREG GICR
 
 #elif defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__)
 
@@ -72,6 +74,7 @@
 #define _UDRIE_UART0 UDRIE0
 #define _UDRE_UART0 UDRE0
 #define _RXC_UART0 RXC0
+#define _TXC_UART0 TXC0
 #define _TXEN_UART0 TXEN0
 #define _RXEN_UART0 RXEN0
 #define _RXCIE_UART0 RXCIE0
@@ -84,6 +87,7 @@
 #define _SIG_UART_RECV_UART0 SIG_USART_RECV
 #define _SIG_UART_DATA_UART0 SIG_USART_DATA
 #define _UDR_UART0 UDR0
+#define _IVREG MCUCR
 #endif
 
 
