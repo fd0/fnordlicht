@@ -400,21 +400,23 @@ command |   function        | description
     Command: BOOT_CRC_CHECK - compare check-sum (0x84)
     --------------------------------------------------
 
-      Compare provided CRC-16 checksum against calculated checksum over
-      previously received data in the data buffer.  If both checksums do not
-      match, the boot loader MUST immediately pull down the INT line.
-      The INT line must be held down for the time specified in delay and be
-      released afterwards.  chksum is a little endian unsigned 16 bit integer.
+      Compare provided CRC-16 checksum against calculated checksum over the
+      first len bytes of previously received data in the data buffer.  If both
+      checksums do not match, the boot loader MUST immediately pull down the
+      INT line.  The INT line must be held down for the time specified in delay
+      and be released afterwards.  chksum is a little endian unsigned 16 bit
+      integer.
 
       The CRC calculation uses the polynomial x^16 + x^15 + x^2 + 1 (0xa001)
       and 0xffff as initial value.
 
       byte offset | name    |  description
       ---------------------------------
-              2-3 | chksum  | CRC-16 checksum over the data chunk
-                4 | delay   | time to wait before releasing the INT line
+              2-3 | len     | checksum over the first len buffer bytes in the buffer
+              4-5 | chksum  | CRC-16 checksum over the data chunk
+                6 | delay   | time to wait before releasing the INT line
                             | (in 50ms, maximum 2550ms, jitter +-10ms)
-             5-14 | -       | don't care
+             7-14 | -       | don't care
 
 
     Command: BOOT_FLASH - write provided data to flash (0x85)

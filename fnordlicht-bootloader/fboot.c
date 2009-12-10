@@ -88,7 +88,7 @@ static void parse_crc(struct remote_msg_boot_crc_check_t *msg)
     uint16_t checksum = 0xffff;
 
     uint8_t *ptr = &global.data_buf[0];
-    for (uint16_t i = 0; i < sizeof(global.data_buf); i++)
+    for (uint16_t i = 0; i < msg->len; i++)
         checksum = _crc16_update(checksum, *ptr++);
 
     if (checksum != msg->checksum) {

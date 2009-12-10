@@ -230,12 +230,13 @@ module Fnordlicht
         $dev.flush
     end
 
-    def boot_crc_check(addr, checksum, delay)
+    def boot_crc_check(addr, len, checksum, delay)
         $dev.write(addr.chr)
         $dev.write("\x84")
+        $dev.write [len].pack('v')
         $dev.write [checksum].pack('v')
         $dev.write delay.chr
-        $dev.write("\x00"*10)
+        $dev.write("\x00"*8)
         $dev.flush
     end
 

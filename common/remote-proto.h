@@ -97,6 +97,7 @@ struct remote_msg_boot_crc_check_t
 {
     uint8_t address;
     uint8_t cmd;
+    uint16_t len;
     uint16_t checksum;
     uint8_t delay;
 };
