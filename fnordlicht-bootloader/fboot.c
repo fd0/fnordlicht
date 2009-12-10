@@ -1,195 +1,289 @@
+/* vim:ts=4 sts=4 et tw=80
+ *
+ *         fnordlicht firmware
+ *
+ *    for additional information please
+ *    see http://lochraster.org/fnordlicht
+ *
+ * (c) by Alexander Neumann <alexander@bumpern.de>
+ *     Lars Noschinski <lars@public.noschinski.de>
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <avr/io.h>
 #include <avr/boot.h>
+#include <avr/wdt.h>
 #include <util/delay.h>
+#include <util/crc16.h>
 #include <string.h>
-#include "../config.h"
-#include "../pt/pt.h"
-#include "../remote-proto.h"
+#include "../common/io.h"
+#include "../common/pt/pt.h"
+#include "../common/remote-proto.h"
+#include "../common/common.h"
+#include "uart.h"
 
 #ifndef CONFIG_BOOTLOADER_BUFSIZE
 #define CONFIG_BOOTLOADER_BUFSIZE 512
 #endif
 
+/* configure primary pwm pins (MUST be three successive pins in a port) */
+#define PWM_PORT B
+#define PWM_CHANNELS 3
+#define PWM_CHANNEL_MASK (_BV(PB0) | _BV(PB1) | _BV(PB2))
+#define PWM_SHIFT 0
+
+/* configure INT pin */
+#define REMOTE_INT_PORT D
+#define REMOTE_INT_PIN PD2
+
+/* abbreviations for port, ddr and pin */
+#define P_PORT _OUTPORT(PWM_PORT)
+#define P_DDR _DDRPORT(PWM_PORT)
+#define R_PORT _OUTPORT(REMOTE_INT_PORT)
+#define R_DDR _DDRPORT(REMOTE_INT_PORT)
+#define R_PIN _INPORT(REMOTE_INT_PORT)
+#define INTPIN REMOTE_INT_PIN
+
 struct global_t
 {
+    uint8_t synced;
+    uint8_t sync_len;
+
     union {
-        uint8_t buf[REMOTE_MSGLEN];
+        uint8_t buf[REMOTE_MSG_LEN];
         struct remote_msg_t msg;
     };
     uint8_t len;
 
-    enum mem_type_t mem;
-    uint16_t address;
-    uint16_t bytes_remaining;
+    uint8_t address;
 
-    uint8_t data_buf[CONFIG_BOOTLOADER_BUFSIZE];
+    union {
+        uint8_t data_buf[CONFIG_BOOTLOADER_BUFSIZE];
+        uint16_t data_buf16[CONFIG_BOOTLOADER_BUFSIZE/2];
+    };
     uint16_t data_len;
+    uint8_t *data_address;
+
+    uint8_t delay;
+
+    struct pt thread;
 };
 
 struct global_t global;
 
-/* define uart baud rate (19200) and mode (8N1) */
-#if defined(__AVR_ATmega8__)
-/* in atmega8, we need a special switching bit
- * for addressing UCSRC */
-#define UART_UCSRC _BV(URSEL) | _BV(UCSZ0) | _BV(UCSZ1)
-
-#elif defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__)
-/* in atmega88, this isn't needed any more */
-#define UART_UCSRC _BV(_UCSZ0_UART0) | _BV(_UCSZ1_UART0)
-#endif
-
-#if CONFIG_SERIAL_BAUDRATE == 115200 && F_CPU == 16000000UL
-    #define UART_UBRR 8
-#elif CONFIG_SERIAL_BAUDRATE == 115200 && F_CPU == 20000000UL
-    #define UART_UBRR 10
-#else
-    #if CONFIG_SERIAL_BAUDRATE > 57600
-    #warn "high uart baudrate, UART_UBRR might not be correct!"
-    #endif
-    #define UART_UBRR (F_CPU/(CONFIG_SERIAL_BAUDRATE * 16L)-1)
-#endif
-
-/* parse message */
-static void parse_message(struct remote_msg_t *msg)
+static void parse_boot_config(struct remote_msg_boot_config_t *msg)
 {
-    if (msg->cmd == REMOTE_CMD_BOOT_CONFIG) {
-        struct remote_msg_boot_config *m = (struct remote_msg_boot_config *)msg;
+    /* remember flash address */
+    global.data_address = (uint8_t *)msg->start_address;
+}
 
-        global.mem = m->mem;
-        global.address = m->start_address;
-        global.bytes_remaining = m->length;
+static void clear_buffer(void)
+{
+    global.data_len = 0;
+}
 
-        /* do a chip erase if flash should be written */
-        if (global.mem == MEM_FLASH) {
-            /* iterate over all pages in flash, and try to erase every single
-             * one of them (the bootloader section should be protected by lock-bits (!) */
-            for (uint16_t addr = 0; addr < BOOT_SECTION_START; addr += SPM_PAGESIZE)
-                boot_page_erase(addr);
-        }
+static void parse_data_cont(struct remote_msg_boot_data_t *msg)
+{
+    uint8_t len = sizeof(msg->data);
+    if (global.data_len + len > CONFIG_BOOTLOADER_BUFSIZE)
+        len = CONFIG_BOOTLOADER_BUFSIZE - global.data_len;
 
-        return;
-    }
+    memcpy(&global.data_buf[global.data_len], msg->data, len);
+    global.data_len += len;
+}
 
-    if (msg->cmd == REMOTE_CMD_BOOT_FLASH) {
-        struct remote_msg_boot_flash *m = (struct remote_msg_boot_flash *)msg;
+static void parse_crc(struct remote_msg_boot_crc_check_t *msg)
+{
+    /* compute crc16 over buffer */
+    uint16_t checksum = 0xffff;
 
-        for (uint8_t i = 0;
-             i < REMOTE_MSGLEN-2 && global.data_len < CONFIG_BOOTLOADER_BUFSIZE;
-             i++) {
-            global.data_buf[global.data_len++] = m->data[i];
-            global.bytes_remaining--;
-        }
+    uint8_t *ptr = &global.data_buf[0];
+    for (uint16_t i = 0; i < sizeof(global.data_buf); i++)
+        checksum = _crc16_update(checksum, *ptr++);
 
-        return;
+    if (checksum != msg->checksum) {
+        global.delay = msg->delay;
+
+        /* pull int to gnd */
+        R_DDR |= _BV(INTPIN);
+
+        P_PORT |= 0b1;
     }
 }
 
-
-/* initialize and cleanup uart (taken from ../uart.c) */
-static inline void init_uart(void)
+static void flash(void)
 {
-    /* set baud rate */
-    _UBRRH_UART0 = (uint8_t)(UART_UBRR >> 8);  /* high byte */
-    _UBRRL_UART0 = (uint8_t)UART_UBRR;         /* low byte */
+    /* pull int */
+    R_DDR |= _BV(INTPIN);
 
-    /* set mode */
-    _UCSRC_UART0 = UART_UCSRC;
+    uint8_t *addr = global.data_address;
+    uint16_t *data = &global.data_buf16[0];
 
-    /* enable transmitter and receiver */
-    _UCSRB_UART0 = _BV(_TXEN_UART0) | _BV(_RXEN_UART0);
+    for (uint8_t page = 0; page < global.data_len/SPM_PAGESIZE; page++) {
+        /* erase page */
+        boot_page_erase(addr);
+        boot_spm_busy_wait();
+
+        for (uint16_t i = 0; i < SPM_PAGESIZE; i += 2) {
+            /* fill internal buffer */
+            boot_page_fill(addr+i, *data++);
+            boot_spm_busy_wait();
+        }
+
+        P_PORT ^= (0b100 << PWM_SHIFT);
+
+        /* after filling the temp buffer, write the page and wait till we're done */
+        boot_page_write(addr);
+        boot_spm_busy_wait();
+
+        /* re-enable application flash section, so we can read it again */
+        boot_rww_enable();
+        P_PORT &= ~(0b100 << PWM_SHIFT);
+
+        addr += SPM_PAGESIZE;
+    }
+
+    global.data_address = addr;
+
+    /* release int */
+    R_DDR &= ~_BV(INTPIN);
 }
 
-static inline void cleanup_uart(void)
+static void remote_parse_msg(struct remote_msg_t *msg)
 {
-    _UBRRH_UART0 = 0;
-    _UBRRL_UART0 = 0;
-    _UCSRC_UART0 = 0;
-    _UCSRB_UART0 = 0;
+    /* verify address */
+    if (msg->address != global.address && msg->address != REMOTE_ADDR_BROADCAST)
+        return;
+
+    /* parse command */
+    switch (msg->cmd) {
+        case REMOTE_CMD_BOOT_CONFIG: parse_boot_config((struct remote_msg_boot_config_t *)msg);
+                                     break;
+        case REMOTE_CMD_DATA_INITIAL: clear_buffer();
+        case REMOTE_CMD_DATA_CONT:   parse_data_cont((struct remote_msg_boot_data_t *)msg);
+                                     break;
+        case REMOTE_CMD_CRC_CHECK:   parse_crc((struct remote_msg_boot_crc_check_t *)msg);
+                                     break;
+        case REMOTE_CMD_FLASH:       flash();
+                                     break;
+        case REMOTE_CMD_ENTER_APP:   /* let the watchdog restart the program */
+                                     wdt_enable(WDTO_60MS);
+                                     while(1);
+                                     break;
+    }
 }
 
 static PT_THREAD(remote_thread(struct pt *thread))
 {
-    static uint16_t temp_addr;
     PT_BEGIN(thread);
 
     while (1) {
-        /* wait for enough chars for a message */
-        PT_WAIT_UNTIL(thread, _UCSRA_UART0 & _BV(_RXC_UART0));
+        PT_WAIT_UNTIL(thread, global.len == REMOTE_MSG_LEN);
 
-        /* read data */
-        global.buf[global.len++] = UDR;
-
-        /* parse message */
-        if (global.len == REMOTE_MSGLEN) {
-            parse_message(&global.msg);
-            global.len = 0;
-        }
-
-        /* start flashing, if we have enough bytes */
-        if (global.data_len >= SPM_PAGESIZE && !boot_spm_busy()) {
-            PWM_PORT ^= _BV(PB2);
-
-            /* fill bytes */
-            temp_addr = global.address;
-            for (uint8_t i = 0; i < SPM_PAGESIZE; i+=2) {
-                boot_page_fill(temp_addr, global.data_buf[i] | global.data_buf[i+1] << 8);
-                temp_addr += 2;
-            }
-
-            /* after filling the temp buffer, write the page and wait till we're done */
-            boot_page_write_safe(global.address);
-
-            /* re-enable application flash section, so we can read it again */
-            // boot_rww_enable();
-
-            /* store next page's address, since we do auto-address-incrementing */
-            global.address = temp_addr;
-
-            /* move data in buffer around */
-            global.data_len -= SPM_PAGESIZE;
-            memmove(&global.data_buf[0], &global.data_buf[SPM_PAGESIZE], global.data_len);
-        }
+        remote_parse_msg(&global.msg);
+        global.len = 0;
     }
 
     PT_END(thread);
 }
 
+static void remote_poll(void)
+{
+    /* wait for a byte */
+    if (uart_receive_complete())
+    {
+        uint8_t data = uart_getc();
+
+        /* check if sync sequence has been received before */
+        if (global.sync_len == REMOTE_SYNC_LEN) {
+            /* synced, safe address and send next address to following device */
+            global.address = data;
+            uart_putc(data+1);
+
+            /* reset buffer */
+            global.len = 0;
+
+            /* enable remote command thread */
+            global.synced = 1;
+            PT_INIT(&global.thread);
+        } else {
+            /* just pass through data */
+            uart_putc(data);
+
+            /* put data into remote buffer
+             * (just processed if remote.synced == 1) */
+            if (global.len < sizeof(global.buf))
+                global.buf[global.len++] = data;
+        }
+
+        /* remember the number of sync bytes received so far */
+        if (data == REMOTE_CMD_RESYNC)
+            global.sync_len++;
+        else
+            global.sync_len = 0;
+    }
+
+    if (global.synced)
+        PT_SCHEDULE(remote_thread(&global.thread));
+
+}
+
+/* NEVER CALL DIRECTLY! */
+void disable_watchdog(void) \
+  __attribute__((naked)) \
+  __attribute__((section(".init3")));
+void disable_watchdog(void)
+{
+    MCUSR = 0;
+    wdt_disable();
+}
+
+
 int main(void)
 {
-    /* init structs */
-    struct pt pt;
-    PT_INIT(&pt);
-    global.len = 0;
-    global.bytes_remaining = 0;
-
     /* configure and enable uart */
-    init_uart();
+    uart_init();
 
-    /* configure output pins */
-    PWM_DDR = PWM_CHANNEL_MASK;
+    /* configure outputs */
+    P_DDR |= PWM_CHANNEL_MASK;
 
-    /* initialize timer1, CTC at 500ms, prescaler 1024 */
-    OCR1A = F_CPU/1024/4;
+    /* initialize timer1, CTC at 50ms, prescaler 1024 */
+    OCR1A = F_CPU/1024/20;
     TCCR1B = _BV(WGM12) | _BV(CS12) | _BV(CS10);
 
     while(1) {
-        /* switch output every timer interrupt */
+        remote_poll();
+
         if (TIFR & _BV(OCF1A)) {
-            PWM_PORT ^= _BV(PB0);
             TIFR = _BV(OCF1A);
+
+            static uint8_t c;
+            if (c == 20) {
+                /* blink */
+                P_PORT ^= 0b10 << PWM_SHIFT;
+                c = 0;
+            } else
+                c++;
+
+            /* if int is pulled, decrement delay */
+            if (R_DDR & _BV(INTPIN)) {
+                if (--global.delay == 0) {
+                    /* release int */
+                    R_DDR &= ~_BV(INTPIN);
+                    P_PORT &= ~1;
+                }
+            }
         }
-
-        /* call remote command parser thread until thread exited */
-        if (PT_SCHEDULE(remote_thread(&pt)) == 0)
-            break;
     }
-
-    /* cleanup */
-    cleanup_uart();
-    PWM_DDR = 0;
-    PWM_PORT = 0;
-    TCCR1B = 0;
-    OCR1A = 0;
-    TIFR = TIFR;
 }

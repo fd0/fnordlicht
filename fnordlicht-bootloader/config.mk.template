@@ -40,3 +40,10 @@
 
 # use more debug-flags when compiling
 #DEBUG = 1
+
+###################################################################
+# FIRMWARE CONFIGURATION
+#
+
+# default baudrate
+#CONFIG_SERIAL_BAUDRATE = 19200
