@@ -68,8 +68,8 @@
 
 #define PWM_PIN_TOGGLE(bit) P_PORT ^= _BV(bit) << (PWM_SHIFT)
 
-#define PWM_RED 0b1
-#define PWM_GREEN 0b10
-#define PWM_BLUE 0b100
+#define PWM_RED 0
+#define PWM_GREEN 1
+#define PWM_BLUE 2
 
 #endif

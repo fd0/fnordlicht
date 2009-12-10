@@ -110,6 +110,8 @@ static void flash(void)
     uint16_t *data = &global.data_buf16[0];
 
     for (uint8_t page = 0; page < global.data_len/SPM_PAGESIZE; page++) {
+        PWM_PIN_ON(PWM_BLUE);
+
         /* erase page */
         boot_page_erase(addr);
         boot_spm_busy_wait();
@@ -121,7 +123,6 @@ static void flash(void)
         }
 
         /* after filling the temp buffer, write the page and wait till we're done */
-        PWM_PIN_ON(PWM_BLUE);
         boot_page_write(addr);
         boot_spm_busy_wait();
 
@@ -236,6 +237,12 @@ int main(void)
     /* configure outputs */
     P_DDR |= PWM_CHANNEL_MASK;
 
+#ifdef PWM_INVERTED
+    P_PORT |= PWM_CHANNEL_MASK;
+#else
+    P_PORT &= ~PWM_CHANNEL_MASK;
+#endif
+
     /* initialize timer1, CTC at 50ms, prescaler 1024 */
     OCR1A = F_CPU/1024/20;
     TCCR1B = _BV(WGM12) | _BV(CS12) | _BV(CS10);
@@ -249,7 +256,7 @@ int main(void)
             static uint8_t c;
             if (c == 20) {
                 /* blink */
-                P_PORT ^= 0b10 << PWM_SHIFT;
+                PWM_PIN_TOGGLE(PWM_GREEN);
                 c = 0;
             } else
                 c++;
