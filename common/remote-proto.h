@@ -55,6 +55,7 @@
 #define REMOTE_CMD_CRC_CHECK        0x84
 #define REMOTE_CMD_FLASH            0x85
 #define REMOTE_CMD_ENTER_APP        0x86
+#define REMOTE_CMD_CRC_FLASH        0x87
 
 #define REMOTE_ADDR_BROADCAST 0xff
 
@@ -97,6 +98,16 @@ struct remote_msg_boot_crc_check_t
 {
     uint8_t address;
     uint8_t cmd;
+    uint16_t len;
+    uint16_t checksum;
+    uint8_t delay;
+};
+
+struct remote_msg_boot_crc_flash_t
+{
+    uint8_t address;
+    uint8_t cmd;
+    uint16_t start;
     uint16_t len;
     uint16_t checksum;
     uint8_t delay;

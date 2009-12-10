@@ -68,9 +68,19 @@ open(file, 'r') do |f|
 
         puts "flashing..."
         boot_flash(address)
-        sleep 0.5
+        sleep 0.3
 
         break if d.length < 512
     end
-    puts "done"
 end
+
+data = ""
+open(file, 'r') do |f|
+    d = f.read()
+    break if d.nil?
+    data += d
+end
+checksum = compute_checksum(data)
+puts "verifying checksum (%u bytes): 0x%04x" % [data.length, checksum]
+boot_crc_flash(address, 0, data.length, checksum, 50)
+puts "done"

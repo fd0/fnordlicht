@@ -234,6 +234,17 @@ module Fnordlicht
         $dev.flush
     end
 
+    def boot_crc_flash(addr, start, len, checksum, delay)
+        $dev.write(addr.chr)
+        $dev.write("\x87")
+        $dev.write [start].pack('v')
+        $dev.write [len].pack('v')
+        $dev.write [checksum].pack('v')
+        $dev.write delay.chr
+        $dev.write("\x00"*6)
+        $dev.flush
+    end
+
     def boot_flash(addr)
         $dev.write(addr.chr)
         $dev.write("\x85")

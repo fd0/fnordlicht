@@ -109,6 +109,7 @@ command |   function        | description
    0x84 | BOOT_CRC_CHECK    | compare check-sum
    0x85 | BOOT_FLASH        | write provided data to flash
    0x86 | BOOT_ENTER_APP    | start application
+   0x87 | BOOT_CRC_FLASH    | compare check-sum with flash
 
 
     Command: FADE_RGB - set color/fade to color (RGB) (0x02)
@@ -446,6 +447,29 @@ command |   function        | description
       byte offset | name    |  description
       ------------------------------------
              2-14 | -       | don't care
+
+
+    Command: BOOT_CRC_FLASH - compare check-sum with flash (0x87)
+    -------------------------------------------------------------
+
+      Compare provided CRC-16 checksum against calculated checksum over
+      len bytes from flash starting at addr.  If both checksums do not match,
+      the boot loader MUST immediately pull down the INT line.  The INT line
+      must be held down for the time specified in delay and be released
+      afterwards.  Chksum, start and len are unsigned 16 bit little endian
+      integers.
+
+      The CRC calculation uses the polynomial x^16 + x^15 + x^2 + 1 (0xa001)
+      and 0xffff as initial value.
+
+      byte offset | name    |  description
+      ---------------------------------
+              2-3 | addr    | checksum len bytes starting at this address
+              4-6 | len     | checksum over the first len buffer bytes in the buffer
+              6-8 | chksum  | CRC-16 checksum over the data chunk
+                9 | delay   | time to wait before releasing the INT line
+                            | (in 50ms, maximum 2550ms, jitter +-10ms)
+            10-14 | -       | don't care
 
 
 Static Programs

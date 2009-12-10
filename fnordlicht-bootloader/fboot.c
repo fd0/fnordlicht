@@ -28,6 +28,7 @@
 #include <util/delay.h>
 #include <util/crc16.h>
 #include <string.h>
+#include <stdbool.h>
 #include "../common/io.h"
 #include "../common/remote-proto.h"
 #include "../common/common.h"
@@ -54,6 +55,7 @@ struct global_t
     uint16_t data_len;
     uint8_t *data_address;
 
+    bool crc_match;
     uint8_t delay;
 };
 
@@ -136,17 +138,34 @@ static void parse_crc(struct remote_msg_boot_crc_check_t *msg)
     uint16_t checksum = 0xffff;
 
     uint8_t *ptr = &global.data_buf[0];
-    for (uint16_t i = 0; i < msg->len; i++)
+    uint16_t i = msg->len+1;
+    while (--i)
         checksum = _crc16_update(checksum, *ptr++);
 
     if (checksum != msg->checksum) {
         global.delay = msg->delay;
+        global.crc_match = false;
+    } else
+        global.crc_match = true;
+}
 
-        /* pull int to gnd */
-        R_DDR |= _BV(INTPIN);
+static void parse_crc_flash(struct remote_msg_boot_crc_flash_t *msg)
+{
+    /* compute crc16 over flash */
+    uint16_t checksum = 0xffff;
 
-        PWM_PIN_ON(PWM_RED);
+    uint8_t *address = (uint8_t *)msg->start;
+    uint16_t i = msg->len+1;
+    while (--i) {
+        uint8_t data = pgm_read_byte(address++);
+        checksum = _crc16_update(checksum, data);
     }
+
+    if (checksum != msg->checksum) {
+        global.delay = msg->delay;
+        global.crc_match = false;
+    } else
+        global.crc_match = true;
 }
 
 static void flash(void)
@@ -207,11 +226,20 @@ static void remote_parse_msg(struct remote_msg_t *msg)
                                      break;
         case REMOTE_CMD_CRC_CHECK:   parse_crc((struct remote_msg_boot_crc_check_t *)msg);
                                      break;
+        case REMOTE_CMD_CRC_FLASH:   parse_crc_flash((struct remote_msg_boot_crc_flash_t *)msg);
+                                     break;
         case REMOTE_CMD_FLASH:       flash();
                                      break;
         case REMOTE_CMD_ENTER_APP:   /* cleanup and start application */
                                      start_application();
                                      break;
+    }
+
+    if (global.delay && global.crc_match == false) {
+        /* pull int to gnd */
+        R_DDR |= _BV(INTPIN);
+
+        PWM_PIN_ON(PWM_RED);
     }
 }
 
