@@ -220,7 +220,7 @@ module Fnordlicht
         data = data[0..12]
         $dev.write(data)
 
-        $dev.write("\x00" * (13-data.length))
+        $dev.write("\xff" * (13-data.length))
         $dev.flush
     end
 
