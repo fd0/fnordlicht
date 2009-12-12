@@ -66,6 +66,7 @@ void script_start_default(void)
     union program_params_t params;
     params.random.seed = 23;
     params.random.use_address = 0;
+    params.random.wait_for_fade = 1;
     params.random.min_distance = 60;
 
     params.random.saturation = 255;
