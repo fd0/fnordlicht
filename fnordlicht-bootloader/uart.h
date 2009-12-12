@@ -35,6 +35,12 @@ static inline bool uart_receive_complete(void)
     return _UCSRA_UART0 & _BV(_RXC_UART0);
 }
 
+
+static inline bool uart_send_complete(void)
+{
+    return _BV(_UDRE_UART0) & _UCSRA_UART0;
+}
+
 static inline uint8_t uart_getc(void)
 {
     return _UDR_UART0;
