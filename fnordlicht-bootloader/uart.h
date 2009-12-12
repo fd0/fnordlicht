@@ -75,7 +75,7 @@ static inline uint8_t uart_getc(void)
     return _UDR_UART0;
 }
 
-static inline void uart_putc(uint8_t data)
+static void uart_putc(uint8_t data)
 {
     while(!(_BV(_UDRE_UART0) & _UCSRA_UART0));
     UDR0 = data;
