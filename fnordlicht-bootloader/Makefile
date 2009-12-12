@@ -252,7 +252,7 @@ program-eeprom-%: %.eep.hex
 .PHONY: fuses-atmega8-fnordlichtmini fuses-lock
 
 fuses-atmega8-fnordlichtmini:
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U lfuse:w:0xff:m -U hfuse:w:0xda:m
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U lfuse:w:0x3f:m -U hfuse:w:0xda:m
 
 fuses-lock:
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U lock:w:0x2f:m
