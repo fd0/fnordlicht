@@ -300,7 +300,7 @@ static void check_startup(void)
     if (!(R_PIN & _BV(INTPIN)))
         return;
 
-    /* els cleanup and start application */
+    /* else cleanup and start application */
     start_application();
 }
 
