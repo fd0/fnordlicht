@@ -37,29 +37,35 @@
 
 struct global_t
 {
+    /* for bus synchronization */
     uint8_t synced;
     uint8_t sync_len;
 
+    /* own device address */
+    uint8_t address;
+
+    /* for crc checking */
+    bool crc_match;
+    uint8_t delay;
+
+    /* for enter_application command */
+    bool request_exit;
+    uint8_t exit_delay;
+
+    /* for internal message buffer */
+    uint8_t len;
     union {
         uint8_t buf[REMOTE_MSG_LEN];
         struct remote_msg_t msg;
     };
-    uint8_t len;
 
-    uint8_t address;
-
+    /* length and address for data buffer */
+    uint16_t data_len;
+    uint8_t *data_address;
     union {
         uint8_t data_buf[CONFIG_BOOTLOADER_BUFSIZE];
         uint16_t data_buf16[CONFIG_BOOTLOADER_BUFSIZE/2];
     };
-    uint16_t data_len;
-    uint8_t *data_address;
-
-    bool crc_match;
-    uint8_t delay;
-
-    bool request_exit;
-    uint8_t exit_delay;
 };
 
 struct global_t __global;
