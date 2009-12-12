@@ -341,12 +341,11 @@ int __attribute__ ((noreturn,OS_main)) main(void)
             _TIFR_TIMER1 = _BV(OCF1A);
 
             static uint8_t c;
-            if (c == 20) {
+            if (c++ == 20) {
                 /* blink */
                 PWM_PIN_TOGGLE(PWM_BLUE);
                 c = 0;
-            } else
-                c++;
+            }
 
             /* if int is pulled, decrement delay */
             if (R_DDR & _BV(INTPIN)) {
