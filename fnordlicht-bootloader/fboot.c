@@ -71,7 +71,7 @@ struct global_t
 struct global_t __global;
 #define global (&__global)
 
-/* disable watchgo - NEVER CALL DIRECTLY! */
+/* disable watchdog - NEVER CALL DIRECTLY! */
 uint8_t mcusr_mirror __attribute__ ((section (".noinit")));
 void disable_watchdog(void) \
   __attribute__((naked)) \
@@ -312,11 +312,6 @@ static void check_startup(void)
 
 int __attribute__ ((noreturn,OS_main)) main(void)
 {
-    /* immediately start application, if the reset has been caused
-     * by a watchdog reset */
-    if (mcusr_mirror & _BV(WDRF))
-        jump_to_application();
-
     /* initialize timer1, CTC at 50ms, prescaler 1024 */
     OCR1A = F_CPU/1024/20;
     TCCR1B = _BV(WGM12) | _BV(CS12) | _BV(CS10);
