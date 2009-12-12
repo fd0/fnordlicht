@@ -215,9 +215,9 @@ program-eeprom-%: %.eep.hex
 %.lss: %.elf
 	$(OBJDUMP) -h -S $< > $@
 
-.PHONY: fuses-atmega8-fnordlichtmini
+.PHONY: fuses-atmega8-fnordlichtmini-without-bootloader
 
-fuses-atmega8-fnordlichtmini:
+fuses-atmega8-fnordlichtmini-without-bootloader:
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U lfuse:w:0x3f:m -U hfuse:w:0xd9:m
 
 -include $(shell $(MKDIR) .dep 2>/dev/null) $(wildcard .dep/*)

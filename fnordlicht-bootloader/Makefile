@@ -249,9 +249,9 @@ program-eeprom-%: %.eep.hex
 %.lss: %.elf
 	$(OBJDUMP) -h -S $< > $@
 
-.PHONY: fuses-atmega8-fnordlichtmini fuses-lock
+.PHONY: fuses-atmega8-fnordlichtmini-with-bootloader fuses-lock
 
-fuses-atmega8-fnordlichtmini:
+fuses-atmega8-fnordlichtmini-with-bootloader:
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U lfuse:w:0x3f:m -U hfuse:w:0xda:m
 
 fuses-lock:

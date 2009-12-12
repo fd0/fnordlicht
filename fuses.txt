@@ -11,7 +11,7 @@ atmega8:
     -> default: 0xe1
        new:     0b00111111 = 0x3f
 
-    high fuse byte:
+    high fuse byte (with bootloader, leave at 0xd9 for use without bootloader):
         512 words bootloader size: BOOTSZ0 = 1
                                    BOOTSZ1 = 0
 
@@ -75,7 +75,7 @@ atmega8:
     -> default: 0xe1
        new:     0b00111111 = 0x3f
 
-    high fuse byte:
+    high fuse byte (with bootloader, leave at 0xd9 for use without bootloader):
         512 words bootloader size: BOOTSZ0 = 1
                                    BOOTSZ1 = 0
 
