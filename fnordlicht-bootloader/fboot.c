@@ -57,6 +57,9 @@ struct global_t
 
     bool crc_match;
     uint8_t delay;
+
+    bool request_exit;
+    uint8_t exit_delay;
 };
 
 struct global_t global;
@@ -226,8 +229,8 @@ static void remote_parse_msg(struct remote_msg_t *msg)
                                      break;
         case REMOTE_CMD_FLASH:       flash();
                                      break;
-        case REMOTE_CMD_ENTER_APP:   /* cleanup and start application */
-                                     start_application();
+        case REMOTE_CMD_ENTER_APP:   global.request_exit = true;
+                                     global.exit_delay = CONFIG_EXIT_DELAY;
                                      break;
     }
 
@@ -349,6 +352,10 @@ int __attribute__ ((noreturn,OS_main)) main(void)
                     P_PORT &= ~1;
                 }
             }
+
+            /* exit (after exit_delay) if requested */
+            if (global.request_exit && global.exit_delay-- == 0)
+                start_application();
         }
     }
 }

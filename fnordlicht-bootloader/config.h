@@ -29,4 +29,9 @@
 #define CONFIG_BOOTLOADER_BUFSIZE 512
 #endif
 
+/* configure exit delay (in 50ms) */
+#ifndef CONFIG_EXIT_DELAY
+#define CONFIG_EXIT_DELAY 2
+#endif
+
 #endif
