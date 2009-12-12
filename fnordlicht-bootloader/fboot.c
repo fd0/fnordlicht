@@ -88,6 +88,7 @@ void jump_to_application(void)
 }
 
 
+static void start_application(void) __attribute__((noreturn));
 static void start_application(void)
 {
     /* pwm pins */
@@ -108,7 +109,7 @@ static void start_application(void)
     TCCR1B = 0;
     OCR1A = 0;
     TCNT1 = 0;
-    _TIFR_TIMER1 = 0xff;
+    _TIFR_TIMER1 = _TIFR_TIMER1;
 
     /* move interrupt vectors and start real application */
     jump_to_application();
@@ -318,12 +319,10 @@ int __attribute__ ((noreturn,OS_main)) main(void)
     uart_init();
 
     /* configure outputs */
-    P_DDR |= PWM_CHANNEL_MASK;
+    P_DDR = PWM_CHANNEL_MASK;
 
 #ifdef PWM_INVERTED
-    P_PORT |= PWM_CHANNEL_MASK;
-#else
-    P_PORT &= ~PWM_CHANNEL_MASK;
+    P_PORT = PWM_CHANNEL_MASK;
 #endif
 
     /* initialize timer1, CTC at 50ms, prescaler 1024 */
