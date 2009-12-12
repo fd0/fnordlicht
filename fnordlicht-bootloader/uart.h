@@ -49,8 +49,6 @@ static inline void uart_init(void)
 
     #if USE_2X
     _UCSRA_UART0 |= (1 << _U2X_UART0);
-    #else
-    _UCSRA_UART0 &= ~(1 << _U2X_UART0);
     #endif
 
     /* set mode */

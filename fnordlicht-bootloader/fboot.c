@@ -293,8 +293,8 @@ static void check_startup(void)
     /* configure pullup resistor at int pin */
     R_PORT |= _BV(INTPIN);
 
-    /* sleep 100ms (TCNT1 == 2) */
-    while (TCNT1 < 2);
+    /* sleep 100ms (TCNT1 == 2, -> TCNT1L == 2) */
+    while (TCNT1L < 2);
 
     /* if int pin is pulled down, remain in bootloader */
     if (!(R_PIN & _BV(INTPIN)))
