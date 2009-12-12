@@ -62,8 +62,8 @@ struct global_t
     uint8_t exit_delay;
 };
 
-struct global_t global;
-
+struct global_t __global;
+#define global (&__global)
 
 /* disable watchgo - NEVER CALL DIRECTLY! */
 uint8_t mcusr_mirror __attribute__ ((section (".noinit")));
@@ -118,17 +118,17 @@ static void start_application(void)
 static void parse_boot_config(struct remote_msg_boot_config_t *msg)
 {
     /* remember flash address */
-    global.data_address = (uint8_t *)msg->start_address;
+    global->data_address = (uint8_t *)msg->start_address;
 }
 
 static void parse_data(struct remote_msg_boot_data_t *msg)
 {
     uint8_t len = sizeof(msg->data);
-    if (global.data_len + len > CONFIG_BOOTLOADER_BUFSIZE)
-        len = CONFIG_BOOTLOADER_BUFSIZE - global.data_len;
+    if (global->data_len + len > CONFIG_BOOTLOADER_BUFSIZE)
+        len = CONFIG_BOOTLOADER_BUFSIZE - global->data_len;
 
-    memcpy(&global.data_buf[global.data_len], msg->data, len);
-    global.data_len += len;
+    memcpy(&global->data_buf[global->data_len], msg->data, len);
+    global->data_len += len;
 }
 
 static void parse_crc(struct remote_msg_boot_crc_check_t *msg)
@@ -136,16 +136,16 @@ static void parse_crc(struct remote_msg_boot_crc_check_t *msg)
     /* compute crc16 over buffer */
     uint16_t checksum = 0xffff;
 
-    uint8_t *ptr = &global.data_buf[0];
+    uint8_t *ptr = &global->data_buf[0];
     uint16_t i = msg->len+1;
     while (--i)
         checksum = _crc16_update(checksum, *ptr++);
 
     if (checksum != msg->checksum) {
-        global.delay = msg->delay;
-        global.crc_match = false;
+        global->delay = msg->delay;
+        global->crc_match = false;
     } else
-        global.crc_match = true;
+        global->crc_match = true;
 }
 
 static void parse_crc_flash(struct remote_msg_boot_crc_flash_t *msg)
@@ -161,10 +161,10 @@ static void parse_crc_flash(struct remote_msg_boot_crc_flash_t *msg)
     }
 
     if (checksum != msg->checksum) {
-        global.delay = msg->delay;
-        global.crc_match = false;
+        global->delay = msg->delay;
+        global->crc_match = false;
     } else
-        global.crc_match = true;
+        global->crc_match = true;
 }
 
 static void flash(void)
@@ -172,11 +172,11 @@ static void flash(void)
     /* pull int */
     R_DDR |= _BV(INTPIN);
 
-    uint8_t *addr = global.data_address;
-    uint16_t *data = &global.data_buf16[0];
+    uint8_t *addr = global->data_address;
+    uint16_t *data = &global->data_buf16[0];
 
-    uint8_t last_page = global.data_len/SPM_PAGESIZE;
-    if (global.data_len % SPM_PAGESIZE)
+    uint8_t last_page = global->data_len/SPM_PAGESIZE;
+    if (global->data_len % SPM_PAGESIZE)
         last_page++;
 
     for (uint8_t page = 0; page < last_page; page++)
@@ -204,7 +204,7 @@ static void flash(void)
         addr += SPM_PAGESIZE;
     }
 
-    global.data_address = addr;
+    global->data_address = addr;
 
     /* release int */
     R_DDR &= ~_BV(INTPIN);
@@ -213,14 +213,14 @@ static void flash(void)
 static void remote_parse_msg(struct remote_msg_t *msg)
 {
     /* verify address */
-    if (msg->address != global.address && msg->address != REMOTE_ADDR_BROADCAST)
+    if (msg->address != global->address && msg->address != REMOTE_ADDR_BROADCAST)
         return;
 
     /* parse command */
     switch (msg->cmd) {
         case REMOTE_CMD_BOOT_CONFIG: parse_boot_config((struct remote_msg_boot_config_t *)msg);
                                      break;
-        case REMOTE_CMD_BOOT_INIT:   global.data_len = 0;
+        case REMOTE_CMD_BOOT_INIT:   global->data_len = 0;
                                      break;
         case REMOTE_CMD_BOOT_DATA:   parse_data((struct remote_msg_boot_data_t *)msg);
                                      break;
@@ -230,12 +230,12 @@ static void remote_parse_msg(struct remote_msg_t *msg)
                                      break;
         case REMOTE_CMD_FLASH:       flash();
                                      break;
-        case REMOTE_CMD_ENTER_APP:   global.request_exit = true;
-                                     global.exit_delay = CONFIG_EXIT_DELAY;
+        case REMOTE_CMD_ENTER_APP:   global->request_exit = true;
+                                     global->exit_delay = CONFIG_EXIT_DELAY;
                                      break;
     }
 
-    if (global.delay && global.crc_match == false) {
+    if (global->delay && global->crc_match == false) {
         /* pull int to gnd */
         R_DDR |= _BV(INTPIN);
 
@@ -251,36 +251,36 @@ static void remote_poll(void)
         uint8_t data = uart_getc();
 
         /* check if sync sequence has been received before */
-        if (global.sync_len == REMOTE_SYNC_LEN) {
+        if (global->sync_len == REMOTE_SYNC_LEN) {
             /* synced, safe address and send next address to following device */
-            global.address = data;
+            global->address = data;
             uart_putc(data+1);
 
             /* reset buffer */
-            global.len = 0;
+            global->len = 0;
 
             /* enable remote command thread */
-            global.synced = 1;
+            global->synced = 1;
         } else {
             /* just pass through data */
             uart_putc(data);
 
             /* put data into remote buffer
              * (just processed if remote.synced == 1) */
-            if (global.len < sizeof(global.buf))
-                global.buf[global.len++] = data;
+            if (global->len < sizeof(global->buf))
+                global->buf[global->len++] = data;
         }
 
         /* remember the number of sync bytes received so far */
         if (data == REMOTE_CMD_RESYNC)
-            global.sync_len++;
+            global->sync_len++;
         else
-            global.sync_len = 0;
+            global->sync_len = 0;
     }
 
-    if (global.synced && global.len == REMOTE_MSG_LEN) {
-        remote_parse_msg(&global.msg);
-        global.len = 0;
+    if (global->synced && global->len == REMOTE_MSG_LEN) {
+        remote_parse_msg(&global->msg);
+        global->len = 0;
     }
 }
 
@@ -344,7 +344,7 @@ int __attribute__ ((noreturn,OS_main)) main(void)
 
             /* if int is pulled, decrement delay */
             if (R_DDR & _BV(INTPIN)) {
-                if (--global.delay == 0) {
+                if (--global->delay == 0) {
                     /* release int */
                     R_DDR &= ~_BV(INTPIN);
                     P_PORT &= ~1;
@@ -352,7 +352,7 @@ int __attribute__ ((noreturn,OS_main)) main(void)
             }
 
             /* exit (after exit_delay) if requested */
-            if (global.request_exit && global.exit_delay-- == 0)
+            if (global->request_exit && global->exit_delay-- == 0)
                 start_application();
         }
     }
