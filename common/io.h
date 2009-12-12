@@ -64,6 +64,9 @@
 #define RXB80 RXB8
 #define UDR0 UDR
 #define _IVREG GICR
+#ifndef MCUSR
+#define MCUSR MCUCSR
+#endif
 
 #elif defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__)
 
