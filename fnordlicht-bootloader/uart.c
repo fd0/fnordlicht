@@ -47,7 +47,7 @@ void uart_putc(uint8_t data)
 /** init the hardware uart */
 void uart_init(void)
 {
-    #define BAUD 19200
+    #define BAUD CONFIG_SERIAL_BAUDRATE
     #include <util/setbaud.h>
     /* set baud rate */
     _UBRRH_UART0 = UBRRH_VALUE;
