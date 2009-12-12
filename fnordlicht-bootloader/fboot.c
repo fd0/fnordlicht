@@ -293,9 +293,8 @@ static void check_startup(void)
     /* configure pullup resistor at int pin */
     R_PORT |= _BV(INTPIN);
 
-    /* sleep 100ms */
-    for (uint8_t i = 0; i < CONFIG_DELAY; i++)
-        _delay_loop_2(CONFIG_DELAY_LOOP2);
+    /* sleep 100ms (TCNT1 == 2) */
+    while (TCNT1 < 2);
 
     /* if int pin is pulled down, remain in bootloader */
     if (!(R_PIN & _BV(INTPIN)))
@@ -312,6 +311,10 @@ int __attribute__ ((noreturn,OS_main)) main(void)
     if (mcusr_mirror & _BV(WDRF))
         jump_to_application();
 
+    /* initialize timer1, CTC at 50ms, prescaler 1024 */
+    OCR1A = F_CPU/1024/20;
+    TCCR1B = _BV(WGM12) | _BV(CS12) | _BV(CS10);
+
     /* start application if necessary */
     check_startup();
 
@@ -324,10 +327,6 @@ int __attribute__ ((noreturn,OS_main)) main(void)
 #ifdef PWM_INVERTED
     P_PORT = PWM_CHANNEL_MASK;
 #endif
-
-    /* initialize timer1, CTC at 50ms, prescaler 1024 */
-    OCR1A = F_CPU/1024/20;
-    TCCR1B = _BV(WGM12) | _BV(CS12) | _BV(CS10);
 
     while(1) {
         remote_poll();
