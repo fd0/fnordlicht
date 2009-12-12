@@ -175,7 +175,7 @@ $(OBJECTS): $(HEADERS) config.mk
 
 # remove all compiled files
 clean:
-	$(RM) $(foreach ext,elf hex eep.hex map,$(TARGET).$(ext)) \
+	$(RM) $(foreach ext,elf hex eep.hex bin map,$(TARGET).$(ext)) \
 		$(foreach file,$(patsubst %.o,%,$(OBJECTS)),$(foreach ext,o lst lss,$(file).$(ext)))
 
 # additionally remove the dependency makefile and config.mk
