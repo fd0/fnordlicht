@@ -254,6 +254,9 @@ program-eeprom-%: %.eep.hex
 fuses-atmega8-fnordlichtmini-with-bootloader:
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U lfuse:w:0x3f:m -U hfuse:w:0xda:m
 
+fuses-atmega8-fnordlichtmini-without-bootloader:
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U lfuse:w:0x3f:m -U hfuse:w:0xd9:m
+
 fuses-lock:
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U lock:w:0x2f:m
 
