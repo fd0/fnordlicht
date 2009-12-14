@@ -49,8 +49,11 @@ extern struct global_remote_t global_remote;
 #define remote_poll(...)
 #define remote_address(...) 0
 
-#define apply_offset(...)
-#define apply_hsv_offset(...)
+#define remote_apply_offset(x, ...) x
+#define remote_apply_hsv_offset(x, ...) x
+
+#define remote_pull_int(...)
+#define remote_release_int(...)
 
 #else
 
@@ -62,8 +65,8 @@ void remote_pull_int(void);
 void remote_release_int(void);
 
 /* offset helper functions */
-uint8_t apply_offset(uint8_t value, int8_t offset);
-void apply_hsv_offset(struct hsv_color_t *color);
+uint8_t remote_apply_offset(uint8_t value, int8_t offset);
+void remote_apply_hsv_offset(struct hsv_color_t *color);
 
 #endif
 #endif

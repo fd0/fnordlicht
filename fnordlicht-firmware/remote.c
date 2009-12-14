@@ -221,7 +221,7 @@ void remote_release_int(void)
 }
 
 /* offset helper functions */
-uint8_t apply_offset(uint8_t value, int8_t offset)
+uint8_t remote_apply_offset(uint8_t value, int8_t offset)
 {
     if (offset < 0) {
         if (value > -offset)
@@ -247,7 +247,7 @@ static uint8_t apply_scale(uint8_t value, uint8_t scale)
     return LO8(temp);
 }
 
-void apply_hsv_offset(struct hsv_color_t *color)
+void remote_apply_hsv_offset(struct hsv_color_t *color)
 {
     color->hue += global_remote.offsets.hue;
     color->saturation = apply_scale(color->saturation, global_remote.offsets.saturation);
@@ -258,16 +258,16 @@ void apply_hsv_offset(struct hsv_color_t *color)
 
 void parse_fade_rgb(struct remote_msg_fade_rgb_t *msg)
 {
-    uint8_t step = apply_offset(msg->step, global_remote.offsets.step);
-    uint8_t delay = apply_offset(msg->delay, global_remote.offsets.delay);
+    uint8_t step = remote_apply_offset(msg->step, global_remote.offsets.step);
+    uint8_t delay = remote_apply_offset(msg->delay, global_remote.offsets.delay);
     pwm_fade_rgb(&msg->color, step, delay);
 }
 
 void parse_fade_hsv(struct remote_msg_fade_hsv_t *msg)
 {
-    uint8_t step = apply_offset(msg->step, global_remote.offsets.step);
-    uint8_t delay = apply_offset(msg->delay, global_remote.offsets.delay);
-    apply_hsv_offset(&msg->color);
+    uint8_t step = remote_apply_offset(msg->step, global_remote.offsets.step);
+    uint8_t delay = remote_apply_offset(msg->delay, global_remote.offsets.delay);
+    remote_apply_hsv_offset(&msg->color);
     pwm_fade_hsv(&msg->color, step, delay);
 }
 

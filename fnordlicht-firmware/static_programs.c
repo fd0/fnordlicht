@@ -58,11 +58,11 @@ PT_THREAD(program_colorwheel(struct process_t *process))
         /* set new color */
         memcpy(&c2, &c, sizeof(c));
         /* apply offsets */
-        apply_hsv_offset(&c2);
-        uint8_t step = apply_offset(
+        remote_apply_hsv_offset(&c2);
+        uint8_t step = remote_apply_offset(
                 process->params.colorwheel.fade_step,
                 global_remote.offsets.step);
-        uint8_t delay = apply_offset(
+        uint8_t delay = remote_apply_offset(
                 process->params.colorwheel.fade_delay,
                 global_remote.offsets.delay);
         pwm_fade_hsv(&c2, step, delay);
@@ -122,11 +122,11 @@ PT_THREAD(program_random(struct process_t *process))
         c.saturation = process->params.random.saturation;
 
         /* apply offsets */
-        apply_hsv_offset(&c);
-        uint8_t step = apply_offset(
+        remote_apply_hsv_offset(&c);
+        uint8_t step = remote_apply_offset(
                 process->params.random.fade_step,
                 global_remote.offsets.step);
-        uint8_t delay = apply_offset(
+        uint8_t delay = remote_apply_offset(
                 process->params.random.fade_delay,
                 global_remote.offsets.delay);
         /* fade to new color */
@@ -181,11 +181,11 @@ PT_THREAD(program_replay(struct process_t *process))
             color.value = c.color.value;
 
             /* apply offsets */
-            apply_hsv_offset(&color);
-            uint8_t step = apply_offset(
+            remote_apply_hsv_offset(&color);
+            uint8_t step = remote_apply_offset(
                     process->params.random.fade_step,
                     global_remote.offsets.step);
-            uint8_t delay = apply_offset(
+            uint8_t delay = remote_apply_offset(
                     process->params.random.fade_delay,
                     global_remote.offsets.delay);
             pwm_fade_hsv(&color, step, delay);
