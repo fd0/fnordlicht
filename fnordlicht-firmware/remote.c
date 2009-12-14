@@ -334,7 +334,8 @@ void parse_config_offsets(struct remote_msg_config_offsets_t *msg)
 
 void parse_start_program(struct remote_msg_start_program_t *msg)
 {
-    parse_stop(NULL);
+    script_stop();
+    pwm_stop_fading();
     script_start(0, msg->script, (union program_params_t *)&msg->parameters);
 }
 
