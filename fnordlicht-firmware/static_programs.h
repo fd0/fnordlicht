@@ -36,9 +36,10 @@ struct colorwheel_params_t
 {
     uint8_t fade_step;
     uint8_t fade_delay;
-    uint16_t fade_sleep;
+    uint8_t fade_sleep;
     uint16_t hue_start;
     int16_t hue_step;
+    uint8_t add_addr;
     uint8_t saturation;
     uint8_t value;
 };

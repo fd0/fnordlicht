@@ -53,6 +53,7 @@ void script_start_default(void)
     union program_params_t params;
     params.colorwheel.hue_start = 0;
     params.colorwheel.hue_step = 60;
+    params.colorwheel.add_addr = 0;
     params.colorwheel.saturation = 255;
     params.colorwheel.value = 255;
 

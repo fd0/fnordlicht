@@ -483,18 +483,23 @@ compiled into the firmware.
     current hue value, afterwards the device fades to the resulting color (using
     fade_step and fade_delay) and waits for the time specified by fade_sleep.
 
+    If add_addr is nonzero, the fade ist not started at hue_start but
+    (hue_start + addr_add * device_address * hue_step).
+
         byte offset | name       | description
         ---------------------------------------------------------
                   0 | fade_step  | used for fading to new color
                     |            |   (unsigned 8 bit integer)
                   1 | fade_delay | used for fading to now color
                     |            |   (unsigned 8 bit integer)
-                2-3 | fade_sleep | sleep between steps (in 100ms)
-                    |            |   (unsigned 16 bit integer)
-                4-5 | hue_start  | start at this hue value
+                  2 | fade_sleep | sleep between steps (in seconds)
+                    |            |   (unsigned 8 bit integer)
+                3-4 | hue_start  | start at this hue value
                     |            |   (unsigned 16 bit integer
-                6-7 | hue_step   | add this to the hue in each step
+                5-6 | hue_step   | add this to the hue in each step
                     |            |   (signed 16 bit integer)
+                  7 | add_addr   | add hue_step address-times before start
+                    |            |   (unsigned 8 bit integer)
                   8 | saturation | saturation
                     |            |   (unsigned 8 bit integer)
                   9 | value      | value

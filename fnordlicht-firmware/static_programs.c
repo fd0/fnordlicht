@@ -50,16 +50,20 @@ PT_THREAD(program_colorwheel(struct process_t *process))
     c.value = process->params.colorwheel.value;
     c.saturation = process->params.colorwheel.saturation;
 
+    uint8_t add = process->params.colorwheel.add_addr;
+    c.hue += remote_address() * add * process->params.colorwheel.hue_step;
+
     while (1) {
         /* set new color */
         pwm_fade_hsv(&c, process->params.colorwheel.fade_step, process->params.colorwheel.fade_delay);
+
         c.hue += process->params.colorwheel.hue_step;
 
         /* wait until target reached */
         PT_WAIT_UNTIL(&process->pt, pwm_target_reached());
 
-        /* sleep (remember: we are called every 100ms) */
-        sleep = process->params.colorwheel.fade_sleep;
+        /* sleep (in seconds, remember: we are called every 100ms) */
+        sleep = 10 * process->params.colorwheel.fade_sleep;
         while (sleep--)
             PT_YIELD(&process->pt);
     }
