@@ -33,6 +33,7 @@
 #include "../common/common.h"
 #include "pwm.h"
 #include "timer.h"
+#include "remote.h"
 
 /* abbreviations for port, ddr and pin */
 #define P_PORT _OUTPORT(PWM_PORT)
@@ -536,6 +537,10 @@ static void compute_speed(uint8_t step, uint8_t delay)
 
 void pwm_fade_rgb(struct rgb_color_t *color, uint8_t step, uint8_t delay)
 {
+    /* apply offsets for step and delay */
+    step = remote_apply_offset(step, global_remote.offsets.step);
+    delay = remote_apply_offset(delay, global_remote.offsets.delay);
+
     /* set target color */
     for (uint8_t i = 0; i < PWM_CHANNELS; i++)
         global_pwm.target.rgb.rgb[i] = color->rgb[i];
@@ -551,8 +556,15 @@ void pwm_fade_rgb(struct rgb_color_t *color, uint8_t step, uint8_t delay)
 
 void pwm_fade_hsv(struct hsv_color_t *color, uint8_t step, uint8_t delay)
 {
+    /* apply offsets for step and delay */
+    step = remote_apply_offset(step, global_remote.offsets.step);
+    delay = remote_apply_offset(delay, global_remote.offsets.delay);
+
     /* convert color */
     memcpy(&global_pwm.target.hsv, color, sizeof(struct hsv_color_t));
+
+    /* apply offsets */
+    remote_apply_hsv_offset(&global_pwm.target.hsv);
 
     /* update rgb color in target */
     pwm_hsv2rgb(&global_pwm.target);

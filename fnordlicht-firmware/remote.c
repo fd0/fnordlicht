@@ -258,17 +258,12 @@ void remote_apply_hsv_offset(struct hsv_color_t *color)
 
 void parse_fade_rgb(struct remote_msg_fade_rgb_t *msg)
 {
-    uint8_t step = remote_apply_offset(msg->step, global_remote.offsets.step);
-    uint8_t delay = remote_apply_offset(msg->delay, global_remote.offsets.delay);
-    pwm_fade_rgb(&msg->color, step, delay);
+    pwm_fade_rgb(&msg->color, msg->step, msg->delay);
 }
 
 void parse_fade_hsv(struct remote_msg_fade_hsv_t *msg)
 {
-    uint8_t step = remote_apply_offset(msg->step, global_remote.offsets.step);
-    uint8_t delay = remote_apply_offset(msg->delay, global_remote.offsets.delay);
-    remote_apply_hsv_offset(&msg->color);
-    pwm_fade_hsv(&msg->color, step, delay);
+    pwm_fade_hsv(&msg->color, msg->step, msg->delay);
 }
 
 void parse_save_rgb(struct remote_msg_save_rgb_t *msg)
