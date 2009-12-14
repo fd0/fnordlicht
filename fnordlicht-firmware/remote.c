@@ -406,7 +406,7 @@ void parse_bootloader(struct remote_msg_bootloader_t *msg)
 
     /* wait until the tx fifo is empty, then start watchdog, but never kick it
      * (bootloader and firmware both disable the watchdog) */
-    while (fifo_fill(&global_uart.tx) > 0);
+    while (fifo_fill((fifo_t *)&global_uart.tx) > 0);
     wdt_enable(WDTO_120MS);
 }
 
