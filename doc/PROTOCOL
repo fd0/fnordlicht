@@ -228,10 +228,10 @@ command |   function        | description
     ---------------------------------------------------------
 
     Set global values which influence how fast and what colors are when using
-    FADE_RGB or FADE_HSV.  All bytes are signed 8 bit integers, except hue, which
-    is a little endian signed 16 bit integer.  Saturation and value are scales.
-    This means, the final saturation and value will be scaled with
-    saturation/255 and value/255, respectively.
+    FADE_RGB or FADE_HSV or the static programs documented below.  All bytes are
+    signed 8 bit integers, except hue, which is a little endian signed 16 bit
+    integer.  Saturation and value are scales.  This means, the final saturation
+    and value will be scaled with saturation/255 and value/255, respectively.
 
         byte offset | name          |  description
         -------------------------------------------
@@ -486,6 +486,10 @@ compiled into the firmware.
     If add_addr is nonzero, the fade ist not started at hue_start but
     (hue_start + addr_add * device_address * hue_step).
 
+    This program honors the globally defined offsets set with the CONFIG_OFFSETS
+    command in each step.  If a global offset is reconfigured, the new value
+    will be applied in the next color calculation of this program.
+
         byte offset | name       | description
         ---------------------------------------------------------
                   0 | fade_step  | used for fading to new color
@@ -522,6 +526,10 @@ compiled into the firmware.
     fade_delay are used in each fade.  If the wait_for_fade-bit within the
     flags byte is set, the device waits until the target color is reached.
     Afterwards the device sleeps for a configurable amount of time (fade_sleep).
+
+    This program honors the globally defined offsets set with the CONFIG_OFFSETS
+    command in each step.  If a global offset is reconfigured, the new value
+    will be applied in the next color calculation of this program.
 
         flags (1 byte)
         --------------
@@ -565,6 +573,10 @@ compiled into the firmware.
     when end is reached, if repeat is 1, the sequence is restarted from the
     beginning and if repeat is 2, the color sequence is played in reverse
     order, from end to beginning.
+
+    This program honors the globally defined offsets set with the CONFIG_OFFSETS
+    command for hsv colors in each step.  If a global offset is reconfigured,
+    the new value will be applied in the next color calculation of this program.
 
         byte offset | name         | description
         ----------------------------------------------------------------------

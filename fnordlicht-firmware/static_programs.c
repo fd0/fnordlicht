@@ -21,6 +21,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include <avr/pgmspace.h>
 #include "static_programs.h"
 #include "color.h"
@@ -42,7 +43,7 @@ PROGMEM program_handler static_programs[] = {
 PT_THREAD(program_colorwheel(struct process_t *process))
 {
     static uint16_t sleep;
-    static struct hsv_color_t c;
+    static struct hsv_color_t c, c2;
 
     PT_BEGIN(&process->pt);
 
@@ -55,7 +56,16 @@ PT_THREAD(program_colorwheel(struct process_t *process))
 
     while (1) {
         /* set new color */
-        pwm_fade_hsv(&c, process->params.colorwheel.fade_step, process->params.colorwheel.fade_delay);
+        memcpy(&c2, &c, sizeof(c));
+        /* apply offsets */
+        apply_hsv_offset(&c2);
+        uint8_t step = apply_offset(
+                process->params.colorwheel.fade_step,
+                global_remote.offsets.step);
+        uint8_t delay = apply_offset(
+                process->params.colorwheel.fade_delay,
+                global_remote.offsets.delay);
+        pwm_fade_hsv(&c2, step, delay);
 
         c.hue += process->params.colorwheel.hue_step;
 
@@ -84,9 +94,6 @@ PT_THREAD(program_random(struct process_t *process))
         seed ^= remote_address();
     srandom(seed);
 
-    c.value = process->params.random.value;
-    c.saturation = process->params.random.saturation;
-
     while (1) {
         /* generate new color */
         union uint32_t_access rnd;
@@ -109,11 +116,21 @@ PT_THREAD(program_random(struct process_t *process))
                 continue;
         }
 
-        /* copy color to structure */
+        /* copy color to structure, reset saturation and value */
         c.hue = rnd.words[0];
+        c.value = process->params.random.value;
+        c.saturation = process->params.random.saturation;
 
+        /* apply offsets */
+        apply_hsv_offset(&c);
+        uint8_t step = apply_offset(
+                process->params.random.fade_step,
+                global_remote.offsets.step);
+        uint8_t delay = apply_offset(
+                process->params.random.fade_delay,
+                global_remote.offsets.delay);
         /* fade to new color */
-        pwm_fade_hsv(&c, process->params.random.fade_step, process->params.random.fade_delay);
+        pwm_fade_hsv(&c, step, delay);
 
         /* wait until target reached */
         if (process->params.random.wait_for_fade)
@@ -163,7 +180,15 @@ PT_THREAD(program_replay(struct process_t *process))
             color.saturation = c.color.saturation;
             color.value = c.color.value;
 
-            pwm_fade_hsv(&color, c.step, c.delay);
+            /* apply offsets */
+            apply_hsv_offset(&color);
+            uint8_t step = apply_offset(
+                    process->params.random.fade_step,
+                    global_remote.offsets.step);
+            uint8_t delay = apply_offset(
+                    process->params.random.fade_delay,
+                    global_remote.offsets.delay);
+            pwm_fade_hsv(&color, step, delay);
         }
 
         /* update pos */

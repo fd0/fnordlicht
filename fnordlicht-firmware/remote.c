@@ -220,8 +220,8 @@ void remote_release_int(void)
     remote.int_state = INT_IDLE;
 }
 
-/* static helper functions */
-static uint8_t apply_offset(uint8_t value, int8_t offset)
+/* offset helper functions */
+uint8_t apply_offset(uint8_t value, int8_t offset)
 {
     if (offset < 0) {
         if (value > -offset)
@@ -247,7 +247,7 @@ static uint8_t apply_scale(uint8_t value, uint8_t scale)
     return LO8(temp);
 }
 
-static void apply_hsv_offset(struct hsv_color_t *color)
+void apply_hsv_offset(struct hsv_color_t *color)
 {
     color->hue += global_remote.offsets.hue;
     color->saturation = apply_scale(color->saturation, global_remote.offsets.saturation);

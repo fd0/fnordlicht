@@ -24,6 +24,7 @@
 #define __REMOTE_H
 
 #include <stdint.h>
+#include "color.h"
 
 struct remote_offsets_t
 {
@@ -48,6 +49,9 @@ extern struct global_remote_t global_remote;
 #define remote_poll(...)
 #define remote_address(...) 0
 
+#define apply_offset(...)
+#define apply_hsv_offset(...)
+
 #else
 
 void remote_init(void);
@@ -56,6 +60,10 @@ void remote_poll(void);
 
 void remote_pull_int(void);
 void remote_release_int(void);
+
+/* offset helper functions */
+uint8_t apply_offset(uint8_t value, int8_t offset);
+void apply_hsv_offset(struct hsv_color_t *color);
 
 #endif
 #endif
