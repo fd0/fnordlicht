@@ -22,6 +22,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <avr/wdt.h>
 #include "globals.h"
 #include "remote.h"
 #include "fifo.h"
@@ -79,6 +80,7 @@ static void parse_stop(struct remote_msg_stop_t *msg);
 static void parse_modify_current(struct remote_msg_modify_current_t *msg);
 static void parse_pull_int(struct remote_msg_pull_int_t *msg);
 static void parse_config_startup(struct remote_msg_config_startup_t *msg);
+static void parse_bootloader(struct remote_msg_bootloader_t *msg);
 
 void remote_init(void)
 {
@@ -133,6 +135,10 @@ static void remote_parse_msg(struct remote_msg_t *msg)
         case REMOTE_CMD_CONFIG_STARTUP:
             parse_config_startup((struct remote_msg_config_startup_t *)msg);
             break;
+        case REMOTE_CMD_BOOTLOADER:
+            parse_bootloader((struct remote_msg_bootloader_t *)msg);
+            break;
+
     }
 }
 
@@ -387,6 +393,21 @@ void parse_config_startup(struct remote_msg_config_startup_t *msg)
     memcpy(&startup_config.params, &msg->params, sizeof(struct startup_parameters_t));
     /* save config to eeprom */
     storage_save_config();
+}
+
+void parse_bootloader(struct remote_msg_bootloader_t *msg)
+{
+    /* check magic bytes */
+    if (msg->magic[0] != BOOTLOADER_MAGIC_BYTE1 ||
+        msg->magic[1] != BOOTLOADER_MAGIC_BYTE2 ||
+        msg->magic[2] != BOOTLOADER_MAGIC_BYTE3 ||
+        msg->magic[3] != BOOTLOADER_MAGIC_BYTE4)
+        return;
+
+    /* wait until the tx fifo is empty, then start watchdog, but never kick it
+     * (bootloader and firmware both disable the watchdog) */
+    while (fifo_fill(&global_uart.tx) > 0);
+    wdt_enable(WDTO_120MS);
 }
 
 #endif

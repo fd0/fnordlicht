@@ -68,11 +68,11 @@ struct remote_msg_t
 };
 
 /* bootloader commands */
-#define BOOTLOADER_MAGIC_BYTE1 = 0x6b
-#define BOOTLOADER_MAGIC_BYTE2 = 0x56
-#define BOOTLOADER_MAGIC_BYTE3 = 0x27
-#define BOOTLOADER_MAGIC_BYTE4 = 0xfc
-struct remote_msg_bootloader
+#define BOOTLOADER_MAGIC_BYTE1 0x6b
+#define BOOTLOADER_MAGIC_BYTE2 0x56
+#define BOOTLOADER_MAGIC_BYTE3 0x27
+#define BOOTLOADER_MAGIC_BYTE4 0xfc
+struct remote_msg_bootloader_t
 {
     uint8_t address;
     uint8_t cmd;
