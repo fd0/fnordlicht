@@ -36,6 +36,9 @@
 #define _INPORT(name)            _CONCAT(PIN, name)
 #define _DDRPORT(name)           _CONCAT(DDR, name)
 
+/* __noinline attribute (opposite of inline attribute */
+#define __noinline __attribute__((noinline))
+
 /* structure for accessing bytes and words in an uint32_t */
 union uint32_t_access {
     uint8_t bytes[4];

@@ -183,7 +183,7 @@ static PT_THREAD(remote_thread(struct pt *thread))
     PT_END(thread);
 }
 
-static void send_msg(struct remote_msg_t *msg)
+static __noinline void send_msg(struct remote_msg_t *msg)
 {
     uint8_t *ptr = (uint8_t *)msg;
     for (uint8_t i = 0; i < REMOTE_MSG_LEN; i++)
