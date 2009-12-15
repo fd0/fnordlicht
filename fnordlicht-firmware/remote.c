@@ -208,7 +208,7 @@ static PROGMEM uint8_t master_parameters[] = {
     0,          /* fade sleep */
     0, 0,       /* hue start (little endian) */
     60, 0,      /* hue step (little endian) */
-    2,          /* addr add */
+    1,          /* addr add */
     255,        /* saturation */
     255,        /* value */
 
