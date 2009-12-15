@@ -50,7 +50,7 @@ PT_THREAD(program_colorwheel(struct process_t *process))
     c.value = process->params.colorwheel.value;
     c.saturation = process->params.colorwheel.saturation;
 
-    uint8_t add = process->params.colorwheel.add_addr;
+    int8_t add = process->params.colorwheel.add_addr;
     c.hue += remote_address() * add * process->params.colorwheel.hue_step;
 
     while (1) {

@@ -483,8 +483,8 @@ compiled into the firmware.
     current hue value, afterwards the device fades to the resulting color (using
     fade_step and fade_delay) and waits for the time specified by fade_sleep.
 
-    If add_addr is nonzero, the fade ist not started at hue_start but
-    (hue_start + addr_add * device_address * hue_step).
+    If add_addr is nonzero (attention: signed integer!), the fade ist not
+    started at hue_start but (hue_start + addr_add * device_address * hue_step).
 
     This program honors the globally defined offsets set with the CONFIG_OFFSETS
     command in each step.  If a global offset is reconfigured, the new value
@@ -503,7 +503,7 @@ compiled into the firmware.
                 5-6 | hue_step   | add this to the hue in each step
                     |            |   (signed 16 bit integer)
                   7 | add_addr   | add hue_step address-times before start
-                    |            |   (unsigned 8 bit integer)
+                    |            |   (signed 8 bit integer)
                   8 | saturation | saturation
                     |            |   (unsigned 8 bit integer)
                   9 | value      | value
