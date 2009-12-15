@@ -109,7 +109,7 @@ void script_stop(void)
 {
     /* stop all tasks */
     for (uint8_t i = 0; i < CONFIG_SCRIPT_TASKS; i++) {
-        global_script.tasks[i].enable = 0;
+        global_script.tasks[i].enable = false;
         PT_INIT(&global_script.tasks[i].pt);
     }
 
@@ -133,7 +133,7 @@ void script_start(uint8_t task, uint8_t index, union program_params_t *params)
     global_script.tasks[task].execute = (program_handler)pgm_read_word(&static_programs[index]);
 
     /* enable script */
-    global_script.tasks[task].enable = 1;
+    global_script.tasks[task].enable = true;
 
     /* reset timer */
     timer_set(&global_script.timer, 10);

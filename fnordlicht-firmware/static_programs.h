@@ -24,6 +24,7 @@
 #define __STATIC_PROGRAMS_H
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "globals.h"
 #include "../common/pt/pt.h"
 
@@ -82,7 +83,7 @@ union program_params_t
 struct process_t {
     program_handler execute;
     struct pt pt;
-    uint8_t enable:1;
+    bool enable;
     union program_params_t params;
 };
 
