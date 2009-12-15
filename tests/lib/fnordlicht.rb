@@ -168,6 +168,13 @@ module Fnordlicht
         $dev.flush
     end
 
+    def powerdown(addr)
+        $dev.write(addr.chr)
+        $dev.write("\x0C")
+        $dev.write("\x00"*13)
+        $dev.flush
+    end
+
     # secondary functions
     def fade_updown_rgb(addr, r, g, b, step, delay, sleep_time)
         fade_rgb(addr, r, g, b, step, delay)

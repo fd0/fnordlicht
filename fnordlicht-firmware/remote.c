@@ -24,6 +24,9 @@
 #include <string.h>
 #include <avr/wdt.h>
 #include <avr/pgmspace.h>
+#include <avr/sleep.h>
+#include <avr/interrupt.h>
+#include <util/delay.h>
 #include "globals.h"
 #include "remote.h"
 #include "fifo.h"
@@ -89,6 +92,7 @@ static void parse_modify_current(struct remote_msg_modify_current_t *msg);
 static void parse_pull_int(struct remote_msg_pull_int_t *msg);
 static void parse_config_startup(struct remote_msg_config_startup_t *msg);
 static void parse_bootloader(struct remote_msg_bootloader_t *msg);
+static void parse_powerdown(void);
 
 void remote_init(void)
 {
@@ -166,6 +170,9 @@ static void remote_parse_msg(struct remote_msg_t *msg)
             break;
         case REMOTE_CMD_BOOTLOADER:
             parse_bootloader((struct remote_msg_bootloader_t *)msg);
+            break;
+        case REMOTE_CMD_POWERDOWN:
+            parse_powerdown();
             break;
 
     }
@@ -544,5 +551,52 @@ void parse_bootloader(struct remote_msg_bootloader_t *msg)
     wait_for_uart();
     wdt_enable(WDTO_120MS);
 }
+
+void parse_powerdown(void)
+{
+    /* configure sleep mode */
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+
+    /* wait until the tx fifo is empty before sleep */
+    wait_for_uart();
+
+    /* save all output registers */
+    uint8_t portb = PORTB;
+    uint8_t portc = PORTC;
+    uint8_t portd = PORTD;
+    uint8_t ddrb = DDRB;
+    uint8_t ddrc = DDRC;
+    uint8_t ddrd = DDRD;
+    PORTB = 0;
+    PORTC = 0;
+    PORTD = 0;
+    DDRB = 0;
+    DDRC = 0;
+    DDRD = 0;
+
+    /* configure int pin as input with pullup */
+    R_DDR = _BV(INTPIN);
+    R_PORT = _BV(INTPIN);
+
+    /* enable int0 low level interrupt */
+    GIFR = _BV(INTF0);
+    GICR |= _BV(INT0);
+    /* enter sleep mode */
+    sleep_mode();
+
+    /* wakeup, disable int0 */
+    GICR &= ~_BV(INT0);
+
+    /* restore output registers */
+    PORTB = portb;
+    PORTC = portc;
+    PORTD = portd;
+    DDRB = ddrb;
+    DDRC = ddrc;
+    DDRD = ddrd;
+}
+
+/* do nothing, just for wakeup after sleep */
+EMPTY_INTERRUPT(INT0_vect);
 
 #endif

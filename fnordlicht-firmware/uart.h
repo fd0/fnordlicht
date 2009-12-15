@@ -26,6 +26,7 @@
 
 #include "globals.h"
 #include "fifo.h"
+#include "../common/io.h"
 
 #if !CONFIG_SERIAL
 
@@ -46,6 +47,11 @@ extern volatile struct global_uart_t global_uart;
 /* prototypes */
 void uart_init(void);
 void uart_putc(uint8_t data);
+
+static inline bool uart_send_complete(void)
+{
+    return _BV(_UDRE_UART0) & _UCSRA_UART0;
+}
 
 #endif
 

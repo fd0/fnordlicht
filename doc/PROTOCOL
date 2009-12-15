@@ -100,6 +100,7 @@ command |   function        | description
    0x09 | MODIFY_CURRENT    | modify current color
    0x0A | PULL_INT          | pull down INT line
    0x0B | CONFIG_STARTUP    | configure startup
+   0x0C | POWERDOWN         | power down the device
    0x1B |                   | RESERVED (sync-sequence)
 
    0x80 | BOOTLOADER        | start bootloader
@@ -338,6 +339,19 @@ command |   function        | description
                 3 | program    | static program index
              4-14 | parameters | parameters to configured program
 
+
+    Command: POWERDOWN - power down device (0x0C)
+    ---------------------------------------------
+
+      Power down the device.  After receiving this command, the device should
+      power down all light outputs and suspend itself to reduce the power
+      consumption to a minimum.  A device must resume operation after a falling
+      edge on the INT pin.  It is allowed to activate a pull-up resistor on
+      that pin, to pull the pin to a defined level.
+
+      byte offset | name       |  description
+      ------------------------------------
+             2-14 | don't care |
 
 
     Command: BOOTLOADER - start bootloader (0x80)

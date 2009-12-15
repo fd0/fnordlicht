@@ -38,6 +38,7 @@
 #define REMOTE_CMD_MODIFY_CURRENT   0x09
 #define REMOTE_CMD_PULL_INT         0x0A
 #define REMOTE_CMD_CONFIG_STARTUP   0x0B
+#define REMOTE_CMD_POWERDOWN        0x0C
 
 #define REMOTE_CMD_RESYNC           0x1b
 
