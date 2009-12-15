@@ -647,7 +647,7 @@ void pwm_modify_hsv(struct hsv_color_offset_t *color, uint8_t step, uint8_t dela
 /** interrupts*/
 
 /** timer1 overflow (=output compare a) interrupt */
-ISR(SIG_OUTPUT_COMPARE1A)
+ISR(TIMER1_COMPA_vect)
 {
     /* read next_bitmask */
     uint8_t next_bitmask = pwm_next_bitmask;
@@ -683,4 +683,4 @@ ISR(SIG_OUTPUT_COMPARE1A)
 }
 
 /** timer1 output compare b interrupt */
-ISR(SIG_OUTPUT_COMPARE1B, ISR_ALIASOF(SIG_OUTPUT_COMPARE1A));
+ISR(TIMER1_COMPB_vect, ISR_ALIASOF(TIMER1_COMPA_vect));

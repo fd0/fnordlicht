@@ -72,27 +72,16 @@ struct global_t __global;
 #define global (&__global)
 
 /* disable watchdog - NEVER CALL DIRECTLY! */
-uint8_t mcusr_mirror __attribute__ ((section (".noinit")));
 void disable_watchdog(void) \
   __attribute__((naked)) \
   __attribute__((section(".init3")));
 void disable_watchdog(void)
 {
-    mcusr_mirror = MCUSR;
     MCUSR = 0;
     wdt_disable();
 }
 
-/* enter application */
-void jump_to_application(void) __attribute__((naked, noinline));
-void jump_to_application(void)
-{
-    /* jump to application reset vector */
-    asm("ldi r30, 0");
-    asm("ldi r31, 0");
-    asm("icall");
-}
-
+static void (*jump_to_application)(void) = 0;
 
 static void start_application(void) __attribute__((noreturn));
 static void start_application(void)
