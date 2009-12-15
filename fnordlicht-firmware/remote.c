@@ -211,16 +211,27 @@ static void send_resync(uint8_t addr)
 
 #if CONFIG_MASTER_MODE
 /* parameters for master mode script commands */
-#define MASTER_PROGRAMS 1
+#define MASTER_PROGRAMS 2
 static PROGMEM uint8_t master_parameters[] = {
-    /* first: colorwheel */
-    0,
+    /* first: colorwheel forward */
+    0,          /* program index */
     1,          /* fade step */
     2,          /* fade delay */
     0,          /* fade sleep */
     0, 0,       /* hue start (little endian) */
     20, 0,      /* hue step (little endian) */
     -1,         /* addr add */
+    255,        /* saturation */
+    255,        /* value */
+
+    /* first: colorwheel backward */
+    0,          /* program index */
+    1,          /* fade step */
+    2,          /* fade delay */
+    0,          /* fade sleep */
+    0, 0,       /* hue start (little endian) */
+    20, 0,      /* hue step (little endian) */
+    1,          /* addr add */
     255,        /* saturation */
     255,        /* value */
 };
