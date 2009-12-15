@@ -98,6 +98,10 @@ CFLAGS += --param inline-call-cost=2  -finline-limit=3 -fno-inline-small-functio
 CFLAGS += -Wl,--relax
 CFLAGS += -fno-split-wide-types
 
+# place each function in an own section and do garbage collection
+CFLAGS += -ffunction-sections -fdata-sections
+CFLAGS += -Wl,--gc-sections
+
 # flags for the compiler (for .S files)
 ASFLAGS += -g -mmcu=$(MCU) -DF_CPU=$(F_CPU) -x assembler-with-cpp $(DEPFLAGS)
 ASFLAGS += $(addprefix -I,$(INCLUDES))
