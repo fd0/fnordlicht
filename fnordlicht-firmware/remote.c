@@ -211,7 +211,7 @@ static void send_resync(uint8_t addr)
 
 #if CONFIG_MASTER_MODE
 /* parameters for master mode script commands */
-#define MASTER_PROGRAMS 2
+#define MASTER_PROGRAMS 1
 static PROGMEM uint8_t master_parameters[] = {
     /* first: colorwheel */
     0,
@@ -219,21 +219,10 @@ static PROGMEM uint8_t master_parameters[] = {
     2,          /* fade delay */
     0,          /* fade sleep */
     0, 0,       /* hue start (little endian) */
-    60, 0,      /* hue step (little endian) */
+    20, 0,      /* hue step (little endian) */
     -1,         /* addr add */
     255,        /* saturation */
     255,        /* value */
-
-    /* second: random */
-    1,
-    55, 0,      /* seed (little endian) */
-    3,          /* flags (wait for fade, use address) */
-    1,          /* fade step */
-    3,          /* fade delay */
-    0x2c, 0x01, /* fade sleep (little endian) */
-    255,        /* saturation */
-    255,        /* value */
-    30,         /* min distance */
 };
 
 static PT_THREAD(remote_master_thread(struct pt *thread))
