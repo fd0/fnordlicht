@@ -67,9 +67,13 @@
 #define CONFIG_SERIAL_BAUDRATE 19200
 #endif
 
-/* disable static master mode by default (still check jumper) */
-#ifndef CONFIG_STATIC_MASTER
-#define CONFIG_STATIC_MASTER 0
+/* configure master mode:
+ *   0   disable master mode completely
+ *   1   check if master mode jumper is set (default)
+ *   2   always act as master
+ */
+#ifndef CONFIG_MASTER_MODE
+#define CONFIG_MASTER_MODE 1
 #endif
 
 /* check if hardware is valid */

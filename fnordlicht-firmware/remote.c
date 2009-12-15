@@ -63,7 +63,9 @@ struct remote_state_t
     uint8_t sync;
     uint8_t synced;
     struct pt thread;
+#if CONFIG_MASTER_MODE
     struct pt master_thread;
+#endif
 
     /* int line */
     timer_t int_timer;
@@ -117,13 +119,13 @@ void remote_init(void)
     PT_INIT(&remote.master_thread);
 #endif
 
-#if CONFIG_STATIC_MASTER
-    /* statically configure master mode */
-    global_remote.master = true;
-#else
+#if CONFIG_MASTER_MODE == 1
     /* check master state: read value of M_PIN1 */
     if (!(M_PIN & _BV(M_PIN1)))
         global_remote.master = true;
+#elif CONFIG_MASTER_MODE == 2
+    /* statically configure master mode */
+    global_remote.master = true;
 #endif
 }
 
@@ -207,6 +209,7 @@ static void send_resync(uint8_t addr)
     uart_putc(addr);
 }
 
+#if CONFIG_MASTER_MODE
 /* parameters for master mode script commands */
 #define MASTER_PROGRAMS 2
 static PROGMEM uint8_t master_parameters[] = {
@@ -292,6 +295,7 @@ static PT_THREAD(remote_master_thread(struct pt *thread))
 
     PT_END(thread);
 }
+#endif
 
 void remote_poll(void)
 {
@@ -310,7 +314,9 @@ void remote_poll(void)
             /* enable remote command thread */
             remote.synced = 1;
             PT_INIT(&remote.thread);
+#if CONFIG_MASTER_MODE
             global_remote.master = false;
+#endif
         } else {
             /* just pass through data */
             uart_putc(data);
@@ -336,8 +342,10 @@ void remote_poll(void)
         remote_release_int();
     }
 
+#if CONFIG_MASTER_MODE
     if (global_remote.master)
         PT_SCHEDULE(remote_master_thread(&remote.master_thread));
+#endif
 }
 
 void remote_pull_int(void)

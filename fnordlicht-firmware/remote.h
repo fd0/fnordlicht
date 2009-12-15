@@ -40,8 +40,10 @@ struct global_remote_t {
     uint8_t address;
     struct remote_offsets_t offsets;
 
+#if CONFIG_MASTER_MODE
     /* master mode */
     bool master;
+#endif
 };
 
 extern struct global_remote_t global_remote;

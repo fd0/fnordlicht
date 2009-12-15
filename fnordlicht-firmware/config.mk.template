@@ -67,5 +67,8 @@
 # default baudrate
 #CONFIG_SERIAL_BAUDRATE = 19200
 
-# statically force master mode (regardless of jumper position)
-#CONFIG_STATIC_MASTER = 0
+# configure master mode:
+#   0   disable master mode completely
+#   1   check if master mode jumper is set (default)
+#   2   always act as master
+#CONFIG_STATIC_MASTER = 1
