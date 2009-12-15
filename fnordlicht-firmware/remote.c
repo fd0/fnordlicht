@@ -525,6 +525,11 @@ void parse_config_startup(struct remote_msg_config_startup_t *msg)
     storage_save_config();
 }
 
+static void wait_for_uart(void)
+{
+    while (fifo_fill(&global_uart.tx) != 0 || !uart_send_complete());
+}
+
 void parse_bootloader(struct remote_msg_bootloader_t *msg)
 {
     /* check magic bytes */
@@ -536,7 +541,7 @@ void parse_bootloader(struct remote_msg_bootloader_t *msg)
 
     /* wait until the tx fifo is empty, then start watchdog, but never kick it
      * (bootloader and firmware both disable the watchdog) */
-    while (fifo_fill((fifo_t *)&global_uart.tx) > 0);
+    wait_for_uart();
     wdt_enable(WDTO_120MS);
 }
 
