@@ -45,7 +45,7 @@ INCLUDES =
 DEBUG = 0
 
 # default static color program
-CONFIG_SCRIPT_DEFAULT = 0
+CONFIG_SCRIPT_DEFAULT = 1
 # include the script interpreter
 CONFIG_SCRIPT = 1
 # include uart support

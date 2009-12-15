@@ -15,9 +15,9 @@
 # default program
 #
 # possible values:
-# - 0   -- colorwheel   (default)
-# - 1   -- random colors
-#CONFIG_SCRIPT_DEFAULT = 0
+# - 0   -- colorwheel
+# - 1   -- random colors   (default)
+#CONFIG_SCRIPT_DEFAULT = 1
 
 ###################################################################
 # PROGRAMMER
