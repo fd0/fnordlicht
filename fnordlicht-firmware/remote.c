@@ -107,9 +107,11 @@ void remote_init(void)
     /* initialize int pin, tri-state */
     R_DDR &= ~_BV(INTPIN);
     R_PORT &= ~_BV(INTPIN);
+#ifdef INIT_ZERO
     remote.int_state = INT_IDLE;
 
     PT_INIT(&remote.master_thread);
+#endif
 
 #if CONFIG_STATIC_MASTER
     /* statically configure master mode */

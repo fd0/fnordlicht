@@ -36,10 +36,12 @@ void script_init(void)
 {
     /* initialize global structures */
     global_script.enable = 1;
+#ifdef INIT_ZERO
     for (uint8_t i = 0; i < CONFIG_SCRIPT_TASKS; i++) {
         global_script.tasks[i].enable = 0;
         PT_INIT(&global_script.tasks[i].pt);
     }
+#endif
 
     /* initialize timer, delay before start is 200ms */
     timer_set(&global_script.timer, 20);
