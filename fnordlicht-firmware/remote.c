@@ -579,13 +579,13 @@ void parse_powerdown(void)
     R_PORT = _BV(INTPIN);
 
     /* enable int0 low level interrupt */
-    GIFR = _BV(INTF0);
-    GICR |= _BV(INT0);
+    _IFR_INT0 = _BV(INTF0);
+    _ICR_INT0 |= _BV(INT0);
     /* enter sleep mode */
     sleep_mode();
 
     /* wakeup, disable int0 */
-    GICR &= ~_BV(INT0);
+    _ICR_INT0 &= ~_BV(INT0);
 
     /* restore output registers */
     PORTB = portb;

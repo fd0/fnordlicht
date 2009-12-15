@@ -67,6 +67,8 @@
 #ifndef MCUSR
 #define MCUSR MCUCSR
 #endif
+#define _IFR_INT0 GIFR
+#define _ICR_INT0 GICR
 
 #elif defined(__AVR_ATmega88__) || defined(__AVR_ATmega168__)
 
@@ -91,6 +93,8 @@
 #define _SIG_UART_DATA_UART0 SIG_USART_DATA
 #define _UDR_UART0 UDR0
 #define _IVREG MCUCR
+#define _IFR_INT0 EIFR
+#define _ICR_INT0 EIMSK
 #endif
 
 
