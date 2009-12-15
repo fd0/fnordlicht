@@ -190,6 +190,14 @@ static void send_msg(struct remote_msg_t *msg)
         uart_putc(*ptr++);
 }
 
+
+static void send_resync(uint8_t addr)
+{
+    for (uint8_t i = 0; i < REMOTE_SYNC_LEN; i++)
+        uart_putc(REMOTE_CMD_RESYNC);
+    uart_putc(addr);
+}
+
 /* parameters for master mode script commands */
 #define MASTER_PROGRAMS 2
 static PROGMEM uint8_t master_parameters[] = {
@@ -232,9 +240,7 @@ static PT_THREAD(remote_master_thread(struct pt *thread))
         PT_YIELD(thread);
 
     /* send sync sequence */
-    for (uint8_t i = 0; i < REMOTE_SYNC_LEN; i++)
-        uart_putc(REMOTE_CMD_RESYNC);
-    uart_putc(MASTER_MODE_FIRST_ADDRESS);
+    send_resync(MASTER_MODE_FIRST_ADDRESS);
     PT_YIELD(thread);
 
     /* start program on all devices */
@@ -256,6 +262,8 @@ static PT_THREAD(remote_master_thread(struct pt *thread))
                 msg.params.raw[i] = pgm_read_byte(ptr++);
 
             /* send */
+            send_resync(MASTER_MODE_FIRST_ADDRESS);
+            PT_YIELD(thread);
             send_msg((struct remote_msg_t *)&msg);
 
             /* start program locally */
