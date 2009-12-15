@@ -24,6 +24,7 @@
 #define __SCRIPT_H
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "globals.h"
 #include "../common/pt/pt.h"
 #include "timer.h"
@@ -39,7 +40,7 @@
 #else
 
 struct global_script_t {
-    uint8_t enable:1;
+    bool disable;
     struct process_t tasks[CONFIG_SCRIPT_TASKS];
     timer_t timer;
 };

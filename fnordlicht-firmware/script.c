@@ -35,7 +35,6 @@ struct global_script_t global_script;
 void script_init(void)
 {
     /* initialize global structures */
-    global_script.enable = 1;
 #ifdef INIT_ZERO
     for (uint8_t i = 0; i < CONFIG_SCRIPT_TASKS; i++) {
         global_script.tasks[i].enable = 0;
@@ -88,7 +87,7 @@ void script_start_default(void)
 
 void script_poll(void)
 {
-    if (!global_script.enable)
+    if (global_script.disable)
         return;
 
     if (timer_expired(&global_script.timer)) {
@@ -115,7 +114,7 @@ void script_stop(void)
     }
 
     /* disable global */
-    global_script.enable = 0;
+    global_script.disable = true;
 }
 
 void script_start(uint8_t task, uint8_t index, union program_params_t *params)
@@ -125,7 +124,7 @@ void script_start(uint8_t task, uint8_t index, union program_params_t *params)
         return;
 
     /* enable global */
-    global_script.enable = 1;
+    global_script.disable = false;
 
     /* copy params from pointer to task structure */
     memcpy(&global_script.tasks[task].params, params, sizeof(union program_params_t));
