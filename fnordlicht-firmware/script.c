@@ -3,7 +3,7 @@
  *         fnordlicht firmware
  *
  *    for additional information please
- *    see http://lochraster.org/fnordlicht
+ *    see http://lochraster.org/fnordlichtmini
  *
  * (c) by Alexander Neumann <alexander@bumpern.de>
  *
@@ -35,11 +35,12 @@ struct global_script_t global_script;
 void script_init(void)
 {
     /* initialize global structures */
-    global_script.enable = 1;
+#ifdef INIT_ZERO
     for (uint8_t i = 0; i < CONFIG_SCRIPT_TASKS; i++) {
         global_script.tasks[i].enable = 0;
         PT_INIT(&global_script.tasks[i].pt);
     }
+#endif
 
     /* initialize timer, delay before start is 200ms */
     timer_set(&global_script.timer, 20);
@@ -53,6 +54,7 @@ void script_start_default(void)
     union program_params_t params;
     params.colorwheel.hue_start = 0;
     params.colorwheel.hue_step = 60;
+    params.colorwheel.add_addr = 0;
     params.colorwheel.saturation = 255;
     params.colorwheel.value = 255;
 
@@ -66,6 +68,7 @@ void script_start_default(void)
     union program_params_t params;
     params.random.seed = 23;
     params.random.use_address = 0;
+    params.random.wait_for_fade = 1;
     params.random.min_distance = 60;
 
     params.random.saturation = 255;
@@ -84,7 +87,7 @@ void script_start_default(void)
 
 void script_poll(void)
 {
-    if (!global_script.enable)
+    if (global_script.disable)
         return;
 
     if (timer_expired(&global_script.timer)) {
@@ -106,12 +109,12 @@ void script_stop(void)
 {
     /* stop all tasks */
     for (uint8_t i = 0; i < CONFIG_SCRIPT_TASKS; i++) {
-        global_script.tasks[i].enable = 0;
+        global_script.tasks[i].enable = false;
         PT_INIT(&global_script.tasks[i].pt);
     }
 
     /* disable global */
-    global_script.enable = 0;
+    global_script.disable = true;
 }
 
 void script_start(uint8_t task, uint8_t index, union program_params_t *params)
@@ -121,7 +124,7 @@ void script_start(uint8_t task, uint8_t index, union program_params_t *params)
         return;
 
     /* enable global */
-    global_script.enable = 1;
+    global_script.disable = false;
 
     /* copy params from pointer to task structure */
     memcpy(&global_script.tasks[task].params, params, sizeof(union program_params_t));
@@ -130,7 +133,7 @@ void script_start(uint8_t task, uint8_t index, union program_params_t *params)
     global_script.tasks[task].execute = (program_handler)pgm_read_word(&static_programs[index]);
 
     /* enable script */
-    global_script.tasks[task].enable = 1;
+    global_script.tasks[task].enable = true;
 
     /* reset timer */
     timer_set(&global_script.timer, 10);

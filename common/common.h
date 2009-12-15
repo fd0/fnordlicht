@@ -3,7 +3,7 @@
  *         fnordlicht firmware
  *
  *    for additional information please
- *    see http://lochraster.org/fnordlicht
+ *    see http://lochraster.org/fnordlichtmini
  *
  * (c) by Alexander Neumann <alexander@bumpern.de>
  *     Lars Noschinski <lars@public.noschinski.de>
@@ -35,6 +35,9 @@
 #define _OUTPORT(name)           _CONCAT(PORT, name)
 #define _INPORT(name)            _CONCAT(PIN, name)
 #define _DDRPORT(name)           _CONCAT(DDR, name)
+
+/* __noinline attribute (opposite of inline attribute */
+#define __noinline __attribute__((noinline))
 
 /* structure for accessing bytes and words in an uint32_t */
 union uint32_t_access {

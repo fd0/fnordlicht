@@ -3,7 +3,7 @@
  *         fnordlicht firmware
  *
  *    for additional information please
- *    see http://lochraster.org/fnordlicht
+ *    see http://lochraster.org/fnordlichtmini
  *
  * (c) by Alexander Neumann <alexander@bumpern.de>
  *     Lars Noschinski <lars@public.noschinski.de>
@@ -65,6 +65,11 @@
 /* set default baudrate */
 #ifndef CONFIG_SERIAL_BAUDRATE
 #define CONFIG_SERIAL_BAUDRATE 19200
+#endif
+
+/* disable static master mode by default (still check jumper) */
+#ifndef CONFIG_STATIC_MASTER
+#define CONFIG_STATIC_MASTER 0
 #endif
 
 /* check if hardware is valid */

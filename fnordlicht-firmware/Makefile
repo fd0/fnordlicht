@@ -56,6 +56,8 @@ CONFIG_REMOTE = 1
 CONFIG_SECONDARY_PWM = 1
 # default baudrate
 CONFIG_SERIAL_BAUDRATE = 19200
+# disable forced master mode
+CONFIG_STATIC_MASTER = 0
 
 # avrdude programmer protocol
 PROG = usbasp
@@ -68,6 +70,7 @@ CFLAGS += -DHARDWARE_$(HARDWARE)=1 -DCONFIG_SCRIPT_DEFAULT=$(CONFIG_SCRIPT_DEFAU
 CFLAGS += -DCONFIG_SCRIPT=$(CONFIG_SCRIPT) -DCONFIG_SERIAL=$(CONFIG_SERIAL)
 CFLAGS += -DCONFIG_REMOTE=$(CONFIG_REMOTE) -DCONFIG_SECONDARY_PWM=$(CONFIG_SECONDARY_PWM)
 CFLAGS += -DCONFIG_SERIAL_BAUDRATE=$(CONFIG_SERIAL_BAUDRATE)
+CFLAGS += -DCONFIG_STATIC_MASTER=$(CONFIG_STATIC_MASTER)
 
 ####################################################
 # 'make' configuration
@@ -109,7 +112,7 @@ OBJECTS += $(ASRC:.S=.o)
 .PHONY: all
 
 # main make target (moved up here because of the config.mk target)
-all: $(TARGET).hex
+all: $(TARGET).hex $(TARGET).bin
 
 # create config.mk (if it does not exist yet)
 $(CURDIR)/config.mk:
@@ -175,7 +178,7 @@ $(OBJECTS): $(HEADERS) config.mk
 
 # remove all compiled files
 clean:
-	$(RM) $(foreach ext,elf hex eep.hex map,$(TARGET).$(ext)) \
+	$(RM) $(foreach ext,elf hex eep.hex bin map,$(TARGET).$(ext)) \
 		$(foreach file,$(patsubst %.o,%,$(OBJECTS)),$(foreach ext,o lst lss,$(file).$(ext)))
 
 # additionally remove the dependency makefile and config.mk
@@ -205,15 +208,19 @@ program-eeprom-%: %.eep.hex
 	@$(SIZE) -A $@ | grep '\.sec1' | tr -s ' ' | cut -d" " -f2
 	@echo "===================================================="
 
+# special programming targets
+%.bin: %.elf
+	$(OBJCOPY) -O binary -R .eeprom $< $@
+
 %.eep.hex: %.elf
 	$(OBJCOPY) --set-section-flags=.eeprom="alloc,load" --change-section-lma .eeprom=0 -O ihex -j .eeprom $< $@
 
 %.lss: %.elf
 	$(OBJDUMP) -h -S $< > $@
 
-.PHONY: fuses-atmega8-fnordlichtmini
+.PHONY: fuses-atmega8-fnordlichtmini-without-bootloader
 
-fuses-atmega8-fnordlichtmini:
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U lfuse:w:0xff:m -U hfuse:w:0xd9:m
+fuses-atmega8-fnordlichtmini-without-bootloader:
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U lfuse:w:0x3f:m -U hfuse:w:0xd9:m
 
 -include $(shell $(MKDIR) .dep 2>/dev/null) $(wildcard .dep/*)

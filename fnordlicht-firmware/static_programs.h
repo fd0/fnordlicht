@@ -3,7 +3,7 @@
  *         fnordlicht firmware
  *
  *    for additional information please
- *    see http://lochraster.org/fnordlicht
+ *    see http://lochraster.org/fnordlichtmini
  *
  * (c) by Alexander Neumann <alexander@bumpern.de>
  *
@@ -24,6 +24,7 @@
 #define __STATIC_PROGRAMS_H
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "globals.h"
 #include "../common/pt/pt.h"
 
@@ -36,9 +37,10 @@ struct colorwheel_params_t
 {
     uint8_t fade_step;
     uint8_t fade_delay;
-    uint16_t fade_sleep;
+    uint8_t fade_sleep;
     uint16_t hue_start;
     int16_t hue_step;
+    int8_t add_addr;
     uint8_t saturation;
     uint8_t value;
 };
@@ -81,7 +83,7 @@ union program_params_t
 struct process_t {
     program_handler execute;
     struct pt pt;
-    uint8_t enable:1;
+    bool enable;
     union program_params_t params;
 };
 

@@ -3,7 +3,7 @@
  *         fnordlicht firmware
  *
  *    for additional information please
- *    see http://lochraster.org/fnordlicht
+ *    see http://lochraster.org/fnordlichtmini
  *
  * (c) by Alexander Neumann <alexander@bumpern.de>
  *
@@ -27,17 +27,18 @@
 #define REMOTE_SYNC_LEN 15
 
 /* normal commands */
-#define REMOTE_CMD_FADE_RGB         0x02
-#define REMOTE_CMD_FADE_HSV         0x03
-#define REMOTE_CMD_SAVE_RGB         0x04
-#define REMOTE_CMD_SAVE_HSV         0x05
-#define REMOTE_CMD_SAVE_CURRENT     0x06
-#define REMOTE_CMD_CONFIG_OFFSETS   0x07
-#define REMOTE_CMD_START_PROGRAM    0x09
-#define REMOTE_CMD_STOP             0x0A
-#define REMOTE_CMD_MODIFY_CURRENT   0x0B
-#define REMOTE_CMD_PULL_INT         0x0C
-#define REMOTE_CMD_CONFIG_STARTUP   0x0D
+#define REMOTE_CMD_FADE_RGB         0x01
+#define REMOTE_CMD_FADE_HSV         0x02
+#define REMOTE_CMD_SAVE_RGB         0x03
+#define REMOTE_CMD_SAVE_HSV         0x04
+#define REMOTE_CMD_SAVE_CURRENT     0x05
+#define REMOTE_CMD_CONFIG_OFFSETS   0x06
+#define REMOTE_CMD_START_PROGRAM    0x07
+#define REMOTE_CMD_STOP             0x08
+#define REMOTE_CMD_MODIFY_CURRENT   0x09
+#define REMOTE_CMD_PULL_INT         0x0A
+#define REMOTE_CMD_CONFIG_STARTUP   0x0B
+#define REMOTE_CMD_POWERDOWN        0x0C
 
 #define REMOTE_CMD_RESYNC           0x1b
 
@@ -50,11 +51,12 @@
 /* bootloader commands */
 #define REMOTE_CMD_BOOTLOADER       0x80
 #define REMOTE_CMD_BOOT_CONFIG      0x81
-#define REMOTE_CMD_DATA_INITIAL     0x82
-#define REMOTE_CMD_DATA_CONT        0x83
+#define REMOTE_CMD_BOOT_INIT        0x82
+#define REMOTE_CMD_BOOT_DATA        0x83
 #define REMOTE_CMD_CRC_CHECK        0x84
-#define REMOTE_CMD_FLASH            0x85
-#define REMOTE_CMD_ENTER_APP        0x86
+#define REMOTE_CMD_CRC_FLASH        0x85
+#define REMOTE_CMD_FLASH            0x86
+#define REMOTE_CMD_ENTER_APP        0x87
 
 #define REMOTE_ADDR_BROADCAST 0xff
 
@@ -67,11 +69,11 @@ struct remote_msg_t
 };
 
 /* bootloader commands */
-#define BOOTLOADER_MAGIC_BYTE1 = 0x6b
-#define BOOTLOADER_MAGIC_BYTE2 = 0x56
-#define BOOTLOADER_MAGIC_BYTE3 = 0x27
-#define BOOTLOADER_MAGIC_BYTE4 = 0xfc
-struct remote_msg_bootloader
+#define BOOTLOADER_MAGIC_BYTE1 0x6b
+#define BOOTLOADER_MAGIC_BYTE2 0x56
+#define BOOTLOADER_MAGIC_BYTE3 0x27
+#define BOOTLOADER_MAGIC_BYTE4 0xfc
+struct remote_msg_bootloader_t
 {
     uint8_t address;
     uint8_t cmd;
@@ -97,6 +99,17 @@ struct remote_msg_boot_crc_check_t
 {
     uint8_t address;
     uint8_t cmd;
+    uint16_t len;
+    uint16_t checksum;
+    uint8_t delay;
+};
+
+struct remote_msg_boot_crc_flash_t
+{
+    uint8_t address;
+    uint8_t cmd;
+    uint16_t start;
+    uint16_t len;
     uint16_t checksum;
     uint8_t delay;
 };

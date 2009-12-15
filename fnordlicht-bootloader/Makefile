@@ -30,7 +30,7 @@ SRC = $(wildcard *.c)
 
 # asm sourcecode files
 # eg. 'interrupts.S foobar/another.S'
-ASRC =
+ASRC = $(wildcard *.S)
 
 # headers which should be considered when recompiling
 # eg. 'global.h foobar/important.h'
@@ -57,6 +57,26 @@ AVRDUDE_FLAGS =
 CFLAGS += -DHARDWARE_$(HARDWARE)=1
 CFLAGS += -DCONFIG_SERIAL_BAUDRATE=$(CONFIG_SERIAL_BAUDRATE)
 
+# use a custom linker script
+LDFLAGS += -L$(CURDIR)/ldscripts
+
+.PHONY: all
+
+# main make target (moved up here because of the config.mk target)
+all: $(TARGET).hex
+
+# create config.mk (if it does not exist yet)
+$(CURDIR)/config.mk:
+	@$(CP) config.mk.template config.mk
+	@echo "===================================================="
+	@echo "created file $@"
+	@echo 'please tune your settings (especially $$HARDWARE)'
+	@echo "there, then run 'make' again"
+	@echo "===================================================="
+	@exit 1
+
+# include config file
+-include $(CURDIR)/config.mk
 
 # bootloader section start
 # (see datasheet)
@@ -70,6 +90,9 @@ ifeq ($(MCU),atmega8)
 	BOOT_SECTION_START = 0x1c00
 	# 7kb data memory (raw memory minus bootloader space)
 	DATA_MEM = 7
+
+	# use custom linker script
+	LDFLAGS += -T avr4.x
 endif
 ifeq ($(MCU),atmega88)
 	# atmega88 with 1024 words bootloader:
@@ -81,39 +104,23 @@ ifeq ($(MCU),atmega88)
 	BOOT_SECTION_START = 0x1c00
 	# 7kb data memory (raw memory minus bootloader space)
 	DATA_MEM = 7
+
+	# use custom linker script
+	LDFLAGS += -T avr4.x
 endif
 ifeq ($(MCU),atmega168)
 	# atmega168 with 1024 words bootloader:
 	# bootloader section starts at 0x1c00 (word-address) == 0x3800 (byte-address)
-	BOOT_SECTION_START = 0x3800
+	#BOOT_SECTION_START = 0x3800
 	#
 	# atmega168 with 512 words bootloader:
 	# bootloader section starts at 0x1e00 (word-address) == 0x3c00 (byte-address)
-	#BOOT_SECTION_START = 0x3c00
-	# 14kb data memory (raw memory minus bootloader space)
-	DATA_MEM = 14
-endif
-ifeq ($(MCU),atmega32)
-	# atmega32 with 1024 words bootloader:
-	# bootloader section starts at 0x3c00 (word-address) == 0x7800 (byte-address)
-	#BOOT_SECTION_START = 0x7800
-	#
-	# atmega32 with 512 words bootloader:
-	# bootloader section starts at 0x3e00 (word-address) == 0x7c00 (byte-address)
-	BOOT_SECTION_START = 0x7c00
-	# 31kb data memory (raw memory minus bootloader space)
-	DATA_MEM = 31
-endif
-ifeq ($(MCU),atmega644)
-	# atmega644 with 1024 words bootloader:
-	# bootloader section starts at 0x7c00 (word-address) == 0xf800 (byte-address)
-	BOOT_SECTION_START = 0xf800
-	#
-	# atmega644 with 512 words bootloader:
-	# bootloader section starts at 0x7e00 (word-address) == 0xfc00 (byte-address)
-	#BOOT_SECTION_START = 0xfc00
-	# 62kb data memory (raw memory minus bootloader space)
-	DATA_MEM = 62
+	BOOT_SECTION_START = 0x3c00
+	# 15kb data memory (raw memory minus bootloader space)
+	DATA_MEM = 15
+
+	# use custom linker script
+	LDFLAGS += -T avr5.x
 endif
 
 LDFLAGS += -Wl,--section-start=.text=$(BOOT_SECTION_START)
@@ -140,11 +147,9 @@ DEPFLAGS = -MD -MP -MF .dep/$(@F).d
 # flags for the compiler (for .c files)
 CFLAGS += -g -Os -mmcu=$(MCU) -DF_CPU=$(F_CPU) -std=gnu99 -fshort-enums $(DEPFLAGS)
 CFLAGS += $(addprefix -I,$(INCLUDES))
-# optimize for size
-#CFLAGS += -mcall-prologues
-#CFLAGS += --param inline-call-cost=2  -finline-limit=3 -fno-inline-small-functions
-#CFLAGS += -Wl,--relax
-#CFLAGS += -fno-split-wide-types
+CFLAGS += -fno-split-wide-types
+CFLAGS += --param inline-call-cost=2  -finline-limit=3 -fno-inline-small-functions
+CFLAGS += -Wl,--relax
 
 # flags for the compiler (for .S files)
 ASFLAGS += -g -mmcu=$(MCU) -DF_CPU=$(F_CPU) -x assembler-with-cpp $(DEPFLAGS)
@@ -156,24 +161,6 @@ LDFLAGS += -mmcu=$(MCU)
 # fill in object files
 OBJECTS += $(SRC:.c=.o)
 OBJECTS += $(ASRC:.S=.o)
-
-.PHONY: all
-
-# main make target (moved up here because of the config.mk target)
-all: $(TARGET).hex
-
-# create config.mk (if it does not exist yet)
-$(CURDIR)/config.mk:
-	@$(CP) config.mk.template config.mk
-	@echo "===================================================="
-	@echo "created file $@"
-	@echo 'please tune your settings (especially $$HARDWARE)'
-	@echo "there, then run 'make' again"
-	@echo "===================================================="
-	@exit 1
-
-# include config file
--include $(CURDIR)/config.mk
 
 # include more debug flags, if $(DEBUG) is 1
 ifeq ($(DEBUG),1)
@@ -241,7 +228,7 @@ avrdude-terminal:
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -t
 
 program-%: %.hex
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U flash:w:$<
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U flash:w:$< -U lock:w:0x2f:m
 
 program-eeprom-%: %.eep.hex
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U eeprom:w:$<
@@ -262,10 +249,13 @@ program-eeprom-%: %.eep.hex
 %.lss: %.elf
 	$(OBJDUMP) -h -S $< > $@
 
-.PHONY: fuses-atmega8-fnordlichtmini fuses-lock
+.PHONY: fuses-atmega8-fnordlichtmini-with-bootloader fuses-lock
 
-fuses-atmega8-fnordlichtmini:
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U lfuse:w:0xff:m -U hfuse:w:0xda:m
+fuses-atmega8-fnordlichtmini-with-bootloader:
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U lfuse:w:0x3f:m -U hfuse:w:0xda:m
+
+fuses-atmega8-fnordlichtmini-without-bootloader:
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U lfuse:w:0x3f:m -U hfuse:w:0xd9:m
 
 fuses-lock:
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -c $(PROG) -P $(DEV) -U lock:w:0x2f:m

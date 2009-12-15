@@ -3,7 +3,7 @@
  *         fnordlicht firmware
  *
  *    for additional information please
- *    see http://lochraster.org/fnordlicht
+ *    see http://lochraster.org/fnordlichtmini
  *
  * (c) by Alexander Neumann <alexander@bumpern.de>
  *     Lars Noschinski <lars@public.noschinski.de>
@@ -26,12 +26,14 @@
 #include "../common/io.h"
 
 #include <stdint.h>
+#include <string.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 
 #include "../common/common.h"
 #include "pwm.h"
 #include "timer.h"
+#include "remote.h"
 
 /* abbreviations for port, ddr and pin */
 #define P_PORT _OUTPORT(PWM_PORT)
@@ -206,7 +208,7 @@ void pwm_poll_fading(void)
 
         /* if timer is not running and current != target, start timer */
         if (!(fading.running & mask)
-                && global_pwm.current.rgb[i] != global_pwm.target.rgb[i]
+                && global_pwm.current.rgb[i] != global_pwm.target.rgb.rgb[i]
                 && global_pwm.fade_delay[i] > 0) {
             timer_set(&fading.timer[i], global_pwm.fade_delay[i]);
             fading.running |= mask;
@@ -310,12 +312,12 @@ void update_pwm_timeslots(struct rgb_color_t *target)
 void update_rgb(uint8_t c)
 {
     /* return if target reached */
-    if (global_pwm.current.rgb[c] == global_pwm.target.rgb[c])
+    if (global_pwm.current.rgb[c] == global_pwm.target.rgb.rgb[c])
         return;
 
     /* check direction */
-    if (global_pwm.current.rgb[c] < global_pwm.target.rgb[c]) {
-        uint8_t diff = global_pwm.target.rgb[c] - global_pwm.current.rgb[c];
+    if (global_pwm.current.rgb[c] < global_pwm.target.rgb.rgb[c]) {
+        uint8_t diff = global_pwm.target.rgb.rgb[c] - global_pwm.current.rgb[c];
 
         if (diff >= global_pwm.fade_step[c])
             global_pwm.current.rgb[c] += global_pwm.fade_step[c];
@@ -323,7 +325,7 @@ void update_rgb(uint8_t c)
             global_pwm.current.rgb[c] += diff;
 
     } else {
-        uint8_t diff = global_pwm.current.rgb[c] - global_pwm.target.rgb[c];
+        uint8_t diff = global_pwm.current.rgb[c] - global_pwm.target.rgb.rgb[c];
 
         if (diff >= global_pwm.fade_step[c])
             global_pwm.current.rgb[c] -= global_pwm.fade_step[c];
@@ -375,15 +377,15 @@ uint8_t timeslots_fill(void)
  */
 void pwm_hsv2rgb(struct dual_color_t *color)
 {
-    if (color->saturation == 0) {
+    if (color->hsv.saturation == 0) {
         for (uint8_t i = 0; i < PWM_CHANNELS; i++)
-            color->rgb[i] = color->value;
+            color->rgb.rgb[i] = color->hsv.value;
         return;
     }
 
-    uint16_t h = color->hue % 360;
-    uint8_t s = color->saturation;
-    uint8_t v = color->value;
+    uint16_t h = color->hsv.hue % 360;
+    uint8_t s = color->hsv.saturation;
+    uint8_t v = color->hsv.value;
 
     uint16_t f = ((h % 60) * 255 + 30)/60;
     uint16_t p = (v * (255-s)+128)/255;
@@ -394,34 +396,34 @@ void pwm_hsv2rgb(struct dual_color_t *color)
 
     switch (i) {
         case 0:
-            color->rgb[0] = v;
-            color->rgb[1] = t;
-            color->rgb[2] = p;
+            color->rgb.rgb[0] = v;
+            color->rgb.rgb[1] = t;
+            color->rgb.rgb[2] = p;
             break;
         case 1:
-            color->rgb[0] = q;
-            color->rgb[1] = v;
-            color->rgb[2] = p;
+            color->rgb.rgb[0] = q;
+            color->rgb.rgb[1] = v;
+            color->rgb.rgb[2] = p;
             break;
         case 2:
-            color->rgb[0] = p;
-            color->rgb[1] = v;
-            color->rgb[2] = t;
+            color->rgb.rgb[0] = p;
+            color->rgb.rgb[1] = v;
+            color->rgb.rgb[2] = t;
             break;
         case 3:
-            color->rgb[0] = p;
-            color->rgb[1] = q;
-            color->rgb[2] = v;
+            color->rgb.rgb[0] = p;
+            color->rgb.rgb[1] = q;
+            color->rgb.rgb[2] = v;
             break;
         case 4:
-            color->rgb[0] = t;
-            color->rgb[1] = p;
-            color->rgb[2] = v;
+            color->rgb.rgb[0] = t;
+            color->rgb.rgb[1] = p;
+            color->rgb.rgb[2] = v;
             break;
         case 5:
-            color->rgb[0] = v;
-            color->rgb[1] = p;
-            color->rgb[2] = q;
+            color->rgb.rgb[0] = v;
+            color->rgb.rgb[1] = p;
+            color->rgb.rgb[2] = q;
             break;
     }
 }
@@ -434,57 +436,54 @@ void pwm_hsv2rgb(struct dual_color_t *color)
 void pwm_rgb2hsv(struct dual_color_t *color)
 {
     /* search min and max */
-    uint8_t max = color->red;
+    uint8_t max = color->rgb.red;
     uint8_t min = max;
 
-    if (color->green > max)
-        max = color->green;
-    if (color->blue > max)
-        max = color->blue;
+    if (color->rgb.green > max)
+        max = color->rgb.green;
+    if (color->rgb.blue > max)
+        max = color->rgb.blue;
 
-    if (color->green < min)
-        min = color->green;
-    if (color->blue < min)
-        min = color->blue;
+    if (color->rgb.green < min)
+        min = color->rgb.green;
+    if (color->rgb.blue < min)
+        min = color->rgb.blue;
 
     uint16_t hue = 0;
     uint8_t diff = max - min;
     uint8_t diffh = diff/2;
 
     /* compute value and saturation */
-    color->value = max;
-    color->saturation = 0;
+    color->hsv.value = max;
+    color->hsv.saturation = 0;
 
     if (max > 0)
-        color->saturation = ((255 * diff)+max/2)/max;
+        color->hsv.saturation = ((255 * diff)+max/2)/max;
     else {
-        color->saturation = 0;
-        color->hue = 0; /* undefined */
+        color->hsv.saturation = 0;
+        color->hsv.hue = 0; /* undefined */
         return;
     }
 
     if (max == min) {
         hue = 0;
-    } else if (max == color->red) {
-        hue = (60 * (color->green - color->blue) + diffh)/diff + 360;
-    } else if (max == color->green) {
-        hue = (60 * (color->blue - color->red) + diffh)/diff + 120;
-    } else if (max == color->blue) {
-        hue = (60 * (color->red - color->green) + diffh)/diff + 240;
+    } else if (max == color->rgb.red) {
+        hue = (60 * (color->rgb.green - color->rgb.blue) + diffh)/diff + 360;
+    } else if (max == color->rgb.green) {
+        hue = (60 * (color->rgb.blue - color->rgb.red) + diffh)/diff + 120;
+    } else if (max == color->rgb.blue) {
+        hue = (60 * (color->rgb.red - color->rgb.green) + diffh)/diff + 240;
     }
 
     hue = hue % 360;
 
-    color->hue = hue;
+    color->hsv.hue = hue;
 }
 
 /* stop fading, hold current color */
 void pwm_stop_fading(void)
 {
-    for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
-        /* set current value as target */
-        global_pwm.target.rgb[i] = global_pwm.current.rgb[i];
-    }
+    memcpy(&global_pwm.target.rgb, &global_pwm.current.rgb, sizeof(struct rgb_color_t));
 
     /* ignore all timers */
     fading.running = 0;
@@ -506,7 +505,7 @@ static void compute_speed(uint8_t step, uint8_t delay)
     uint8_t dist = 0;
 
     for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
-        uint8_t d = diff_abs(global_pwm.target.rgb[i], global_pwm.current.rgb[i]);
+        uint8_t d = diff_abs(global_pwm.target.rgb.rgb[i], global_pwm.current.rgb[i]);
 
         if (d > dist) {
             max = i;
@@ -522,7 +521,7 @@ static void compute_speed(uint8_t step, uint8_t delay)
         if (i == max)
             continue;
 
-        uint8_t d = diff_abs(global_pwm.target.rgb[i], global_pwm.current.rgb[i]);
+        uint8_t d = diff_abs(global_pwm.target.rgb.rgb[i], global_pwm.current.rgb[i]);
 
         uint8_t ratio = 1;
         if (d > 0)
@@ -538,9 +537,13 @@ static void compute_speed(uint8_t step, uint8_t delay)
 
 void pwm_fade_rgb(struct rgb_color_t *color, uint8_t step, uint8_t delay)
 {
+    /* apply offsets for step and delay */
+    step = remote_apply_offset(step, global_remote.offsets.step);
+    delay = remote_apply_offset(delay, global_remote.offsets.delay);
+
     /* set target color */
     for (uint8_t i = 0; i < PWM_CHANNELS; i++)
-        global_pwm.target.rgb[i] = color->rgb[i];
+        global_pwm.target.rgb.rgb[i] = color->rgb[i];
 
     /* compute correct speed for all channels */
     if (delay == 0)
@@ -553,12 +556,18 @@ void pwm_fade_rgb(struct rgb_color_t *color, uint8_t step, uint8_t delay)
 
 void pwm_fade_hsv(struct hsv_color_t *color, uint8_t step, uint8_t delay)
 {
+    /* apply offsets for step and delay */
+    step = remote_apply_offset(step, global_remote.offsets.step);
+    delay = remote_apply_offset(delay, global_remote.offsets.delay);
+
     /* convert color */
-    for (uint8_t i = 0; i < PWM_HSV_SIZE; i++)
-        global_pwm.target.hsv[i] = color->hsv[i];
+    memcpy(&global_pwm.target.hsv, color, sizeof(struct hsv_color_t));
+
+    /* apply offsets */
+    remote_apply_hsv_offset(&global_pwm.target.hsv);
 
     /* update rgb color in target */
-    pwm_hsv2rgb((struct dual_color_t *)&global_pwm.target);
+    pwm_hsv2rgb(&global_pwm.target);
 
     /* compute correct speed for all channels */
     compute_speed(step, delay);
@@ -570,7 +579,7 @@ void pwm_fade_hsv(struct hsv_color_t *color, uint8_t step, uint8_t delay)
 bool pwm_target_reached(void)
 {
     for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
-        if (global_pwm.target.rgb[i] != global_pwm.current.rgb[i])
+        if (global_pwm.target.rgb.rgb[i] != global_pwm.current.rgb[i])
             return false;
     }
 
@@ -581,7 +590,7 @@ bool pwm_target_reached(void)
 void pwm_modify_rgb(struct rgb_color_offset_t *color, uint8_t step, uint8_t delay)
 {
     for (uint8_t i = 0; i < PWM_CHANNELS; i++) {
-        int16_t current = global_pwm.target.rgb[i];
+        int16_t current = global_pwm.target.rgb.rgb[i];
         current += color->rgb[i];
 
         if (current > 255)
@@ -589,7 +598,7 @@ void pwm_modify_rgb(struct rgb_color_offset_t *color, uint8_t step, uint8_t dela
         if (current < 0)
             current = 0;
 
-        global_pwm.target.rgb[i] = LO8(current);
+        global_pwm.target.rgb.rgb[i] = LO8(current);
     }
 
     compute_speed(step, delay);
@@ -601,31 +610,31 @@ void pwm_modify_rgb(struct rgb_color_offset_t *color, uint8_t step, uint8_t dela
 void pwm_modify_hsv(struct hsv_color_offset_t *color, uint8_t step, uint8_t delay)
 {
     /* convert current target color from rgb to hsv */
-    pwm_rgb2hsv((struct dual_color_t *)&global_pwm.target);
+    pwm_rgb2hsv(&global_pwm.target);
 
     /* apply changes, hue */
-    global_pwm.target.hue += color->hue;
+    global_pwm.target.hsv.hue += color->hue;
 
     /* saturation */
-    int16_t sat = global_pwm.target.saturation;
+    int16_t sat = global_pwm.target.hsv.saturation;
     sat += color->saturation;
     if (sat > 255)
         sat = 255;
     if (sat < 0)
         sat = 0;
-    global_pwm.target.saturation = LO8(sat);
+    global_pwm.target.hsv.saturation = LO8(sat);
 
     /* value */
-    int16_t val = global_pwm.target.value;
+    int16_t val = global_pwm.target.hsv.value;
     val += color->value;
     if (val > 255)
         val = 255;
     if (val < 0)
         val = 0;
-    global_pwm.target.value = LO8(val);
+    global_pwm.target.hsv.value = LO8(val);
 
     /* re-convert to rgb */
-    pwm_hsv2rgb((struct dual_color_t *)&global_pwm.target);
+    pwm_hsv2rgb(&global_pwm.target);
 
     /* compute correct speed for all channels */
     compute_speed(step, delay);

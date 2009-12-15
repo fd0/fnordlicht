@@ -3,7 +3,7 @@
  *         fnordlicht firmware
  *
  *    for additional information please
- *    see http://lochraster.org/fnordlicht
+ *    see http://lochraster.org/fnordlichtmini
  *
  * (c) by Alexander Neumann <alexander@bumpern.de>
  *
@@ -24,6 +24,8 @@
 #define __REMOTE_H
 
 #include <stdint.h>
+#include <stdbool.h>
+#include "color.h"
 
 struct remote_offsets_t
 {
@@ -37,6 +39,9 @@ struct remote_offsets_t
 struct global_remote_t {
     uint8_t address;
     struct remote_offsets_t offsets;
+
+    /* master mode */
+    bool master;
 };
 
 extern struct global_remote_t global_remote;
@@ -48,6 +53,12 @@ extern struct global_remote_t global_remote;
 #define remote_poll(...)
 #define remote_address(...) 0
 
+#define remote_apply_offset(x, ...) x
+#define remote_apply_hsv_offset(x, ...) x
+
+#define remote_pull_int(...)
+#define remote_release_int(...)
+
 #else
 
 void remote_init(void);
@@ -56,6 +67,10 @@ void remote_poll(void);
 
 void remote_pull_int(void);
 void remote_release_int(void);
+
+/* offset helper functions */
+uint8_t remote_apply_offset(uint8_t value, int8_t offset);
+void remote_apply_hsv_offset(struct hsv_color_t *color);
 
 #endif
 #endif

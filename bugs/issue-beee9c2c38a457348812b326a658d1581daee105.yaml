@@ -5,8 +5,8 @@ type: :bugfix
 component: fnordlicht/firmware
 release: "0.3"
 reporter: Alexander Neumann <alexander@bumpern.de>
-status: :unstarted
-disposition: 
+status: :closed
+disposition: :fixed
 creation_time: 2009-12-10 09:48:01.894996 Z
 references: []
 
@@ -15,5 +15,9 @@ log_events:
 - - 2009-12-10 09:48:02.623046 Z
   - Alexander Neumann <alexander@bumpern.de>
   - created
+  - ""
+- - 2009-12-10 23:30:24.609411 Z
+  - Alexander Neumann <alexander@bumpern.de>
+  - closed with disposition fixed
   - ""
 git_branch: 

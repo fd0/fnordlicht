@@ -3,7 +3,7 @@
  *         fnordlicht firmware
  *
  *    for additional information please
- *    see http://lochraster.org/fnordlicht
+ *    see http://lochraster.org/fnordlichtmini
  *
  * (c) by Alexander Neumann <alexander@bumpern.de>
  *     Lars Noschinski <lars@public.noschinski.de>
@@ -72,6 +72,18 @@
 /* configure INT line for remote */
 #define REMOTE_INT_PORT D
 #define REMOTE_INT_PIN PD2
+
+/* configure jumper pins for remote master mode */
+#define REMOTE_MASTER_PORT C
+#define REMOTE_MASTER_PIN1 PC2
+#define REMOTE_MASTER_PIN2 PC3
+/* configure master mode */
+/* use 1 as address for the second device */
+#define MASTER_MODE_FIRST_ADDRESS 1
+/* wait 200ms before sending sync sequence */
+#define MASTER_WAIT_BEFORE_SYNC 20
+/* wait 15 min (900s) between program changes */
+#define MASTER_MODE_SLEEP 900
 
 /* configure storage bufer size */
 #define STORAGE_BUFFER_SIZE 13

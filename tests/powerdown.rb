@@ -9,8 +9,15 @@ include Fnordlicht
 
 $dev = SerialPort.new("/dev/ttyUSB0", 19200)
 
+if ARGV.length != 1
+    $stderr.puts "USAGE: #{$0} <addr>"
+    exit 1
+end
+
+addr = ARGV.shift.to_i
+
 puts "sending sync sequence"
 sync()
 
-puts "configure startup: program colorwheel (fast, start with yellow)"
-config_startup_program(255, 0, [8, 1, 10,  60, 0,  60, 0, 0, 255, 255])
+puts "powerdown"
+powerdown(addr)

@@ -3,7 +3,7 @@
  *         fnordlicht firmware
  *
  *    for additional information please
- *    see http://lochraster.org/fnordlicht
+ *    see http://lochraster.org/fnordlichtmini
  *
  * (c) by Alexander Neumann <alexander@bumpern.de>
  *
@@ -70,9 +70,11 @@ void storage_init(void)
     storage.eeprom_good = (checksum1 == checksum2);
     storage_load_config();
 
+#ifdef INIT_ZERO
     /* initialize state structure */
     storage.state = STORAGE_IDLE;
     PT_INIT(&storage.thread);
+#endif
 }
 
 static PT_THREAD(storage_thread(struct pt *thread))

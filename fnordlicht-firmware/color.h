@@ -3,7 +3,7 @@
  *         fnordlicht firmware
  *
  *    for additional information please
- *    see http://lochraster.org/fnordlicht
+ *    see http://lochraster.org/fnordlichtmini
  *
  * (c) by Alexander Neumann <alexander@bumpern.de>
  *     Lars Noschinski <lars@public.noschinski.de>
@@ -75,22 +75,8 @@ struct hsv_color_offset_t {
 
 struct dual_color_t
 {
-    union {
-        struct {
-            uint8_t red;
-            uint8_t green;
-            uint8_t blue;
-        };
-        uint8_t rgb[3];
-    };
-    union {
-        struct {
-            uint16_t hue;
-            uint8_t saturation;
-            uint8_t value;
-        };
-        uint8_t hsv[4];
-    };
+    struct rgb_color_t rgb;
+    struct hsv_color_t hsv;
 };
 
 union color_t

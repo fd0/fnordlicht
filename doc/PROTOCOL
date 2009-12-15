@@ -32,7 +32,8 @@ started, sleep for 100ms and check afterwards, if the INT line is pulled down
 start the main firmware.  Otherwise it should not attempt to start the main
 firmware, but wait for commands received over the bus.  This procedure allows a
 recovery from a broken firmware which does not process commands received over
-the bus (such as the BOOTLOADER command).
+the bus (such as the BOOTLOADER command).  To enter the bootloader via the
+BOOTLOADER command, first pull down the INT line, then issue the command.
 
 Initial sync sequence
 ---------------------
@@ -88,29 +89,31 @@ List of commands:
 
 command |   function        | description
 --------------------------------------------------------
-   0x02 | FADE_RGB          | set color/fade to color (RGB)
-   0x03 | FADE_HSV          | set color/fade to color (HSV)
-   0x04 | SAVE_RGB          | save color to EEPROM (RGB)
-   0x05 | SAVE_HSV          | save color to EEPROM (HSV)
-   0x06 | SAVE_CURRENT      | save current color to EEPROM
-   0x07 | CONFIG_OFFSETS    | set global offset values
-   0x09 | START_PROGRAM     | start program
-   0x0A | STOP              | stop color changing
-   0x0B | MODIFY_CURRENT    | modify current color
-   0x0C | PULL_INT          | pull down INT line
-   0x0D | CONFIG_STARTUP    | configure startup
+   0x01 | FADE_RGB          | set color/fade to color (RGB)
+   0x02 | FADE_HSV          | set color/fade to color (HSV)
+   0x03 | SAVE_RGB          | save color to EEPROM (RGB)
+   0x04 | SAVE_HSV          | save color to EEPROM (HSV)
+   0x05 | SAVE_CURRENT      | save current color to EEPROM
+   0x06 | CONFIG_OFFSETS    | set global offset values
+   0x07 | START_PROGRAM     | start program
+   0x08 | STOP              | stop color changing
+   0x09 | MODIFY_CURRENT    | modify current color
+   0x0A | PULL_INT          | pull down INT line
+   0x0B | CONFIG_STARTUP    | configure startup
+   0x0C | POWERDOWN         | power down the device
    0x1B |                   | RESERVED (sync-sequence)
 
    0x80 | BOOTLOADER        | start bootloader
-   0x81 | BOOT_CONFIG       | configure bootloader options
-   0x82 | BOOT_DATA_INITIAL | initial data packet to bootloader
-   0x83 | BOOT_DATA_CONT    | continuation data packet to bootloader
+   0x81 | BOOT_CONFIG       | configure bootloader
+   0x82 | BOOT_INIT         | initialize bootloader data buffer
+   0x83 | BOOT_DATA         | store data in bootloader data buffer
    0x84 | BOOT_CRC_CHECK    | compare check-sum
-   0x85 | BOOT_FLASH        | write provided data to flash
-   0x86 | BOOT_ENTER_APP    | start application
+   0x85 | BOOT_CRC_FLASH    | compare check-sum with flash
+   0x86 | BOOT_FLASH        | write provided data to flash
+   0x87 | BOOT_ENTER_APP    | start application
 
 
-    Command: FADE_RGB - set color/fade to color (RGB) (0x02)
+    Command: FADE_RGB - set color/fade to color (RGB) (0x01)
     --------------------------------------------------------
 
       Instruct the device to fade to the specified absolute color, given as a
@@ -132,7 +135,7 @@ command |   function        | description
              7-14 | -     | don't care
 
 
-    Command: FADE_HSV - set color/fade to color (HSV) (0x03)
+    Command: FADE_HSV - set color/fade to color (HSV) (0x02)
     --------------------------------------------------------
 
       Instruct the device to fade to the specified absolute color, given as a
@@ -155,7 +158,7 @@ command |   function        | description
              8-14 | -           | don't care
 
 
-    Command: SAVE_RGB - save color to EEPROM (RGB) (0x04)
+    Command: SAVE_RGB - save color to EEPROM (RGB) (0x03)
     -----------------------------------------------------
 
       Save a color in RGB format, a fade speed (step and delay) and a pause
@@ -178,7 +181,7 @@ command |   function        | description
             10-14 | -     | don't care
 
 
-    Command: SAVE_HSV - save color to EEPROM (HSV) (0x05)
+    Command: SAVE_HSV - save color to EEPROM (HSV) (0x04)
     -----------------------------------------------------
 
       Save a color in HSV format, a fade speed (step and delay) and a pause
@@ -202,7 +205,7 @@ command |   function        | description
             11-14 | -          | don't care
 
 
-    Command: SAVE_CURRENT - save current color to EEPROM (0x06)
+    Command: SAVE_CURRENT - save current color to EEPROM (0x05)
     -----------------------------------------------------------
 
       Save the current color to EEPROM (RGB), together with a fade speed and a
@@ -222,14 +225,14 @@ command |   function        | description
              7-14 | -          | don't care
 
 
-    Command: CONFIG_OFFSETS - set global offset values (0x07)
+    Command: CONFIG_OFFSETS - set global offset values (0x06)
     ---------------------------------------------------------
 
     Set global values which influence how fast and what colors are when using
-    FADE_RGB or FADE_HSV.  All bytes are signed 8 bit integers, except hue, which
-    is a little endian signed 16 bit integer.  Saturation and value are scales.
-    This means, the final saturation and value will be scaled with
-    saturation/255 and value/255, respectively.
+    FADE_RGB or FADE_HSV or the static programs documented below.  All bytes are
+    signed 8 bit integers, except hue, which is a little endian signed 16 bit
+    integer.  Saturation and value are scales.  This means, the final saturation
+    and value will be scaled with saturation/255 and value/255, respectively.
 
         byte offset | name          |  description
         -------------------------------------------
@@ -242,7 +245,7 @@ command |   function        | description
                8-14 | -             | don't care
 
 
-    Command: START_PROGRAM - start program (0x09)
+    Command: START_PROGRAM - start program (0x07)
     ---------------------------------------------
 
       Start a program (a function compiled into the firmware) with given
@@ -257,7 +260,7 @@ command |   function        | description
             12-13 | -       | don't care
 
 
-    Command: STOP - stop color changing (0x0A)
+    Command: STOP - stop color changing (0x08)
     ------------------------------------------
 
       Stop all processes modifying the current color.  Optionally, also stop
@@ -269,7 +272,7 @@ command |   function        | description
              3-14 | -      | don't care
 
 
-    Command: MODIFY_CURRENT - modify current color (0x0B)
+    Command: MODIFY_CURRENT - modify current color (0x09)
     -----------------------------------------------------
 
       Instruct the device to fade to a new target color, which is determined
@@ -295,7 +298,7 @@ command |   function        | description
              8-14 | -           | don't care
 
 
-    Command: PULL_INT - pull down INT line (0x0C)
+    Command: PULL_INT - pull down INT line (0x0A)
     ---------------------------------------------
 
       Instruct the adressed device to immediately pull down the INT line
@@ -310,7 +313,7 @@ command |   function        | description
              3-14 | -       | don't care
 
 
-    Command: CONFIG_STARTUP - configure startup (0x0D)
+    Command: CONFIG_STARTUP - configure startup (0x0B)
     --------------------------------------------------
 
       Configure what a device should perform after power-up.  Mode is an
@@ -337,17 +340,28 @@ command |   function        | description
              4-14 | parameters | parameters to configured program
 
 
+    Command: POWERDOWN - power down device (0x0C)
+    ---------------------------------------------
+
+      Power down the device.  After receiving this command, the device should
+      power down all light outputs and suspend itself to reduce the power
+      consumption to a minimum.  A device must resume operation after a falling
+      edge on the INT pin.  It is allowed to activate a pull-up resistor on
+      that pin, to pull the pin to a defined level.
+
+      byte offset | name       |  description
+      ------------------------------------
+             2-14 | don't care |
+
 
     Command: BOOTLOADER - start bootloader (0x80)
     ---------------------------------------------
 
       If a bootloader is installed, jump to the bootloader, otherwise just
       restart the device.  A magic byte sequence of 0xfc27566b (little endian)
-      must follow the command byte.
-
-      Before entering the bootloader area the application code pulls the
-      interrupt line low.  The bootloader code releases it again to indicate
-      successful entry.
+      must follow the command byte.  Pull down the INT line BEFORE sending this
+      command, otherwise the bootloader might not be able to detect wether to
+      start the main firmware or remain within the bootloader code.
 
       byte offset | name    |  description
       ---------------------------------
@@ -358,8 +372,8 @@ command |   function        | description
              6-14 | -       | don't care
 
 
-    Command: BOOT_CONFIG - configure bootloader options (0x81)
-    ----------------------------------------------------------
+    Command: BOOT_CONFIG - configure bootloader (0x81)
+    --------------------------------------------------
 
       Set configuration options of the bootloader.  Currently the only
       options is the start address.
@@ -373,24 +387,21 @@ command |   function        | description
              4-14 | -            | don't care
 
 
-    Command: BOOT_DATA_INITIAL - initial data packet to bootloader (0x82)
-    ---------------------------------------------------------------------
+    Command: BOOT_INIT - initialize bootloader data buffer (0x82)
+    -------------------------------------------------------------
 
-      Store (initial) data packet (13 data bytes) to the beginning of the flash
-      data buffer.  Before this happens, the data buffer will be cleared. Further
-      data can be provided using the BOOT_DATA_CONT.
+      This resets and clears the internal bootloader data buffer.
 
       byte offset | name    |  description
       ---------------------------------
              2-14 | data    | payload
 
 
-    Command: BOOT_DATA_CONT - continuation data packet to bootloader (0x83)
-    ------------------------------------------------------------------------
+    Command: BOOT_DATA - store data in the bootloader data buffer (0x83)
+    --------------------------------------------------------------------
 
-      Store continuation data packet (further 13 data bytes) to the end of
-      the flash data buffer.  If the buffer is full, additional bytes will
-      be ignored.
+      Store data (up to 13 data bytes) at the end of the bootloader data
+      buffer.  If the buffer is full, additional bytes will be ignored.
 
       byte offset | name    |  description
       ---------------------------------
@@ -400,24 +411,49 @@ command |   function        | description
     Command: BOOT_CRC_CHECK - compare check-sum (0x84)
     --------------------------------------------------
 
-      Compare provided CRC-16 checksum against calculated checksum over
-      previously received data in the data buffer.  If both checksums do not
-      match, the boot loader MUST immediately pull down the INT line.
-      The INT line must be held down for the time specified in delay and be
-      released afterwards.  chksum is a little endian unsigned 16 bit integer.
+      Compare provided CRC-16 checksum against calculated checksum over the
+      first len bytes of previously received data in the data buffer.  If both
+      checksums do not match, the boot loader MUST immediately pull down the
+      INT line.  The INT line must be held down for the time specified in delay
+      and be released afterwards.  chksum is a little endian unsigned 16 bit
+      integer.
 
       The CRC calculation uses the polynomial x^16 + x^15 + x^2 + 1 (0xa001)
       and 0xffff as initial value.
 
       byte offset | name    |  description
       ---------------------------------
-              2-3 | chksum  | CRC-16 checksum over the data chunk
-                4 | delay   | time to wait before releasing the INT line
+              2-3 | len     | checksum over the first len buffer bytes in the buffer
+              4-5 | chksum  | CRC-16 checksum over the data chunk
+                6 | delay   | time to wait before releasing the INT line
                             | (in 50ms, maximum 2550ms, jitter +-10ms)
-             5-14 | -       | don't care
+             7-14 | -       | don't care
 
 
-    Command: BOOT_FLASH - write provided data to flash (0x85)
+    Command: BOOT_CRC_FLASH - compare check-sum with flash (0x85)
+    -------------------------------------------------------------
+
+      Compare provided CRC-16 checksum against calculated checksum over
+      len bytes from flash starting at addr.  If both checksums do not match,
+      the boot loader MUST immediately pull down the INT line.  The INT line
+      must be held down for the time specified in delay and be released
+      afterwards.  Chksum, start and len are unsigned 16 bit little endian
+      integers.
+
+      The CRC calculation uses the polynomial x^16 + x^15 + x^2 + 1 (0xa001)
+      and 0xffff as initial value.
+
+      byte offset | name    |  description
+      ---------------------------------
+              2-3 | addr    | checksum len bytes starting at this address
+              4-6 | len     | checksum over the first len buffer bytes in the buffer
+              6-8 | chksum  | CRC-16 checksum over the data chunk
+                9 | delay   | time to wait before releasing the INT line
+                            | (in 50ms, maximum 2550ms, jitter +-10ms)
+            10-14 | -       | don't care
+
+
+    Command: BOOT_FLASH - write provided data to flash (0x86)
     ---------------------------------------------------------
 
       Write the data provided earlier to the flash memory of the device.
@@ -436,7 +472,7 @@ command |   function        | description
              2-14 | -       | don't care
 
 
-    Command: BOOT_ENTER_APP - start application (0x86)
+    Command: BOOT_ENTER_APP - start application (0x87)
     --------------------------------------------------
 
       Leave bootloader and launch application code.
@@ -461,18 +497,27 @@ compiled into the firmware.
     current hue value, afterwards the device fades to the resulting color (using
     fade_step and fade_delay) and waits for the time specified by fade_sleep.
 
+    If add_addr is nonzero (attention: signed integer!), the fade ist not
+    started at hue_start but (hue_start + addr_add * device_address * hue_step).
+
+    This program honors the globally defined offsets set with the CONFIG_OFFSETS
+    command in each step.  If a global offset is reconfigured, the new value
+    will be applied in the next color calculation of this program.
+
         byte offset | name       | description
         ---------------------------------------------------------
                   0 | fade_step  | used for fading to new color
                     |            |   (unsigned 8 bit integer)
                   1 | fade_delay | used for fading to now color
                     |            |   (unsigned 8 bit integer)
-                2-3 | fade_sleep | sleep between steps (in 100ms)
-                    |            |   (unsigned 16 bit integer)
-                4-5 | hue_start  | start at this hue value
+                  2 | fade_sleep | sleep between steps (in seconds)
+                    |            |   (unsigned 8 bit integer)
+                3-4 | hue_start  | start at this hue value
                     |            |   (unsigned 16 bit integer
-                6-7 | hue_step   | add this to the hue in each step
+                5-6 | hue_step   | add this to the hue in each step
                     |            |   (signed 16 bit integer)
+                  7 | add_addr   | add hue_step address-times before start
+                    |            |   (signed 8 bit integer)
                   8 | saturation | saturation
                     |            |   (unsigned 8 bit integer)
                   9 | value      | value
@@ -495,6 +540,10 @@ compiled into the firmware.
     fade_delay are used in each fade.  If the wait_for_fade-bit within the
     flags byte is set, the device waits until the target color is reached.
     Afterwards the device sleeps for a configurable amount of time (fade_sleep).
+
+    This program honors the globally defined offsets set with the CONFIG_OFFSETS
+    command in each step.  If a global offset is reconfigured, the new value
+    will be applied in the next color calculation of this program.
 
         flags (1 byte)
         --------------
@@ -538,6 +587,10 @@ compiled into the firmware.
     when end is reached, if repeat is 1, the sequence is restarted from the
     beginning and if repeat is 2, the color sequence is played in reverse
     order, from end to beginning.
+
+    This program honors the globally defined offsets set with the CONFIG_OFFSETS
+    command for hsv colors in each step.  If a global offset is reconfigured,
+    the new value will be applied in the next color calculation of this program.
 
         byte offset | name         | description
         ----------------------------------------------------------------------
