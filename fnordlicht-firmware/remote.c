@@ -534,7 +534,7 @@ void parse_config_startup(struct remote_msg_config_startup_t *msg)
 
 static void wait_for_uart(void)
 {
-    while (fifo_fill(&global_uart.tx) != 0 || !uart_send_complete());
+    while (fifo_fill((fifo_t *)&global_uart.tx) != 0 || !uart_send_complete());
 }
 
 void parse_bootloader(struct remote_msg_bootloader_t *msg)
