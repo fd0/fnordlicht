@@ -80,8 +80,8 @@
 /* configure master mode */
 /* use 1 as address for the second device */
 #define MASTER_MODE_FIRST_ADDRESS 1
-/* wait 50ms before sending sync sequence */
-#define MASTER_WAIT_BEFORE_SYNC 5
+/* wait 200ms before sending sync sequence */
+#define MASTER_WAIT_BEFORE_SYNC 20
 /* wait 15 min (900s) between program changes */
 #define MASTER_MODE_SLEEP 900
 
