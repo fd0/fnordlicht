@@ -24,6 +24,7 @@
 #define __REMOTE_H
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "color.h"
 
 struct remote_offsets_t
@@ -38,6 +39,9 @@ struct remote_offsets_t
 struct global_remote_t {
     uint8_t address;
     struct remote_offsets_t offsets;
+
+    /* master mode */
+    bool master;
 };
 
 extern struct global_remote_t global_remote;

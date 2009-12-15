@@ -67,6 +67,11 @@
 #define CONFIG_SERIAL_BAUDRATE 19200
 #endif
 
+/* disable static master mode by default (still check jumper) */
+#ifndef CONFIG_STATIC_MASTER
+#define CONFIG_STATIC_MASTER 0
+#endif
+
 /* check if hardware is valid */
 #if defined(HARDWARE_fnordlicht)
     /* specific settings for old fnordlicht hardware */

@@ -25,6 +25,7 @@
 
 #include "../common/remote-proto.h"
 #include "color.h"
+#include "static_programs.h"
 
 struct remote_msg_fade_rgb_t
 {
@@ -92,7 +93,7 @@ struct remote_msg_start_program_t
     uint8_t address;
     uint8_t cmd;
     uint8_t script;
-    uint8_t parameters[PROGRAM_PARAMETER_SIZE];
+    union program_params_t params;
 };
 
 struct remote_msg_stop_t
