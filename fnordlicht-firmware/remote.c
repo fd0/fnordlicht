@@ -222,6 +222,7 @@ static PT_THREAD(remote_master_thread(struct pt *thread))
     static timer_t timer;
     static uint16_t sleep;
     static uint8_t *ptr;
+    static uint8_t idx;
 
     PT_BEGIN(thread);
 
@@ -243,7 +244,7 @@ static PT_THREAD(remote_master_thread(struct pt *thread))
     while (1) {
         ptr = &master_parameters[0];
 
-        for (uint8_t program = 0; program < MASTER_PROGRAMS; program++) {
+        for (idx = 0; idx < MASTER_PROGRAMS; idx++) {
             /* stop current program and fading */
             script_stop();
             pwm_stop_fading();
