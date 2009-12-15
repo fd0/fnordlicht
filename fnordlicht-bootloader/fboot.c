@@ -81,16 +81,7 @@ void disable_watchdog(void)
     wdt_disable();
 }
 
-/* enter application */
-void jump_to_application(void) __attribute__((naked, noinline));
-void jump_to_application(void)
-{
-    /* jump to application reset vector */
-    asm("ldi r30, 0");
-    asm("ldi r31, 0");
-    asm("icall");
-}
-
+static void (*jump_to_application)(void) = 0;
 
 static void start_application(void) __attribute__((noreturn));
 static void start_application(void)
