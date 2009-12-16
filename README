@@ -21,6 +21,13 @@ common/                             common C header files used by all programs
 tests/                              ruby-scripts for testing the serial
                                     protocol implementation
 
+License
+=======
+
+Each file contains a header, which states the author(s) and license for that
+file.  Most code is licensed as GPL (version 3).  The text for this license can
+be found in the file COPYING.
+
 Links
 =====
 
