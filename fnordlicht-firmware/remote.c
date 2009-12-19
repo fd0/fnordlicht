@@ -251,10 +251,6 @@ static PT_THREAD(remote_master_thread(struct pt *thread))
     while(!timer_expired(&timer))
         PT_YIELD(thread);
 
-    /* send sync sequence */
-    send_resync(MASTER_MODE_FIRST_ADDRESS);
-    PT_YIELD(thread);
-
     /* start program on all devices */
     msg.address = 0xff;
     msg.cmd = REMOTE_CMD_START_PROGRAM;
