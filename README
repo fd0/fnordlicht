@@ -15,11 +15,10 @@ bugs/                               files for the ditz[3] issue tracking system
 doc/                                further documentation and serial protocol description
 fnordlicht-firmware/                firmware sourcecode for fnordlicht and fnordlichtmini
 fnordlicht-bootloader/              serial bootloader for fnordlicht and fnordlichtmini
-fnordlicht-controller-firmware/     firmware for fnordlicht-controller
-fnordlicht-controller-bootloader/   usb bootloader for fnordlicht-controller
 common/                             common C header files used by all programs
 tests/                              ruby-scripts for testing the serial
                                     protocol implementation
+compiled/                           compiled binaries for several processors
 
 License
 =======
