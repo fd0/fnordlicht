@@ -30,7 +30,6 @@
 
 #include "globals.h"
 #include "../common/common.h"
-#include "pwm.h"
 #include "fifo.h"
 #include "uart.h"
 

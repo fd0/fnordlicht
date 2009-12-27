@@ -30,6 +30,7 @@
 #include "../common/common.h"
 #include "usbdrv/usbdrv.h"
 #include "timer.h"
+#include "uart.h"
 
 static bool usb_status;
 static timer_t usb_timer;
@@ -53,10 +54,52 @@ static timer_t usb_timer;
                                    } while(0);
 #endif
 
+#define USBRQ_SEND 1
+
+struct usb_state_t {
+    enum {
+        USB_STATE_IDLE = 0,
+        USB_STATE_SEND = 1,
+    } state;
+
+    uint8_t bytes_remaining;
+};
+
+struct usb_state_t usb;
 
 USB_PUBLIC usbMsgLen_t usbFunctionSetup(uchar data[8])
 {
+    usbRequest_t *req = (void *)data;
+    usbMsgLen_t len = 0;
+    static uint8_t buf[8];
 
+    /* set global data pointer to local buffer */
+    usbMsgPtr = buf;
+
+    if (req->bRequest == USBRQ_SEND) {
+        usb.state = USB_STATE_SEND;
+        usb.bytes_remaining = req->wLength.word;
+        return USB_NO_MSG;
+    }
+
+    return len;
+}
+
+uchar usbFunctionWrite(uchar *data, uchar len)
+{
+    if (len > usb.bytes_remaining)
+        len = usb.bytes_remaining;
+
+    usb.bytes_remaining -= len;
+
+    while (len--)
+        uart_putc(*data++);
+
+    if (usb.bytes_remaining == 0) {
+        return true;
+        usb.state == USB_STATE_IDLE;
+    } else
+        return len;
 }
 
 void usb_init(void)
@@ -71,16 +114,12 @@ void usb_enable(void)
 {
     usbDeviceConnect();
     usb_status = true;
-
-    PORTB |= _BV(PB1);
 }
 
 void usb_disable(void)
 {
     usbDeviceDisconnect();
     usb_status = false;
-
-    PORTB &= ~_BV(PB1);
 }
 
 bool usb_enabled(void)
@@ -92,7 +131,4 @@ void usb_poll(void)
 {
     if (usb_status)
         usbPoll();
-
-    //if (!usb_status && timer_expired(&usb_timer))
-    //    usb_enable();
 }

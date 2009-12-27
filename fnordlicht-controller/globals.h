@@ -46,4 +46,7 @@
 /* fifo size should be a power of 2 and below 128 */
 #define CONFIG_FIFO_SIZE 64
 
+/* serial communication is required */
+#define CONFIG_SERIAL 1
+
 #endif /* _FNORDLICHT_CONFIG_H */

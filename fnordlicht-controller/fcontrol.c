@@ -61,17 +61,20 @@ int main(void)
 
     usb_enable();
 
-    timer_t tmr;
-
-    timer_set(&tmr, 50);
+    timer_t blink_timer;
+    timer_set(&blink_timer, 50);
 
     while (1)
     {
         usb_poll();
 
-        if (timer_expired(&tmr)) {
+        if (timer_expired(&blink_timer)) {
             PINB = _BV(PB2);
-            timer_set(&tmr, 50);
+            timer_set(&blink_timer, 50);
+        }
+
+        if (fifo_fill((fifo_t *)&global_uart.rx) > 0) {
+            uart_putc(fifo_dequeue((fifo_t *)&global_uart.rx));
         }
     }
 }
