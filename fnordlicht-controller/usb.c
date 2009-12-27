@@ -1,0 +1,98 @@
+/* vim:ts=4 sts=4 et tw=80
+ *
+ *         fnordlicht firmware
+ *
+ *    for additional information please
+ *    see http://lochraster.org/fnordlichtmini
+ *
+ * (c) by Alexander Neumann <alexander@bumpern.de>
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/* includes */
+#include "globals.h"
+#include "../common/io.h"
+
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "../common/common.h"
+#include "usbdrv/usbdrv.h"
+#include "timer.h"
+
+static bool usb_status;
+static timer_t usb_timer;
+
+ /* supply custom usbDeviceConnect() and usbDeviceDisconnect() macros
+ * which turn the interrupt on and off at the right times,
+ * and prevent the execution of an interrupt while the pullup resistor
+ * is switched off */
+#ifdef USB_CFG_PULLUP_IOPORTNAME
+#undef usbDeviceConnect
+#define usbDeviceConnect()      do { \
+                                    USB_PULLUP_DDR |= (1<<USB_CFG_PULLUP_BIT); \
+                                    USB_PULLUP_OUT |= (1<<USB_CFG_PULLUP_BIT); \
+                                    USB_INTR_ENABLE |= (1 << USB_INTR_ENABLE_BIT); \
+                                   } while(0);
+#undef usbDeviceDisconnect
+#define usbDeviceDisconnect()   do { \
+                                    USB_INTR_ENABLE &= ~(1 << USB_INTR_ENABLE_BIT); \
+                                    USB_PULLUP_DDR &= ~(1<<USB_CFG_PULLUP_BIT); \
+                                    USB_PULLUP_OUT &= ~(1<<USB_CFG_PULLUP_BIT); \
+                                   } while(0);
+#endif
+
+
+USB_PUBLIC usbMsgLen_t usbFunctionSetup(uchar data[8])
+{
+
+}
+
+void usb_init(void)
+{
+    usbInit();
+    /* wait 500ms before turning on usb */
+    timer_set(&usb_timer, 50);
+    //usb_disable();
+}
+
+void usb_enable(void)
+{
+    usbDeviceConnect();
+    usb_status = true;
+
+    PORTB |= _BV(PB1);
+}
+
+void usb_disable(void)
+{
+    usbDeviceDisconnect();
+    usb_status = false;
+
+    PORTB &= ~_BV(PB1);
+}
+
+bool usb_enabled(void)
+{
+    return usb_status;
+}
+
+void usb_poll(void)
+{
+    if (usb_status)
+        usbPoll();
+
+    //if (!usb_status && timer_expired(&usb_timer))
+    //    usb_enable();
+}
