@@ -15,10 +15,23 @@ bugs/                               files for the ditz[3] issue tracking system
 doc/                                further documentation and serial protocol description
 fnordlicht-firmware/                firmware sourcecode for fnordlicht and fnordlichtmini
 fnordlicht-bootloader/              serial bootloader for fnordlicht and fnordlichtmini
+fnordlicht-controller/              firmware sourcecode for fnordlicht-controller
+fnordlicht-controller-bootloader/   sourcecode for the fnordlicht-controller usb bootloader
 common/                             common C header files used by all programs
 tests/                              ruby-scripts for testing the serial
                                     protocol implementation
 compiled/                           compiled binaries for several processors
+
+
+git submodules
+==============
+
+If the directory 'fnordlicht-controller-bootloader' does not contain any files
+(and you cloned the repository with git), you need to initialize the submodule:
+$ git submodule init
+[...]
+$ git submodule update
+[...]
 
 License
 =======
