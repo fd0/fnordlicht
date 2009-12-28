@@ -49,4 +49,22 @@
 /* serial communication is required */
 #define CONFIG_SERIAL 1
 
+/* leds */
+#define LED_PORTNAME B
+#define LED1_PIN     2
+#define LED2_PIN     1
+
+/* buttons */
+#define BTN_PORTNAME C
+#define BTN1_PIN     5
+#define BTN2_PIN     4
+
+/* convenient naming */
+#define LED_PORT _OUTPORT(LED_PORTNAME)
+#define LED_DDR  _DDRPORT(LED_PORTNAME)
+
+#define BTN_PORT _OUTPORT(BTN_PORTNAME)
+#define BTN_DDR  _DDRPORT(BTN_PORTNAME)
+#define BTN_PIN  _INPORT(BTN_PORTNAME)
+
 #endif /* _FNORDLICHT_CONFIG_H */

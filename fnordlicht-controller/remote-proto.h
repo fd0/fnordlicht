@@ -6,7 +6,6 @@
  *    see http://lochraster.org/fnordlichtmini
  *
  * (c) by Alexander Neumann <alexander@bumpern.de>
- *     Lars Noschinski <lars@public.noschinski.de>
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3 as published by
@@ -21,49 +20,17 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* includes */
-#include "globals.h"
-#include "../common/io.h"
+#ifndef __REMOTE_PROTO
+#define __REMOTE_PROTO 1
 
-#include <stdint.h>
-#include <avr/interrupt.h>
-#include <avr/pgmspace.h>
-#include <avr/wdt.h>
+#include "../common/remote-proto.h"
 
-#include "../common/common.h"
-#include "usb.h"
-#include "timer.h"
-#include "uart.h"
-#include "ui.h"
-
-/* NEVER CALL DIRECTLY! */
-void disable_watchdog(void) \
-  __attribute__((naked)) \
-  __attribute__((section(".init3")));
-void disable_watchdog(void)
+struct remote_msg_start_program_t
 {
-    MCUSR = 0;
-    wdt_disable();
-}
+    uint8_t address;
+    uint8_t cmd;
+    uint8_t script;
+    uint8_t params[REMOTE_STARTUP_MAX_PARAMSIZE];
+};
 
-/** main function
- */
-int main(void)
-{
-    usb_init();
-    timer_init();
-    uart_init();
-    ui_init();
-
-    /* enable interrupts globally */
-    sei();
-
-    usb_enable();
-
-    ui_blink(0x03, 0);
-
-    while (1) {
-        usb_poll();
-        ui_poll();
-    }
-}
+#endif
