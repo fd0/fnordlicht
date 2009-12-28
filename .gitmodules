@@ -1,0 +1,3 @@
+[submodule "fnordlicht-controller-bootloader"]
+	path = fnordlicht-controller-bootloader
+	url = git://github.com/fd0/usbload.git
