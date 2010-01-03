@@ -207,6 +207,9 @@ void start_program(uint8_t index)
         struct remote_msg_start_program_t msg;
     } data;
 
+    /* reset data structure */
+    memset(&data, '\0', REMOTE_MSG_LEN);
+
     data.msg.address = 255;
     data.msg.cmd = REMOTE_CMD_START_PROGRAM;
 
@@ -217,8 +220,6 @@ void start_program(uint8_t index)
         uint8_t d = pgm_read_byte(ptr++);
         data.msg.params[i] = d;
     }
-    for (uint8_t i = REMOTE_STARTUP_MAX_PARAMSIZE; i < REMOTE_MSG_LEN-2; i++)
-        data.msg.params[i] = 0;
 
     for (uint8_t i = 0; i < REMOTE_MSG_LEN; i++)
         uart_putc(data.raw[i]);
