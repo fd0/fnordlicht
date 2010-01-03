@@ -71,4 +71,4 @@
 #   0   disable master mode completely
 #   1   check if master mode jumper is set (default)
 #   2   always act as master
-#CONFIG_STATIC_MASTER = 1
+#CONFIG_MASTER_MODE = 1
