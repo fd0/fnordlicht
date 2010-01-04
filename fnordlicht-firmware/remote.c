@@ -578,8 +578,8 @@ void parse_powerdown(void)
     DDRC = 0;
     DDRD = 0;
 
-    /* configure int pin as input with pullup */
-    R_DDR = _BV(INTPIN);
+    /* configure int pin as input (already done by setting the
+     * DDR register to zero) with pullup */
     R_PORT = _BV(INTPIN);
 
     /* enable int0 low level interrupt */
