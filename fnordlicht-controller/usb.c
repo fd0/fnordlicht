@@ -31,6 +31,7 @@
 #include "usbdrv/usbdrv.h"
 #include "timer.h"
 #include "uart.h"
+#include "ir.h"
 
 static bool usb_status;
 
@@ -53,7 +54,9 @@ static bool usb_status;
                                    } while(0);
 #endif
 
-#define USBRQ_SEND 1
+#define USBRQ_SEND          1
+#define USBRQ_IR_STATE      2
+#define USBRQ_IR_READ       3
 
 struct usb_state_t {
     enum {
@@ -61,7 +64,7 @@ struct usb_state_t {
         USB_STATE_SEND = 1,
     } state;
 
-    uint8_t bytes_remaining;
+    usbMsgLen_t bytes_remaining;
 };
 
 struct usb_state_t usb;
@@ -84,6 +87,23 @@ USB_PUBLIC usbMsgLen_t usbFunctionSetup(uchar data[8])
             /* too long */
             buf[0] = 1;
             len = 1;
+        }
+    } else if (req->bRequest == USBRQ_IR_STATE) {
+        /* read or set state? */
+        if (req->bmRequestType & USBRQ_DIR_MASK) {
+            /* read */
+            buf[0] = ir_global.mode;
+            len = 1;
+        } else {
+            /* write */
+            uint8_t new_state = req->wValue.bytes[0];
+            if (new_state <= IR_RECEIVE)
+                ir_set_mode(new_state);
+        }
+    } else if (req->bRequest == USBRQ_IR_READ) {
+        if (ir_global.mode == IR_DISABLED) {
+            usbMsgPtr = (void *)ir_global.time;
+            return 2*ir_global.pos;
         }
     }
 

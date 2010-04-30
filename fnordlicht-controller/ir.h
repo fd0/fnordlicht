@@ -26,7 +26,36 @@
 #ifndef __IR_H
 #define __IR_H
 
+enum ir_mode_t
+{
+    IR_DISABLED    = 0,
+    IR_RAW         = 1,    /* just receive a code, disable ir afterwards (-> DISABLE) */
+    IR_DECODE      = 2,    /* just receive and decode vaules, disable ir afterwards (-> DISABLE) */
+    IR_RECEIVE     = 3,    /* receive, decode and process codes */
+};
+
+struct ir_global_t
+{
+    enum ir_mode_t mode;
+    uint16_t last;
+    uint8_t length;
+
+    #define MAX_CODE_LENGTH 160
+    /* internal storage for received code: allocate 160*2 = 320 byte memory for
+     * storing a code, this means we can store 80 on/off sequence timings */
+
+    uint16_t time[MAX_CODE_LENGTH];
+    uint8_t pos;
+};
+
+extern volatile struct ir_global_t ir_global;
+
 void ir_init(void);
 void ir_poll(void);
+
+void ir_set_mode(enum ir_mode_t mode);
+
+#define ir_disable() ir_set_mode(IR_DISABLED);
+#define ir_enable() ir_set_mode(IR_RECEIVE);
 
 #endif

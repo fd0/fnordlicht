@@ -56,6 +56,7 @@ int main(void)
     uart_init();
     ui_init();
     ir_init();
+    ir_set_mode(IR_RECEIVE);
 
     /* enable interrupts globally */
     sei();

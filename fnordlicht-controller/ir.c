@@ -31,9 +31,10 @@
 #include "config.h"
 #include "globals.h"
 #include "../common/common.h"
-#include "ir.h"
 #include "usb.h"
+#include "ir.h"
 #include "ir-cluster.h"
+#include "ui.h"
 
 /* macro magic */
 #define IR_DDR      _DDRPORT(IR_PORTNAME)
@@ -55,27 +56,21 @@
 #define IR_PCIF         _PCIF(IR_BANK)
 #define IR_PCMSK        _PCMSK(IR_BANK)
 
+/* 8 should be enough for everybody! */
+#define MAX_CLUSTERS 8
+
 /* internal state machine */
 static enum {
     READY = 0,
     LISTEN = 1,
     DONE = 2,
-} state = LISTEN;
+} state;
 
-static struct {
-    uint16_t last;
-    uint8_t length;
-} ir;
-
-/* internal storage for received code: allocate 160*2 = 320 byte memory for
- * storing a code, this means we can store 80 on/off sequence timings */
-#define MAX_CODE_LENGTH 160
-static volatile uint16_t time[MAX_CODE_LENGTH];
-static volatile uint8_t pos = 0;
+volatile struct ir_global_t ir_global;
 
 void ir_init(void)
 {
-    /* initialize input pin (with pullup) and timer 1 */
+    /* initialize input pin (with pullup) */
     IR_DDR &= ~_BV(IR_PIN);
     IR_PORT |= _BV(IR_PIN);
 
@@ -83,12 +78,34 @@ void ir_init(void)
     TCCR1B = _BV(CS11) | _BV(CS10) | _BV(WGM12);
     /* configure timer action after 20ms: 20mhz/64/50 */
     OCR1A = F_CPU/50/64;
-    /* clear interrupt flags */
-    TIFR1 = TIFR1;
+}
 
-    /* enable pin change interrupt */
-    IR_PCMSK = _BV(IR_INT);
-    PCICR |= _BV(IR_PCIE);
+void ir_set_mode(enum ir_mode_t mode)
+{
+    if (ir_global.mode != IR_DISABLED && mode == IR_DISABLED) {
+        /* disable pin change interrupt */
+        IR_PCMSK &= ~_BV(IR_INT);
+        PCICR &= ~_BV(IR_PCIE);
+
+        /* clear interrupt flags */
+        TIFR1 = TIFR1;
+    } else if (ir_global.mode == IR_DISABLED && mode != IR_DISABLED) {
+        /* clear interrupt flags */
+        TIFR1 = TIFR1;
+
+        /* reset variables */
+        ir_global.pos = 0;
+        state = READY;
+
+        /* enable pin change interrupt */
+        IR_PCMSK |= _BV(IR_INT);
+        PCICR |= _BV(IR_PCIE);
+    }
+
+    ir_global.mode = mode;
+
+    if (mode == IR_DECODE || mode == IR_RAW)
+        ui_blink(0, 0x5);
 }
 
 ISR(IR_VECT, ISR_NOBLOCK)
@@ -101,62 +118,79 @@ ISR(IR_VECT, ISR_NOBLOCK)
     if (state == READY)
         state = LISTEN;
     else if (state == LISTEN) {
-        time[pos++] = value;
+        ir_global.time[ir_global.pos++] = value;
 
         /* check if we reached the end of the array */
-        if (pos == MAX_CODE_LENGTH)
+        if (ir_global.pos == MAX_CODE_LENGTH)
             state = DONE;
     }
 }
 
 void ir_poll(void)
 {
+    if (ir_global.mode == IR_DISABLED)
+        return;
+
     /* check for timeout */
     if (TIFR1 & _BV(OCF1A)) {
         /* clear interrupt flag */
         TIFR1 = _BV(OCF1A);
 
         /* if ir has been detected, process code, else return to listening */
-        if (pos > 1) {
+        if (ir_global.pos > 1) {
             state = DONE;
 
             /* set last timing to zero */
-            if (pos % 2 == 0)
-                time[pos-1] = 0;
+            if (ir_global.pos % 2 == 0)
+                ir_global.time[ir_global.pos-1] = 0;
             else
-                time[pos++] = 0;
+                ir_global.time[ir_global.pos++] = 0;
         } else
             state = READY;
     }
 
     /* if code is complete, process! */
     if (state == DONE) {
-        #define MAX_CLUSTERS 8
+        /* compute clusters */
+        if (ir_global.mode == IR_RECEIVE || ir_global.mode == IR_DECODE) {
+            uint16_t cluster_on[MAX_CLUSTERS];
+            uint16_t cluster_off[MAX_CLUSTERS];
 
-        uint16_t cluster_on[MAX_CLUSTERS];
-        uint16_t cluster_off[MAX_CLUSTERS];
+            uint8_t con = ir_cluster(&ir_global.time[0], ir_global.pos/2, &cluster_on[0], MAX_CLUSTERS);
+            uint8_t coff = ir_cluster(&ir_global.time[1], ir_global.pos/2-1, &cluster_off[0], MAX_CLUSTERS);
 
-        uint8_t con = ir_cluster(&time[0], pos/2, &cluster_on[0], MAX_CLUSTERS);
-        uint8_t coff = ir_cluster(&time[1], pos/2-1, &cluster_off[0], MAX_CLUSTERS);
+            for (uint8_t i = 0; i < ir_global.pos/2; i++) {
+                uint8_t data_on = ir_min_cluster(ir_global.time[2*i], cluster_on, con);
+                uint8_t data_off = ir_min_cluster(ir_global.time[2*i+1], cluster_off, coff);
 
-        uint16_t crc = 0;
-        for (uint8_t i = 0; i < pos/2; i++) {
-            uint8_t data_on = ir_min_cluster(time[2*i], cluster_on, con);
-            uint8_t data_off = ir_min_cluster(time[2*i+1], cluster_off, coff);
+                ir_global.time[i] = data_on | (data_off << 8);
+            }
 
-            crc = _crc16_update(crc, data_on);
-            crc = _crc16_update(crc, data_off);
+            ir_global.pos /= 2;
         }
 
-        /* remember code and length */
-        ir.last = crc;
-        ir.length = pos/2;
+        if (ir_global.mode == IR_RECEIVE) {
+            uint16_t crc = 0;
+            for (uint8_t i = 0; i < ir_global.pos; i++) {
+                crc = _crc16_update(crc, LO8(ir_global.time[i]));
+                crc = _crc16_update(crc, HI8(ir_global.time[i]));
+            }
 
-        /*
-         *  insert code evaluation here...
-         */
+            /* remember code and length */
+            ir_global.last = crc;
+            ir_global.length = ir_global.pos/2;
 
-        pos = 0;
-        state = LISTEN;
+            /*
+             *  insert code evaluation here...
+             */
+
+            ui_blink(0x1, 0);
+
+            ir_global.pos = 0;
+            state = READY;
+        } else {
+            ui_blink(0, 0x1);
+            ir_set_mode(IR_DISABLED);
+        }
     }
 }
