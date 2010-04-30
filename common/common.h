@@ -35,6 +35,10 @@
 #define _OUTPORT(name)           _CONCAT(PORT, name)
 #define _INPORT(name)            _CONCAT(PIN, name)
 #define _DDRPORT(name)           _CONCAT(DDR, name)
+#define _PCIE(name)              _CONCAT(PCIE, name)
+#define _PCIF(name)              _CONCAT(PCIF, name)
+#define _PCMSK(name)             _CONCAT(PCMSK, name)
+#define _PCINT(name)             _CONCAT(PCINT, name)
 
 /* __noinline attribute (opposite of inline attribute */
 #define __noinline __attribute__((noinline))

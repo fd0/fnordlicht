@@ -59,6 +59,11 @@
 #define BTN1_PIN     5
 #define BTN2_PIN     4
 
+/* infrared receiver */
+#define IR_PORTNAME  C
+#define IR_PIN       1
+#define IR_INTNUM    9   /* PC1 is PCINT9 */
+
 /* convenient naming */
 #define LED_PORT _OUTPORT(LED_PORTNAME)
 #define LED_DDR  _DDRPORT(LED_PORTNAME)

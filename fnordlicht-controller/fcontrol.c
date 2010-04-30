@@ -35,6 +35,7 @@
 #include "timer.h"
 #include "uart.h"
 #include "ui.h"
+#include "ir.h"
 
 /* NEVER CALL DIRECTLY! */
 void disable_watchdog(void) \
@@ -54,6 +55,7 @@ int main(void)
     timer_init();
     uart_init();
     ui_init();
+    ir_init();
 
     /* enable interrupts globally */
     sei();
@@ -65,5 +67,6 @@ int main(void)
     while (1) {
         usb_poll();
         ui_poll();
+        ir_poll();
     }
 }
