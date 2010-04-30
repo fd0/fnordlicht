@@ -33,7 +33,6 @@
 #include "uart.h"
 
 static bool usb_status;
-static timer_t usb_timer;
 
  /* supply custom usbDeviceConnect() and usbDeviceDisconnect() macros
  * which turn the interrupt on and off at the right times,
@@ -105,9 +104,6 @@ uchar usbFunctionWrite(uchar *data, uchar len)
 void usb_init(void)
 {
     usbInit();
-    /* wait 500ms before turning on usb */
-    timer_set(&usb_timer, 50);
-    //usb_disable();
 }
 
 void usb_enable(void)
