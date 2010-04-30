@@ -75,10 +75,16 @@ USB_PUBLIC usbMsgLen_t usbFunctionSetup(uchar data[8])
     /* set global data pointer to local buffer */
     usbMsgPtr = buf;
 
-    if (req->bRequest == USBRQ_SEND) {
+    if (req->bRequest == USBRQ_SEND && req->wLength.word > 0) {
         usb.state = USB_STATE_SEND;
-        usb.bytes_remaining = req->wLength.word;
-        return USB_NO_MSG;
+        if (req->wLength.word < 256) {
+            usb.bytes_remaining = req->wLength.bytes[0];
+            return USB_NO_MSG;
+        } else {
+            /* too long */
+            buf[0] = 1;
+            len = 1;
+        }
     }
 
     return len;
@@ -91,8 +97,11 @@ uchar usbFunctionWrite(uchar *data, uchar len)
 
     usb.bytes_remaining -= len;
 
-    while (len--)
+    while (len--) {
+        /* ugly hack: busy wait until the fifo is ready for another byte... */
+        while (fifo_full(&global_uart.tx));
         uart_putc(*data++);
+    }
 
     if (usb.bytes_remaining == 0) {
         return true;
