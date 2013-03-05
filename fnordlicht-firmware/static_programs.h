@@ -91,7 +91,7 @@ struct process_t {
 
 /* global list of programs */
 #define STATIC_PROGRAMS_LEN 3
-extern program_handler static_programs[];
+extern  const program_handler static_programs[];
 
 PT_THREAD(program_colorwheel(struct process_t *process));
 PT_THREAD(program_random(struct process_t *process));
